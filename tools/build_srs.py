@@ -311,6 +311,17 @@ def add_table(doc, widths, rows):
     layout.set(qn("w:type"), "fixed")
     tblPr.append(layout)
 
+    width = OxmlElement("w:tblW")
+    width.set(qn("w:w"), str(sum(widths)))
+    width.set(qn("w:type"), "dxa")
+    tblPr.append(width)
+
+    # Under a fixed layout Word lays out from tblGrid, so the grid has to carry
+    # the same widths as the cells or the columns come out evenly split.
+    grid = t._tbl.find(qn("w:tblGrid"))
+    for col, w in zip(grid.findall(qn("w:gridCol")), widths):
+        col.set(qn("w:w"), str(w))
+
     t.autofit = False
     for r_i, row in enumerate(rows):
         # Repeat the header row when a table breaks across pages.
