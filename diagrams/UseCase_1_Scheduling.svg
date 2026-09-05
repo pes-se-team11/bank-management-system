@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="760" viewBox="0 0 1120 760">
+<defs>
+  <marker id="open" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10" fill="none" stroke="#333333" stroke-width="1.6"/>
+  </marker>
+</defs>
+<rect width="1120" height="760" fill="#FFFFFF"/>
+<text x="560.0" y="30" font-family="Segoe UI, Calibri, Helvetica, Arial, sans-serif" font-size="16" font-weight="700" fill="#111111" text-anchor="middle">Use-Case Diagram 1 - Scheduling &amp; Guest Content Submission</text>
+<rect x="280" y="62" width="620" height="658" rx="6" fill="none" stroke="#8A94A6" stroke-width="2"/>
+<text x="590.0" y="88" font-family="Segoe UI, Calibri, Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#8A94A6" text-anchor="middle">Podcast Guest Scheduling &amp; Outline Builder</text>
+<circle cx="150" cy="100" r="12" fill="none" stroke="#111111" stroke-width="2"/>
+<line x1="150" y1="112" x2="150" y2="142" stroke="#111111" stroke-width="2"/>
+<line x1="132" y1="123" x2="168" y2="123" stroke="#111111" stroke-width="2"/>
+<line x1="150" y1="142" x2="135" y2="166" stroke="#111111" stroke-width="2"/>
+<line x1="150" y1="142" x2="165" y2="166" stroke="#111111" stroke-width="2"/>
+<text x="150" y="186" font-family="Segoe UI, Calibri, Helvetica, Arial, sans-serif" font-size="13" font-weight="600" fill="#111111" text-anchor="middle">Show Host</text>
+<circle cx="150" cy="430" r="12" fill="none" stroke="#111111" stroke-width="2"/>
+<line x1="150" y1="442" x2="150" y2="472" stroke="#111111" stroke-width="2"/>
+<line x1="132" y1="453" x2="168" y2="453" stroke="#111111" stroke-width="2"/>
+<line x1="150" y1="472" x2="135" y2="496" stroke="#111111" stroke-width="2"/>
+<line x1="150" y1="472" x2="165" y2="496" stroke="#111111" stroke-width="2"/>
+<text x="150" y="516" font-family="Segoe UI, Calibri, Helvetica, Arial, sans-serif" font-size="13" font-weight="600" fill="#111111" text-anchor="middle">Podcast Guest</text>
+<circle cx="975" cy="470" r="12" fill="none" stroke="#111111" stroke-width="2"/>
+<line x1="975" y1="482" x2="975" y2="512" stroke="#111111" stroke-width="2"/>
+<line x1="957" y1="493" x2="993" y2="493" stroke="#111111" stroke-width="2"/>
+<line x1="975" y1="512" x2="960" y2="536" stroke="#111111" stroke-width="2"/>
+<line x1="975" y1="512" x2="990" y2="536" stroke="#111111" stroke-width="2"/>
+<text x="975" y="556" font-family="Segoe UI, Calibri, Helvetica, Arial, sans-serif" font-size="13" font-weight="600" fill="#111111" text-anchor="middle">Calendar &amp;</text>
+<text x="975" y="571" font-family="Segoe UI, Calibri, Helvetica, Arial, sans-serif" font-size="13" font-weight="600" fill="#111111" text-anchor="middle">Notification</text>
+<text x="975" y="586" font-family="Segoe UI, Calibri, Helvetica, Arial, sans-serif" font-size="13" font-weight="600" fill="#111111" text-anchor="middle">Service</text>
+<ellipse cx="430" cy="130" rx="112" ry="34" fill="#F4F6F8" stroke="#2B4C7E" stroke-width="1.8"/>
+<text x="430" y="114" font-family="Segoe UI, Calibri, Helvetica, Arial, sans-serif" font-size="11" font-weight="700" fill="#2B4C7E" text-anchor="middle">UC-03</text>
+<text x="430" y="129" font-family="Segoe UI, Calibri, Helvetica, Arial, sans-serif" font-size="12.5" fill="#111111" text-anchor="middle">Publish</text>
+<text x="430" y="143" font-family="Segoe UI, Calibri, Helvetica, Arial, sans-serif" font-size="12.5" fill="#111111" text-anchor="middle">Availability</text>
+<ellipse cx="430" cy="268" rx="112" ry="34" fill="#F4F6F8" stroke="#2B4C7E" stroke-width="1.8"/>
+<text x="430" y="260" font-family="Segoe UI, Calibri, Helvetica, Arial, sans-serif" font-size="11" font-weight="700" fill="#2B4C7E" text-anchor="middle">UC-01</text>
+<text x="430" y="275" font-family="Segoe UI, Calibri, Helvetica, Arial, sans-serif" font-size="12.5" fill="#111111" text-anchor="middle">Book Interview Slot</text>
+<ellipse cx="430" cy="400" rx="112" ry="34" fill="#F4F6F8" stroke="#2B4C7E" stroke-width="1.8"/>
+<text x="430" y="392" font-family="Segoe UI, Calibri, Helvetica, Arial, sans-serif" font-size="11" font-weight="700" fill="#2B4C7E" text-anchor="middle">UC-08</text>
+<text x="430" y="407" font-family="Segoe UI, Calibri, Helvetica, Arial, sans-serif" font-size="12.5" fill="#111111" text-anchor="middle">Request Reschedule</text>
+<ellipse cx="430" cy="532" rx="112" ry="34" fill="#F4F6F8" stroke="#2B4C7E" stroke-width="1.8"/>
+<text x="430" y="508" font-family="Segoe UI, Calibri, Helvetica, Arial, sans-serif" font-size="11" font-weight="700" fill="#2B4C7E" text-anchor="middle">UC-02</text>
+<text x="430" y="523" font-family="Segoe UI, Calibri, Helvetica, Arial, sans-serif" font-size="12.5" fill="#111111" text-anchor="middle">Submit</text>
+<text x="430" y="537" font-family="Segoe UI, Calibri, Helvetica, Arial, sans-serif" font-size="12.5" fill="#111111" text-anchor="middle">Talking-Point</text>
+<text x="430" y="551" font-family="Segoe UI, Calibri, Helvetica, Arial, sans-serif" font-size="12.5" fill="#111111" text-anchor="middle">Outline</text>
+<ellipse cx="430" cy="664" rx="112" ry="34" fill="#F4F6F8" stroke="#2B4C7E" stroke-width="1.8"/>
+<text x="430" y="648" font-family="Segoe UI, Calibri, Helvetica, Arial, sans-serif" font-size="11" font-weight="700" fill="#2B4C7E" text-anchor="middle">UC-09</text>
+<text x="430" y="663" font-family="Segoe UI, Calibri, Helvetica, Arial, sans-serif" font-size="12.5" fill="#111111" text-anchor="middle">Attach Biography</text>
+<text x="430" y="677" font-family="Segoe UI, Calibri, Helvetica, Arial, sans-serif" font-size="12.5" fill="#111111" text-anchor="middle">Links</text>
+<ellipse cx="740" cy="330" rx="112" ry="34" fill="#F4F6F8" stroke="#2B4C7E" stroke-width="1.8"/>
+<text x="740" y="314" font-family="Segoe UI, Calibri, Helvetica, Arial, sans-serif" font-size="11" font-weight="700" fill="#2B4C7E" text-anchor="middle">UC-06</text>
+<text x="740" y="329" font-family="Segoe UI, Calibri, Helvetica, Arial, sans-serif" font-size="12.5" fill="#111111" text-anchor="middle">Validate Slot</text>
+<text x="740" y="343" font-family="Segoe UI, Calibri, Helvetica, Arial, sans-serif" font-size="12.5" fill="#111111" text-anchor="middle">Availability</text>
+<ellipse cx="740" cy="470" rx="112" ry="34" fill="#F4F6F8" stroke="#2B4C7E" stroke-width="1.8"/>
+<text x="740" y="454" font-family="Segoe UI, Calibri, Helvetica, Arial, sans-serif" font-size="11" font-weight="700" fill="#2B4C7E" text-anchor="middle">UC-07</text>
+<text x="740" y="469" font-family="Segoe UI, Calibri, Helvetica, Arial, sans-serif" font-size="12.5" fill="#111111" text-anchor="middle">Send Booking</text>
+<text x="740" y="483" font-family="Segoe UI, Calibri, Helvetica, Arial, sans-serif" font-size="12.5" fill="#111111" text-anchor="middle">Notification</text>
+<line x1="170.0" y1="130.0" x2="318.0" y2="130.0" stroke="#333333" stroke-width="1.6"/>
+<line x1="170.0" y1="460.0" x2="387.4" y2="299.4" stroke="#333333" stroke-width="1.6"/>
+<line x1="170.0" y1="460.0" x2="347.3" y2="509.1" stroke="#333333" stroke-width="1.6"/>
+<line x1="523.5" y1="286.7" x2="646.5" y2="311.3" stroke="#333333" stroke-width="1.5" stroke-dasharray="7,5" marker-end="url(#open)"/>
+<text x="585.0" y="293.0" text-anchor="middle" transform="rotate(11.3 585.0 299.0)" font-family="Segoe UI, Calibri, Helvetica, Arial, sans-serif" font-size="11.5" font-style="italic" fill="#333333">&#171;include&#187;</text>
+<line x1="477.3" y1="298.8" x2="692.7" y2="439.2" stroke="#333333" stroke-width="1.5" stroke-dasharray="7,5" marker-end="url(#open)"/>
+<text x="585.0" y="363.0" text-anchor="middle" transform="rotate(33.1 585.0 369.0)" font-family="Segoe UI, Calibri, Helvetica, Arial, sans-serif" font-size="11.5" font-style="italic" fill="#333333">&#171;include&#187;</text>
+<line x1="430.0" y1="366.0" x2="430.0" y2="302.0" stroke="#333333" stroke-width="1.5" stroke-dasharray="7,5" marker-end="url(#open)"/>
+<text x="440.0" y="334.0" text-anchor="start" font-family="Segoe UI, Calibri, Helvetica, Arial, sans-serif" font-size="11.5" font-style="italic" fill="#333333">&#171;extend&#187;</text>
+<line x1="430.0" y1="630.0" x2="430.0" y2="566.0" stroke="#333333" stroke-width="1.5" stroke-dasharray="7,5" marker-end="url(#open)"/>
+<text x="440.0" y="598.0" text-anchor="start" font-family="Segoe UI, Calibri, Helvetica, Arial, sans-serif" font-size="11.5" font-style="italic" fill="#333333">&#171;extend&#187;</text>
+<line x1="955.0" y1="500.0" x2="841.8" y2="484.2" stroke="#333333" stroke-width="1.6"/>
+</svg>

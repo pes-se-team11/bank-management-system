@@ -1,0 +1,9 @@
+* text=auto eol=lf
+
+# Binary deliverables - never diff or merge these as text
+*.docx binary
+*.pdf  binary
+*.png  binary
+
+# SVG is text and worth diffing
+*.svg text
