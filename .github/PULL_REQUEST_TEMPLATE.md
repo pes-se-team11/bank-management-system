@@ -8,8 +8,8 @@
 
 | | |
 |---|---|
-| Requirement(s) | `PGS-F-0__` |
-| Jira story | `PGS-__` |
+| Requirement(s) | `BMS-F-0__` |
+| Jira story | `BMS-__` |
 | Use case | `UC-__` |
 | Test case(s) | `TC-___-__` |
 

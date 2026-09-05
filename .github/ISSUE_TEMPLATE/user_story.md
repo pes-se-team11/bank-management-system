@@ -1,13 +1,13 @@
 ---
 name: User story
-about: A unit of work that delivers value to a Guest, Host or Administrator
+about: A unit of work that delivers value to a Customer, Teller or Manager
 title: "[Story] "
 labels: story
 ---
 
 ## Story
 
-> As a **<Podcast Guest | Show Host | Administrator>**,
+> As a **<Customer | Bank Teller | Bank Manager>**,
 > I want **<capability>**,
 > So that **<benefit>**.
 
@@ -15,9 +15,9 @@ labels: story
 
 | | |
 |---|---|
-| Requirement | `PGS-F-0__` |
+| Requirement | `BMS-F-0__` |
 | Use case | `UC-__` |
-| Epic | `<Epic 1-4>` |
+| Epic | `<Epic 1-7>` |
 
 ## Acceptance criteria
 

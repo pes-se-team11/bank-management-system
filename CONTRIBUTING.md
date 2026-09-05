@@ -22,8 +22,8 @@ git checkout -b docs/test-plan-section-5
 One logical change per commit. Present tense, no trailing period:
 
 ```
-Add security requirements PGS-SR-001..006
-Fix extend arrow direction in use-case diagram 2
+Add security requirements BMS-SR-001..007
+Fix overflow check in withdrawal debit path
 ```
 
 Reference requirement or story ids where they apply — it makes traceability free at review time.
@@ -38,7 +38,7 @@ Reference requirement or story ids where they apply — it makes traceability fr
 
 ## Editing the SRS
 
-`docs/SRS.md` and `docs/SRS_Podcast_Guest_Scheduling_v1.0.docx` are **generated**. A PR that edits
+`docs/SRS.md` and `docs/SRS_Bank_Management_System_v1.0.docx` are **generated**. A PR that edits
 either directly will be sent back.
 
 ```bash

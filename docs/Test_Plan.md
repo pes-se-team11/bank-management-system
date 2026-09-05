@@ -1,85 +1,73 @@
-# Software Test Plan (STP) — Podcast Guest Scheduling & Outline Builder
+# Software Test Plan (STP) — Bank Management System
 
-**Project:** Podcast Guest Scheduling & Outline Builder
-**Problem Statement:** #60 — Media, Events & Community
-**Version:** 0.9 (draft)
-**Authors:** QA / Test Lead, with the mini-project team
-**Date:** 05-09-2025
+**Project:** Bank Management System · **Team 11** · Implementation language: C / C++
+**Version:** 0.9 (draft) · **Date:** 05-09-2025
 **Status:** Draft — **due 15 September 2025**
 
-> Built against `templates/Test_Plan_Template for SE.docx`, section for section. Every `TC-` id
-> below is already referenced by an acceptance criterion in [`SRS.md`](SRS.md), so the two documents
-> are consistent by construction. Items still needing team input are marked **`<TBC>`**.
+> Written against `templates/Test_Plan_Template for SE.docx`, section for section. Every `TC-` id
+> below is already cited by an acceptance criterion in [`SRS.md`](SRS.md), so the two documents agree
+> by construction. Items needing team input are marked **`<TBC>`**.
 
 ---
 
 ## 1. Introduction
 
-**Purpose.** This document defines the test plan for the Podcast Guest Scheduling & Outline Builder
-v1.0. It states the objectives, scope, strategy, resources, schedule and responsibilities for
-verifying that the system meets the requirements in the SRS.
+**Purpose.** Defines the test plan for the Bank Management System v1.0 — objectives, scope, strategy,
+resources, schedule and responsibilities for verifying the system against the SRS.
 
-**Scope.** Testing covers availability publication and blocking, slot presentation and booking,
-booking concurrency, rescheduling, outline submission and revision, host review and approval,
-run-of-show generation and PDF export, notification dispatch and retry, authentication and episode
-board isolation, and administration. Excluded items are listed in section 4.
+**Scope.** Customer and account management, authentication and role enforcement, deposit, withdrawal,
+balance inquiry and statements, funds transfer, and the ledger, audit and reporting behaviour.
+Exclusions in section 4.
 
-**References.** SRS v1.0 (`docs/SRS.md`), Jira backlog (`docs/Jira_Backlog.md`), RTM (SRS section 8),
-Problem Statement #60, WCAG 2.1, RFC 5545 (iCalendar).
+**References.** SRS v1.0 (`docs/SRS.md`), RTM (`docs/RTM.md`), Jira backlog (`docs/Jira_Backlog.md`),
+SAD (pending).
 
-**Definitions.** STP (Software Test Plan), SRS (Software Requirements Specification), RTM
-(Requirements Traceability Matrix), UAT (User Acceptance Testing), p90/p95 (90th/95th percentile),
-DST (Daylight Saving Time), TLS (Transport Layer Security).
+**Definitions.** STP (Software Test Plan), SRS, RTM, UAT (User Acceptance Testing), WAL
+(write-ahead log), paise (smallest currency unit), reconciliation (balance equals opening balance
+plus journal entries).
 
 ---
 
 ## 2. Test items
 
-- SchedulingService — availability, blocking, slot query, booking, reschedule
-- OutlineService — talking points, links, draft lifecycle, episode-board attachment
-- ReviewService — approve, reject, reorder, host segments
-- RunOfShowService — running order, timestamp computation, recompute on edit
-- ExportService — PDF production sheet
-- NotificationService — invites, reminders, decision notices, retry
-- AuthService — sign-in, email verification, episode-board authorisation
-- AuditService — append-only event log
-- AdminConsole — account suspension, audit inspection
-- WebUI — booking page, episode board, host console
+`AuthModule` · `AccountModule` · `TransactionModule` · `LedgerModule` · `ReportModule` ·
+`ValidationModule` · `PersistenceModule` · `CLI / MenuLayer` · the build itself (a warning-free
+compile is a tested property, per BMS-NF-004).
 
 ---
 
 ## 3. Features to be tested
 
-Mapped to SRS requirement ids.
-
-| Requirement | Feature | Test case(s) |
+| Requirement(s) | Feature | Test case(s) |
 |---|---|---|
-| PGS-F-001, PGS-F-002 | Publish availability, block dates | TC-SCH-01, TC-SCH-02 |
-| PGS-F-003 | Present only bookable slots | TC-SCH-03 |
-| PGS-F-004 | Atomic slot re-validation on confirm | TC-SCH-04 |
-| PGS-F-005 | Reschedule inside the 24-hour window | TC-SCH-05 |
-| PGS-NF-007 | UTC storage, timezone-correct display across DST | TC-SCH-06 |
-| PGS-F-010 – PGS-F-013 | Outline submission, links, drafts, attachment | TC-OUT-01 … TC-OUT-04 |
-| PGS-F-020 – PGS-F-023 | Review, mandatory rejection comment, host segments, audit | TC-REV-01 … TC-REV-04 |
-| PGS-F-030 – PGS-F-033 | Run-of-show, timestamps, recompute, PDF export | TC-ROS-01 … TC-ROS-04 |
-| PGS-F-040 – PGS-F-042 | Invite, reminder, retry and permanent-failure logging | TC-NOT-01 … TC-NOT-03 |
-| PGS-F-050, PGS-F-051 | Verification gate, episode-board isolation | TC-AUT-01, TC-AUT-02 |
-| PGS-F-052 | Account suspension and audit view | TC-ADM-01 |
-| PGS-NF-001, PGS-NF-002, PGS-NF-006 | Export latency, page latency, soak | TC-PERF-01 … TC-PERF-03 |
-| PGS-NF-003 | Monthly availability | TC-OPS-01 |
-| PGS-NF-004, PGS-SR-001 – PGS-SR-006 | TLS, credentials, authorisation, rate limits, escaping, audit immutability | TC-SEC-01 … TC-SEC-06 |
-| PGS-NF-005 | WCAG 2.1 AA conformance | TC-UX-01 |
+| BMS-F-001 – BMS-F-006 | Customer records, account open/close/lookup, residual transfer | TC-ACC-01 … TC-ACC-06 |
+| BMS-F-010 – BMS-F-013 | Authentication, lockout, role enforcement, unlock | TC-AUT-01 … TC-AUT-04 |
+| BMS-F-014, BMS-SR-001 | No echo, credential hashing | TC-SEC-01, TC-SEC-02 |
+| BMS-F-020 – BMS-F-022 | Deposit, rejection cases, journalling | TC-DEP-01 … TC-DEP-03 |
+| BMS-F-030, BMS-F-032, BMS-F-033 | Limits, minimum balance, overdraft | TC-WDR-01 … TC-WDR-03 |
+| BMS-F-031, BMS-NF-002 | Atomic debit + journal, crash recovery | TC-REL-01 |
+| BMS-F-040 – BMS-F-042 | Balance, mini-statement, date-range statement | TC-BAL-01 … TC-BAL-03 |
+| BMS-F-050 – BMS-F-052 | Transfer atomicity, rejection cases, ceilings | TC-TRF-01 … TC-TRF-03 |
+| BMS-F-060 – BMS-F-064 | Append-only journal, reconciliation, EOD report, audit capture and view | TC-LED-01 … TC-LED-05 |
+| BMS-NF-001, BMS-NF-007 | Transaction latency, capacity soak | TC-PERF-01, TC-PERF-02 |
+| BMS-NF-003, BMS-SR-003 | Integer paise, overflow refusal | TC-SEC-03 |
+| BMS-SR-002, BMS-SR-004 | Buffer safety, input validation | TC-SEC-04, TC-SEC-05 |
+| BMS-SR-005 – BMS-SR-007 | Append-only enforcement, file permissions, service-layer role check | TC-SEC-06 … TC-SEC-08 |
+| BMS-NF-004, BMS-NF-006 | Warning-free portable build, modules testable in isolation | TC-PORT-01, TC-PORT-02 |
+| BMS-NF-005 | Every rejection states reason and remedy | TC-UX-01 |
 
 ---
 
 ## 4. Features not to be tested
 
-- Internal behaviour of the external Calendar & Notification Service — verified only at our
-  boundary via a stub; delivery to the recipient's inbox is the provider's responsibility
-- Third-party PDF rendering library internals — we test our output, not their engine
-- Browser rendering engines themselves
-- Audio/video recording, editing and podcast hosting — out of product scope per SRS §1.2
-- Load beyond the PGS-NF-006 ceiling (500 hosts / 5,000 bookings per month)
+- Compiler and standard-library correctness
+- Operating-system file-permission enforcement itself (we test that we *request* owner-only
+  permissions, not that the OS honours them)
+- Terminal emulator behaviour
+- Anything in SRS §1.2 out-of-scope: ATM hardware, inter-bank settlement, cheque clearing, loans and
+  interest, card issuance, internet/mobile banking
+- Concurrent multi-instance operation — explicitly unsupported and prevented by the instance lock;
+  we test that the *lock* works (TC-SEC-07), not that concurrency is safe
 
 ---
 
@@ -87,60 +75,75 @@ Mapped to SRS requirement ids.
 
 **Levels**
 
-- Unit — pure logic in isolation. The timestamp computation behind PGS-F-031 is the highest-value
-  unit target: it is a pure function and every run-of-show defect ultimately shows up there.
-- Integration — SchedulingService against the database (the unique constraint behind PGS-F-004),
-  NotificationService against a stubbed provider.
-- System — end-to-end flows through the WebUI.
-- Acceptance (UAT) — the two headline journeys: *guest books and submits*, and *host approves and
-  exports*.
+- **Unit** — the highest-value target in this project. The money arithmetic (BMS-SR-003) and the
+  reconciliation function (BMS-F-061) are pure logic and can be exercised exhaustively at boundaries
+  without any file or menu involvement. BMS-NF-006 exists so that this is possible.
+- **Integration** — service modules against the real `PersistenceModule` and real files, which is
+  where the atomicity requirements actually live.
+- **System** — end-to-end journeys through the menu.
+- **Acceptance (UAT)** — two journeys: *open an account, deposit, withdraw, check balance*; and
+  *transfer, close an account, run the end-of-day report and reconcile*.
 
-**Types**
+**Types.** Functional · regression on every PR touching a tested module · boundary-value analysis
+(the money and limit requirements are almost entirely boundary conditions) · negative testing ·
+fault injection (BMS-NF-002, BMS-F-050) · performance · security · usability · portability.
 
-- Functional, against the acceptance criterion quoted in the SRS
-- Regression, re-run on every PR that touches a tested module
-- Performance, for PGS-NF-001, PGS-NF-002, PGS-NF-006
-- Security, per section 5.1
-- Usability and accessibility, for PGS-NF-005
-- Concurrency, specifically for PGS-F-004 — two simultaneous confirmations of one slot
+**Entry criteria.** Build compiles clean under `-Wall -Wextra -Werror`; seed data loaded; smoke suite
+green.
 
-**Entry criteria.** Build deploys to the test environment; seed data loaded; notification stub
-reachable; smoke suite green.
+**Exit criteria.** 100% of planned cases executed; zero open critical defects; no open major defect
+against a High-priority requirement; reconciliation passing across the full data set; every RTM row
+at status `A`.
 
-**Exit criteria.** 100% of planned test cases executed; zero open critical defects; no open major
-defect against a High-priority requirement; every RTM row at status `A`; performance targets
-PGS-NF-001 and PGS-NF-002 met on the production-like configuration.
+**Boundary values to test explicitly** — these are where this system will actually fail:
+
+| Requirement | Boundaries |
+|---|---|
+| BMS-F-021 | amount = -1, 0, 1, ceiling-1, ceiling, ceiling+1 |
+| BMS-F-032 | balance after withdrawal = minimum-1, minimum, minimum+1 |
+| BMS-F-033 | overdraft used = limit-1, limit, limit+1 |
+| BMS-F-030, BMS-F-052 | daily total = ceiling-1, ceiling, ceiling+1 |
+| BMS-SR-003 | balance near `INT64_MAX`; deposit that would overflow |
+| BMS-F-041 | account with 0, 9, 10, 11 transactions |
+| BMS-F-042 | range with no entries; range boundaries inclusive on both ends |
 
 ### 5.1 Security validation
 
-Each item traces to a security objective from SRS §5.1.1.
+Each check traces to a security objective from SRS §5.1.1.
 
 | Check | Requirement | Objective |
 |---|---|---|
-| TLS protocol scan and HSTS header inspection | PGS-SR-001 | SO-1 |
-| Database and log inspection for plaintext credentials or tokens | PGS-SR-002 | SO-1 |
-| Horizontal privilege escalation — substitute another user's board id, expect 403 | PGS-SR-003 | SO-1 |
-| Brute-force sign-in and booking flood, expect HTTP 429 | PGS-SR-004 | SO-3 |
-| Stored-XSS payload in a talking point; `javascript:` and `file:` URLs in a biography link | PGS-SR-005 | SO-1 |
-| Attempt UPDATE/DELETE on the audit table as the application role, expect a privilege error | PGS-SR-006 | SO-2 |
-| Fuzzing of outline text, link and duration fields | PGS-SR-005 | SO-1 |
+| Inspect data files for plaintext PIN or password; confirm per-record salt | BMS-SR-001 | SO-1 |
+| Confirm terminal echo disabled and credential buffer zeroed after use | BMS-F-014 | SO-1 |
+| Deposit near `INT64_MAX`; confirm refusal, not wraparound | BMS-SR-003 | SO-3 |
+| Source search for `gets`, `strcpy`, `strcat`, `sprintf`, unbounded `scanf("%s")` | BMS-SR-002 | SO-3 |
+| Over-length name, alphabetic input to amount field, out-of-range menu choice | BMS-SR-004 | SO-3 |
+| Attempt to modify a journal record through any menu path; inspect file open modes | BMS-SR-005 | SO-2 |
+| Confirm data files created owner-only; loosen directory and confirm refusal to start | BMS-SR-006 | SO-1 |
+| Call a Manager-only service function directly with a Teller role, bypassing the menu | BMS-SR-007 | SO-4 |
+| Edit a balance in the data file by hand; confirm reconciliation names the account | BMS-F-061 | SO-2 |
+
+The last two are the ones worth arguing about in a viva: they test that the security property holds
+when the attacker does *not* go through the front door.
 
 ---
 
 ## 6. Test environment
 
-**Software.** Application v1.0 on a Linux host; relational database with the production schema;
-Calendar & Notification Service **stub** exposing the same contract, with an injectable failure
-mode to exercise the PGS-F-042 retry path.
+**Hardware.** Reference machine `<TBC — fix one machine and record its spec; every BMS-NF-001 and
+BMS-PERF result is meaningless without it>`.
 
-**Clients.** Current Chrome, Edge, Firefox and Safari; one mobile viewport.
+**Software.** g++ with `-std=c++17` on Linux, MinGW on Windows. No third-party libraries.
 
-**Tools.** `<TBC — align with the stack the Design Lead settles in the SAD>`. Working assumption:
-Postman for API, JMeter for load, axe-core for accessibility, Jira for defects.
+**Tools.** Manual execution against documented test cases, plus a unit-test harness `<TBC — a
+hand-rolled assert harness is acceptable and avoids a third-party dependency>`. Jira for defect
+tracking. Shell scripts for fault injection (killing the process mid-write) and for the source scan
+in BMS-SR-002.
 
-**Test data.** Two host accounts (one verified, one unverified), four guest accounts, one suspended
-account, published availability spanning a DST boundary, blocked date ranges, and outlines at 1, 30
-and 31 segments to sit either side of the PGS-NF-001 boundary.
+**Test data.** 10,000 synthetic accounts for the capacity soak; a small hand-built set for functional
+work covering: Savings at exactly minimum balance, Current at exactly its overdraft limit, a LOCKED
+account, a CLOSED account, an account at a balance near `INT64_MAX`, and an account with exactly 9,
+10 and 11 journal entries. **No real customer names or identifiers.**
 
 ---
 
@@ -150,30 +153,31 @@ and 31 segments to sit either side of the PGS-NF-001 boundary.
 |---|---|
 | Test plan approved | 15-Sep-2025 |
 | Test case design complete | `<TBC>` |
-| Environment ready | `<TBC>` |
-| Test execution start | `<TBC>` |
-| Test execution end | `<TBC>` |
+| Unit tests alongside Sprint 1 code | `<TBC>` |
+| Integration testing from Sprint 2 | `<TBC>` |
+| System testing | `<TBC>` |
 | UAT | `<TBC>` |
 
-Dates depend on the development schedule the team agrees after the 15 September class.
+Dates follow the sprint plan agreed after 15 September.
 
 ---
 
 ## 8. Test deliverables
 
-Test plan (this document) · test cases · test data set · execution logs · defect reports ·
-requirement coverage report from the RTM · test summary report.
+Test plan (this document) · test cases · unit-test harness and sources · test data generator ·
+execution logs · defect reports · requirement coverage report derived from the RTM · test summary
+report.
 
 ---
 
 ## 9. Roles and responsibilities
 
-| Role | Name | Responsibility |
+| Role | SRN | Responsibility |
 |---|---|---|
-| QA / Test Lead | `<member 3>` | Owns this plan, coordinates execution, signs off exit criteria |
-| Test Engineer | `<member 4>` | Designs and executes test cases, logs defects |
-| Developer | `<member 2>` | Fixes and triages defects, supports environment issues |
-| Requirements Lead | Dhanush S | Arbitrates disputes over what an acceptance criterion means |
+| QA / Test Lead | PES1UG24AM318 | Owns this plan, coordinates execution, signs off exit criteria |
+| Test Engineer | PES1UG24AM334 | Designs and executes cases, logs defects |
+| Developer | PES1UG24AM305 | Fixes and triages defects, maintains the build |
+| Requirements Lead | PES1UG24AM360 | Arbitrates what an acceptance criterion means |
 
 ---
 
@@ -181,54 +185,50 @@ requirement coverage report from the RTM · test summary report.
 
 | Risk | Mitigation |
 |---|---|
-| Concurrency defect in PGS-F-004 is hard to reproduce by hand | Automate the two-client race in the integration suite; do not rely on manual timing |
-| DST boundary bugs surface only twice a year | Freeze system time in tests rather than waiting for a real transition |
-| Notification provider unavailable or rate-limited during testing | Test against the stub by default; treat live-provider runs as a separate, scheduled smoke test |
-| PGS-NF-001 measured on a developer laptop, not production-like hardware | Fix the performance configuration before the first measurement and record it with every result |
-| Test data with real personal details | Use synthetic guests only; no real names or email addresses |
+| Crash-safety (BMS-NF-002) is hard to test by hand | Script the kill: run the transaction under a harness that terminates the process at randomised points, then reconcile. Do not test this manually. |
+| Transfer atomicity failure is silent — money quietly disappears | Reconcile after every integration run, not only when a test fails |
+| Floating point creeps into the money path late in the project | Add the source scan to the build gate in Sprint 1, not at test time |
+| Performance measured on different machines gives incomparable numbers | Fix the reference machine before the first measurement and record it with every result |
+| Sprint 1 delivers no visible feature, so testing feels premature | Unit tests for the money type and journal are written in Sprint 1 — that is exactly when they are cheapest |
 | Team member unavailable near submission | Every role has a named second reviewer in `ROLES.md` |
 
 ---
 
 ## 11. Assumptions and dependencies
 
-- The notification stub is available before execution starts and matches the real provider contract
-- Seed data is loaded and reset between runs
-- The SAD has settled the technology stack before test case design begins
-- Requirement acceptance criteria are frozen once execution starts; a change means a new SRS
-  revision row and a re-run of the affected cases
+- The SAD has settled module boundaries and file formats before integration test design begins
+- BMS-NF-006 holds, so service modules can be linked into a test binary without the CLI
+- Test data is regenerable from a script, so a corrupted run can be reset
+- Acceptance criteria are frozen once execution starts; a change means a new SRS revision row and a
+  re-run of the affected cases
 
 ---
 
 ## 12. Suspension and resumption criteria
 
-**Suspend** when the environment is unavailable for more than 4 hours, when a build blocks more than
-30% of planned cases, or when a critical security defect (SO-1 or SO-2) is open.
+**Suspend** when the build does not compile, when reconciliation fails on clean data (which
+invalidates every other result), or when a critical defect against SO-1 or SO-2 is open.
 
-**Resume** when the blocking defect is fixed and verified, the environment is stable, and the smoke
-suite passes.
+**Resume** when the blocking defect is fixed and verified and the smoke suite passes.
 
 ---
 
 ## 13. Test case management and traceability
 
-The RTM in SRS section 8 is the single coverage record — it is not duplicated here. A requirement is
-covered only when its row names at least one `TC-` id and that case has been executed.
+The RTM (`docs/RTM.md`, mirrored in SRS §8) is the single coverage record and is not duplicated here.
+A requirement counts as covered only when its row names at least one `TC-` id **and** that case has
+been executed with a result.
 
-Examples:
-
-- `PGS-F-004` (atomic slot re-validation) → `TC-SCH-04`
-- `PGS-F-033` (PDF export) → `TC-ROS-04`, and `PGS-NF-001` (latency) → `TC-PERF-01`
-- `PGS-SR-003` (server-side authorisation) → `TC-SEC-03`
+Examples: `BMS-F-050` → `TC-TRF-01` · `BMS-NF-002` → `TC-REL-01` · `BMS-SR-003` → `TC-SEC-03`.
 
 ---
 
 ## 14. Test metrics and reporting
 
-**Metrics.** Test cases executed (%) · passed/failed (%) · requirement coverage from the RTM ·
-defect density by module · defect aging · defects reopened.
+**Metrics.** Cases executed (%) · passed/failed (%) · requirement coverage from the RTM · defect
+density by module · defect aging · defects reopened · compiler warnings (target: zero).
 
-**Reports.** Execution status at each stand-up; a coverage report when execution ends; a final test
+**Reports.** Execution status at each stand-up · coverage report at end of execution · final test
 summary report submitted with the project.
 
 ---

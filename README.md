@@ -1,27 +1,28 @@
-# Podcast Guest Scheduling & Outline Builder
+# Bank Management System
 
 **PES University — Dept. of CSE · Software Engineering Mini Project**
-**Problem Statement #60 — Media, Events & Community**
+**Team 11 · Implementation language: C / C++**
 
-A media production organizer that lets podcast hosts publish booking availability, collect guest
-talking-point outlines, and generate timestamped run-of-show episode production notes.
+A system handling core banking operations — deposit, withdrawal, balance inquiry, funds transfer —
+together with the customer and account records, the append-only ledger and the audit trail that make
+every balance explicable.
 
-> **Scenario source:** Problem Statement #60, from the *Scenarios for LAB 1-3* pack. This repository
-> continues the same system modelled in Lab 1 (requirements + use cases) and Lab 2 (Jira backlog),
-> so every artefact here traces back to a numbered Lab 1 requirement.
+> **Scope note.** This is the *bank-side* system. ATM terminal hardware and self-service kiosk
+> interfaces, inter-bank settlement (NEFT/RTGS/UPI), cheque clearing, loans and card issuance are
+> explicitly out of scope — see [`docs/SRS.md`](docs/SRS.md) §1.2.
 
 ---
 
 ## Team & roles
 
-| Role | Member | SRN | Owns |
-|---|---|---|---|
-| Requirements Lead / Repo Maintainer | Dhanush S | PES1UG24AM360 | SRS, RTM, branch protection, merges |
-| Design Lead | _<member 2>_ | _<SRN>_ | SAD, UML class & sequence diagrams, API design |
-| QA / Test Lead | _<member 3>_ | _<SRN>_ | Test Plan, test cases, defect triage |
-| Jira & Traceability Lead | _<member 4>_ | _<SRN>_ | Jira backlog, sprint board, requirement-to-story mapping |
+| Role | SRN | Owns |
+|---|---|---|
+| Requirements Lead / Repo Maintainer | PES1UG24AM360 (Dhanush S) | SRS, RTM, branch protection, merges |
+| Design Lead | PES1UG24AM305 | SAD, UML class & sequence diagrams, API/module design |
+| QA / Test Lead | PES1UG24AM318 | Test Plan, test cases, defect triage |
+| Jira & Traceability Lead | PES1UG24AM334 | Jira backlog, sprint board, requirement→story mapping |
 
-Full responsibility breakdown: [`ROLES.md`](ROLES.md).
+Full responsibility breakdown: [`ROLES.md`](ROLES.md). **Names and GitHub handles still to be filled in.**
 
 ---
 
@@ -29,9 +30,22 @@ Full responsibility breakdown: [`ROLES.md`](ROLES.md).
 
 | # | Deliverable | Due | Status |
 |---|---|---|---|
-| 1 | Project SRS · Jira update started | **6 September 2025** | Drafted — [`docs/SRS.md`](docs/SRS.md) · [`.docx`](docs/SRS_Podcast_Guest_Scheduling_v1.0.docx) |
-| 2 | Project Test Plan · complete Jira backlog | **15 September 2025** | Skeleton — [`docs/Test_Plan.md`](docs/Test_Plan.md) |
+| 1 | Project SRS · Jira update started | **6 September 2025** | Drafted — [`docs/SRS.md`](docs/SRS.md) · [`.docx`](docs/SRS_Bank_Management_System_v1.0.docx) |
+| 2 | Project Test Plan · complete Jira backlog | **15 September 2025** | Draft — [`docs/Test_Plan.md`](docs/Test_Plan.md), [`docs/Jira_Backlog.md`](docs/Jira_Backlog.md) |
 | — | Software Architecture & Design (SAD) | template supplied, date TBC | Not started |
+
+---
+
+## What's in the SRS
+
+| Template minimum | Delivered |
+|---|---|
+| ≥ 15 functional requirements | **29** (`BMS-F-001`…`064`, seven feature areas) |
+| ≥ 5 non-functional requirements | **7** (`BMS-NF-001`…`007`) |
+| ≥ 2 security objectives | **4** (`SO-1`…`SO-4`) |
+| ≥ 5 security requirements | **7** (`BMS-SR-001`…`007`) |
+| ≥ 2 UML use-case diagrams | **2** — 18 use cases, 8 `«include»`, 2 `«extend»` |
+| RTM | **43 rows**, every one naming a test case |
 
 ---
 
@@ -39,69 +53,64 @@ Full responsibility breakdown: [`ROLES.md`](ROLES.md).
 
 ```
 ├── docs/
-│   ├── SRS.md                                   # SRS, reviewable + diffable
-│   ├── SRS_Podcast_Guest_Scheduling_v1.0.docx   # submission copy, template-styled
-│   ├── Test_Plan.md                             # due 15 Sep
-│   ├── Jira_Backlog.md                          # epics, stories, sprint plan
-│   └── RTM.md                                   # requirement -> module -> test case
+│   ├── SRS.md                                # SRS, reviewable + diffable
+│   ├── SRS_Bank_Management_System_v1.0.docx  # submission copy, template-styled
+│   ├── RTM.md                                # requirement → module → test case
+│   ├── Test_Plan.md                          # due 15 Sep
+│   └── Jira_Backlog.md                       # epics, stories, sprint plan
 ├── diagrams/
-│   ├── UseCase_1_Scheduling.{svg,png,pdf}
-│   └── UseCase_2_Production.{svg,png,pdf}
-├── templates/                                   # instructor templates, unmodified
+│   ├── UseCase_1_Transactions.{svg,png,pdf}
+│   └── UseCase_2_Administration.{svg,png,pdf}
+├── templates/                                # instructor templates, unmodified
 └── tools/
-    ├── srs_content.py                           # single source of truth for the SRS
-    ├── build_srs.py                             # renders SRS.md + .docx
-    └── make_diagrams.py                         # renders both use-case diagrams
+    ├── srs_content.py                        # single source of truth for the SRS
+    ├── build_srs.py                          # renders SRS.md + RTM.md + .docx
+    └── make_diagrams.py                      # renders both use-case diagrams
 ```
 
 ---
 
 ## Rebuilding the documents
 
-The Markdown and the Word document are generated from one source
-(`tools/srs_content.py`), so they cannot disagree. Edit the source, never the outputs.
+`docs/SRS.md`, `docs/RTM.md` and the `.docx` are **generated** from `tools/srs_content.py`, so they
+cannot disagree with each other. Edit the source, never the outputs.
 
 ```bash
 pip install python-docx cairosvg
-python tools/make_diagrams.py    # diagrams first, the SRS embeds them
-python tools/build_srs.py        # -> docs/SRS.md + docs/SRS_...v1.0.docx
+python tools/make_diagrams.py    # diagrams first — the SRS embeds them
+python tools/build_srs.py        # -> docs/SRS.md, docs/RTM.md, docs/SRS_...v1.0.docx
 ```
 
-To produce a PDF of the SRS, open the `.docx` in Word and **File ▸ Export ▸ Create PDF/XPS**.
+For a PDF of the SRS, open the `.docx` in Word and **File ▸ Export ▸ Create PDF/XPS**.
 
 ---
 
-## Traceability chain
-
-The property a grader checks is that nothing is invented from nowhere. Every requirement walks
-back to the assigned problem statement:
-
-```
-PS #60 supplied FR-001 / NFR-001
-      ↓
-Lab 1   FR-001..005, NFR-001..002, UC-01..05 (+ «include» / «extend»)
-      ↓
-Lab 2   Epics 1-4, 11 user stories, 55 points, 2 sprints
-      ↓
-Mini project   PGS-F-001..052 (23) · PGS-NF-001..007 (7) · PGS-SR-001..006 (6)
-      ↓
-RTM     requirement -> design spec -> module -> test case -> status
-```
-
-Requirements new to the mini project (not carried from Lab 1) are marked
-`New in mini project` in the RTM Comments column, so the additions are visible rather than
-smuggled in.
-
-### Requirement ID scheme
+## Requirement ID scheme
 
 | Prefix | Meaning | Range |
 |---|---|---|
-| `PGS-F-###` | Functional requirement | 001–052 |
-| `PGS-NF-###` | Non-functional requirement | 001–007 |
-| `PGS-SR-###` | Security requirement | 001–006 |
-| `UC-##` | Use case | 01–15 |
-| `TC-XXX-##` | Test case | by suite |
-| `SO-#` | Security objective | 1–3 |
+| `BMS-F-###` | Functional requirement | 001–064, numbered in blocks of ten per feature area |
+| `BMS-NF-###` | Non-functional requirement | 001–007 |
+| `BMS-SR-###` | Security requirement | 001–007 |
+| `SO-#` | Security objective | 1–4 |
+| `UC-##` | Use case | 01–18 |
+| `TC-XXX-##` | Test case | by suite (`ACC`, `AUT`, `DEP`, `WDR`, `BAL`, `TRF`, `LED`, `PERF`, `REL`, `SEC`, `UX`, `PORT`) |
+
+Blocks of ten leave room to insert a requirement into a feature area later without renumbering
+everything after it — which would otherwise invalidate every cross-reference in the RTM.
+
+---
+
+## Three decisions worth knowing before you read the code
+
+1. **Money is `int64_t` paise, never `float` or `double`** (`BMS-NF-003`, `BMS-SR-003`). Binary
+   floating point cannot represent decimal currency exactly. Every addition and subtraction is
+   overflow-checked before it happens and refuses rather than wrapping.
+2. **The journal is append-only** (`BMS-F-060`, `BMS-SR-005`). There is no code path that rewrites an
+   existing record. `BMS-F-061` reconciles balances against it, so tampering is detected rather than
+   absorbed.
+3. **Role checks live in the service layer, not the menu** (`BMS-SR-007`). A menu that hides an option
+   is a convenience; it is not a security boundary.
 
 ---
 

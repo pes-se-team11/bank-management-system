@@ -2,10 +2,11 @@
 
 # Software Requirements Specification (SRS)
 
-**Project:** Podcast Guest Scheduling & Outline Builder  
-**Problem Statement:** #60 - Media, Events & Community  
+**Project:** Bank Management System  
+**Team:** Team 11  
+**Implementation language:** C / C++  
 **Version:** 1.0  
-**Authors:** Dhanush S (PES1UG24AM360); <Team member 2> (<SRN>); <Team member 3> (<SRN>); <Team member 4> (<SRN>)  
+**Authors:** <Name> (PES1UG24AM305); <Name> (PES1UG24AM318); <Name> (PES1UG24AM334); Dhanush S (PES1UG24AM360)  
 **Date:** 05-09-2025  
 **Status:** Draft - for review
 
@@ -13,16 +14,16 @@
 
 | Version | Date | Author | Change summary | Approval |
 |---|---|---|---|---|
-| 0.1 | 02-09-2025 | Dhanush S | Skeleton raised from the Lab 1 requirements table and Lab 2 backlog | Draft |
-| 1.0 | 05-09-2025 | Mini-project team | Full SRS: 23 FRs, 7 NFRs, 3 security objectives, 6 security requirements, 2 use-case diagrams, RTM | Pending review |
+| 0.1 | 04-09-2025 | Requirements Lead | Skeleton raised against the SRS template; scope and actor set agreed by the team | Draft |
+| 1.0 | 05-09-2025 | Team 11 | Full SRS: 29 FRs, 7 NFRs, 4 security objectives, 7 security requirements, 2 use-case diagrams, 43-row RTM | Pending review |
 
 ## Approvals
 
 | Role | Name | Signature / Email | Date |
 |---|---|---|---|
 | Course Coordinator |  |  |  |
-| Requirements Lead | Dhanush S |  |  |
-| QA / Test Lead | <Team member 3> |  |  |
+| Requirements Lead | Dhanush S (PES1UG24AM360) |  |  |
+| QA / Test Lead | PES1UG24AM318 |  |  |
 
 ## Table of Contents
 
@@ -39,268 +40,302 @@
 
 1.1 Purpose
 
-This document is the Software Requirements Specification for the Podcast Guest Scheduling & Outline Builder, the system defined by Problem Statement #60 (Media, Events & Community). It states the functional and non-functional requirements, the external interfaces, the security objectives and the verification criteria that the mini-project team will build and test against. It is the contract between the requirements captured in Lab 1, the backlog planned in Lab 2, and the design and test artefacts that follow.
+This document is the Software Requirements Specification for the Bank Management System built by Team 11. It states the functional and non-functional requirements, the external interfaces, the security objectives and the verification criteria for a system that handles core banking operations - deposit, withdrawal, balance inquiry, funds transfer and the account records behind them. It is the reference against which the C/C++ implementation, the design document and the test plan are written and assessed.
 
 1.2 Scope
 
-The system lets a Show Host publish recording availability, lets a Podcast Guest reserve a conflict-free interview slot and submit a structured talking-point outline, lets the Host vet that outline, and generates a timestamped run-of-show production sheet exportable as PDF. Calendar invites and reminders are dispatched through an external Calendar & Notification Service.  
-Out of scope: audio or video recording, editing and hosting; payment or sponsorship management; transcript generation; publishing to podcast directories; and the internal implementation of the external calendar and email providers, which are consumed only through their published APIs.
+The system maintains customer and account records for a single bank branch and performs the transactions against them: opening and closing accounts, authenticating operators, accepting deposits, paying out withdrawals within the applicable limits, transferring funds between accounts held at the bank, answering balance and statement queries, and keeping the ledger and audit trail that make every balance explicable.  
+This is the bank-side system. Explicitly out of scope: ATM terminal hardware and self-service kiosk interfaces; inter-bank settlement (NEFT, RTGS, UPI); cheque clearing; loan origination and interest accrual; card issuance and EMV processing; internet and mobile banking front-ends; and statutory reporting to the central bank. Where an out-of-scope channel would ordinarily feed the bank, its transactions are assumed to arrive through the Teller interface.
 
 1.3 Audience
 
-Mini-project developers, QA engineers, the course coordinator and evaluators, and any team member joining the repository later and needing the authoritative requirement set.
+The Team 11 developers implementing the system in C/C++, the QA lead writing and executing the test plan, the course coordinator and evaluators assessing the deliverable, and any team member picking up an unfamiliar module later in the project.
 
 1.4 Definitions
 
-Episode board - the per-booking workspace holding the guest outline, host notes and generated run-of-show.  
-Run-of-show - the ordered, timestamped list of segments the episode is recorded from.  
-Slot - a bookable interval inside a published availability window.  
-Talking point - one guest-supplied bullet of discussion material.  
-Acronyms: SRS (Software Requirements Specification), FR (Functional Requirement), NFR (Non-Functional Requirement), RTM (Requirements Traceability Matrix), UC (Use Case), TLS (Transport Layer Security), HSTS (HTTP Strict Transport Security), IANA (Internet Assigned Numbers Authority), RBAC (Role-Based Access Control), WCAG (Web Content Accessibility Guidelines), DST (Daylight Saving Time), UTC (Coordinated Universal Time), SO (Security Objective), UAT (User Acceptance Testing).
+Account - a ledger position held by a customer, of type Savings or Current, in one of the states ACTIVE, LOCKED or CLOSED.  
+Journal (transaction journal) - the append-only record of every balance-changing operation.  
+Audit log - the append-only record of every privileged, non-monetary action.  
+Paise - the smallest currency unit; all monetary values are stored as integer paise so that no rounding error can arise.  
+Reconciliation - the check that an account's balance equals its opening balance plus the sum of its journal entries.  
+Minimum balance - the floor a Savings account may not be taken below by a withdrawal.  
+Overdraft - a sanctioned limit by which a Current account may go negative.  
+Session - the period between a successful authentication and the operator signing out.  
+Acronyms: SRS (Software Requirements Specification), FR (Functional Requirement), NFR (Non-Functional Requirement), SR (Security Requirement), SO (Security Objective), RTM (Requirements Traceability Matrix), UC (Use Case), TC (Test Case), CLI (Command Line Interface), PIN (Personal Identification Number), RBAC (Role-Based Access Control), I/O (Input/Output), UAT (User Acceptance Testing).
 
 ## 2. Overall description
 
 2.1 Product perspective
 
-The product is a new, self-contained web application. It is not a replacement for an existing system. It sits between two human parties who today coordinate by email, and it depends on one external system boundary: a Calendar & Notification Service that delivers iCalendar invites, confirmations and reminders. That service is modelled as a supporting actor rather than as an internal component, because the acceptance criteria of the supplied FR-001 require a calendar invite to be sent, which places the delivery mechanism outside the system boundary.
+The product is a new, self-contained console application, delivered as a single executable built from C/C++ sources and persisting its data in local files. It is not a component of a larger system and it consumes no external service. It replaces manual ledgers and spreadsheets at a single branch counter.  
+The absence of a network is the defining architectural fact about this system. It removes an entire class of threats, and in exchange it places the whole of the confidentiality obligation on operating-system file permissions and on how credentials are stored at rest, which is why section 5.1 is weighted towards those concerns rather than towards transport security.
 
 2.2 Major product functions (detailed)
 
-- Publish and block Host recording availability  
-- Present and reserve conflict-free interview slots  
-- Reschedule a confirmed booking  
-- Submit, draft and revise a structured talking-point outline  
-- Attach biography and reference links to an outline  
-- Review, approve, reject and reorder submitted talking points  
-- Insert host-authored segments into the running order  
-- Generate a timestamped run-of-show and recompute it on edit  
-- Export the run-of-show as a formatted PDF production sheet  
-- Dispatch calendar invites, confirmations and 24-hour reminders  
-- Authenticate users and restrict episode boards to their two participants  
-- Administer accounts and inspect the audit log
+- Create customer records and open Savings or Current accounts against them  
+- Modify customer contact details, with the previous value retained  
+- Close an account, transferring any residual balance out first  
+- Authenticate customers by PIN and staff by password, and lock an account after repeated failures  
+- Enforce role-based authorisation across Customer, Teller and Manager  
+- Accept deposits and pay out withdrawals within balance, minimum-balance, overdraft and daily limits  
+- Transfer funds between two accounts held at the bank, atomically  
+- Answer balance inquiries and produce mini-statements and date-range statements  
+- Append every balance change to a transaction journal and every privileged action to an audit log  
+- Reconcile stored balances against the journal and detect tampering  
+- Generate the end-of-day report and let a Manager inspect the audit log
 
 2.3 User roles and characteristics (expanded)
 
-- Podcast Guest: an invited interviewee, often non-technical and in a different timezone from the Host. Interacts with the system a handful of times per episode and must be able to book and submit material without training or an account tutorial.  
-- Show Host: the producer of the show. The heaviest user, returning weekly, and the only role that publishes availability, approves content and generates the production sheet.  
-- Administrator: operates the deployment. Suspends abusive accounts and reads the audit log. Does not read episode content in the normal course of duty.  
-- Calendar & Notification Service: supporting system actor. Accepts delivery requests and reports success or failure; has no user interface within this system.
+- Customer: an account holder, of no assumed technical skill, authenticating with an account number and PIN. Operates only on their own accounts and only through the menu. Uses the system occasionally and needs every prompt and refusal to be self-explanatory.  
+- Bank Teller: counter staff, the heaviest user of the system, working through it continuously during banking hours. Opens accounts, records customer detail changes and performs transactions on a customer's behalf. Values speed of entry and unambiguous error messages over guidance.  
+- Bank Manager: supervisory staff, accountable for the branch reconciling at end of day. Closes accounts, unlocks locked accounts, runs the end-of-day report and inspects the audit log. Uses the system briefly but holds its most dangerous privileges, which is why those privileges are separated in BMS-F-012.  
+There are no system actors. The system integrates with nothing, so every actor in section 7 is a human operator.
 
 2.4 Operating environment
 
-Server: a Linux host running the application server and a relational database, reachable over HTTPS. Client: current versions of Chrome, Edge, Firefox and Safari on desktop and mobile; no installed client software. The system must operate correctly for users in different IANA timezones simultaneously, including across daylight-saving transitions.
+A desktop or laptop computer running Windows or Linux, operated from a terminal. Built with g++ targeting C++17, using MinGW on Windows, with no dependency beyond the C++ standard library and the platform C runtime. Data is held in files in a single data directory alongside the executable.  
+The system is designed for single-instance operation. Two instances running against one data directory would race on the account file, so a lock file prevents the second from starting.
 
 2.5 Constraints
 
-- The PDF export latency target of under one second is fixed by the supplied NFR-001 and constrains the choice of PDF library and the decision to render server-side.  
-- All timestamps are stored in UTC; local time is a presentation concern only.  
-- Episode boards are private to two named parties, which rules out shareable unguessable-link access as the sole protection and requires authenticated authorisation.  
-- Calendar delivery is best-effort through a third-party provider; the system owns retry and audit, not delivery itself.  
-- The project is delivered by a four-member student team inside one semester, which bounds the architecture to a single deployable application rather than a distributed service estate.
+- The implementation language is fixed to C/C++ by the course, and no third-party library may be used; this rules out an embedded database and makes the file format and its crash-safety the team's own responsibility.  
+- No network interface may be assumed, so confidentiality rests on file permissions rather than on transport security.  
+- Monetary values must be integer paise. Floating point is prohibited in the money path, because binary floating point cannot represent decimal currency exactly and a bank that mis-rounds is worthless.  
+- Only one instance may run against a data directory at a time, enforced by a lock file.  
+- The system is delivered by four students within one semester, which bounds it to a single console application with file persistence rather than a client-server deployment.
 
 ## 3. External interface requirements
 
 3.1 User interfaces
 
-A responsive web UI with three surfaces: a public booking page reachable by link without an account, an authenticated episode board shared by Host and Guest, and a Host console for availability, review and run-of-show generation. All slot times are rendered in the viewer's local timezone with the timezone abbreviation shown explicitly. Booking and submission flows conform to WCAG 2.1 Level AA per PGS-NF-005.
+A menu-driven text console. The menu presented is determined by the authenticated role, so a Customer is never shown an operation they cannot perform - the menu is a convenience, not the security boundary, which is stated in BMS-SR-007. PIN and password entry is not echoed to the terminal (BMS-F-014). Every rejection states the reason and the corrective action on one line and returns the operator to the menu rather than terminating (BMS-NF-005). Output is formatted for an 80-column terminal so that statements and reports remain aligned on a default console.
 
 3.2 Hardware interfaces
 
-None. The system requires no special-purpose hardware and interacts with no peripheral devices. It runs on commodity server hardware or a cloud virtual machine and is reached from standard personal computing devices.
+None beyond a standard keyboard and character display. The system drives no card reader, cash dispenser, deposit acceptor or receipt printer; those belong to the ATM channel, which section 1.2 places out of scope. Where a printed record is needed, the system writes a formatted text file that the operator may print through the operating system.
 
 3.3 Software interfaces
 
-- Calendar & Notification Service API: outbound HTTPS/JSON. Send iCalendar (RFC 5545) invites, confirmations and reminders; returns a per-message delivery status consumed by PGS-F-042.  
-- Relational database: bookings, outlines, approvals and the append-only audit log. The unique constraint that makes PGS-F-004 correct lives here.  
-- PDF rendering library: server-side, invoked by ExportService under the PGS-NF-001 latency budget.  
-- IANA time zone database: timezone rules for PGS-NF-007.
+The system calls no external service API. Its software interfaces are:  
+- The host filesystem, holding the account file, the append-only transaction journal, the audit log, the configuration file and the instance lock file.  
+- The C++17 standard library, for I/O, containers and time.  
+- The operating system, for two facilities the standard library does not provide portably: disabling terminal echo during credential entry, and setting owner-only file permissions (BMS-SR-006). Both are confined to a single portability header, per BMS-NF-004.
 
 3.4 Communications
 
-HTTPS with TLS 1.2 or higher for all browser and API traffic, with HSTS enforced (PGS-SR-001). Outbound notification calls retry with exponential backoff to a maximum of three attempts, after which a permanent failure is written to the audit log rather than silently dropped.
+None. The system performs no network input or output, opens no socket and listens on no port. This is a deliberate scope decision rather than an omission: it eliminates spoofing, man-in-the-middle and remote denial-of-service from the threat model, and concentrates the remaining risk on local file access and on the integrity of the stored ledger, which security objectives SO-1 and SO-2 address directly.
 
 ## 4. System features (detailed)
 
-Each requirement below carries an acceptance criterion and a reference test case. IDs follow PGS-F-###. The Source column names the originating stakeholder and, where the requirement was carried forward, the Lab 1 requirement or Lab 1 use-case relationship it derives from.
+Each requirement below carries an acceptance criterion and a reference test case. IDs follow BMS-F-###, numbered in blocks of ten by feature area so that a requirement can be added to a block later without renumbering the rest. The Source column names the stakeholder the requirement answers to.
 
-### 4.1 Availability & Scheduling
+### 4.1 Customer & Account Management
 
-Description: A Show Host declares when they are free to record; a Podcast Guest reserves one of those times and is guaranteed it is conflict-free. This section carries the scheduling half of the supplied FR-001 and all of FR-002.
-
-| Req ID | Requirement (shall...) | Type | Priority | Source/Stakeholder | Acceptance criteria / Test case ref | Comments / Dependencies |
-|---|---|---|---|---|---|---|
-| PGS-F-001 | The system shall allow a Show Host to publish recurring weekly availability windows, each with a start time, end time and IANA timezone. | Functional | High | Show Host / FR-002 (Lab 1) | AC-PGS-F-001: A published window appears on the guest booking page in the guest local timezone. Test: TC-SCH-01 | Timezone data from IANA tzdb; depends on PGS-NF-007 |
-| PGS-F-002 | The system shall allow a Show Host to mark specific dates or date ranges as blocked, overriding any recurring window that falls inside them. | Functional | High | Show Host / FR-002 (Lab 1) | AC-PGS-F-002: No bookable slot is offered on a blocked date; booking on a blocked date is rejected. Test: TC-SCH-02 | Realises the Fail condition of the supplied FR-001 |
-| PGS-F-003 | The system shall present a Podcast Guest only those slots that are inside a published window, not blocked, and not already reserved. | Functional | High | Podcast Guest / FR-001 (Lab 1) | AC-PGS-F-003: The slot list excludes blocked and reserved slots for every query. Test: TC-SCH-03 | Read path over PGS-F-001, PGS-F-002, PGS-F-004 |
-| PGS-F-004 | The system shall re-validate slot availability inside a single atomic transaction at the moment the Guest confirms, and reject the booking if the slot was taken in the interim. | Functional | High | Podcast Guest / UC-01 include | AC-PGS-F-004: Two concurrent confirmations for one slot yield exactly one booking and one rejection with a retry prompt. Test: TC-SCH-04 | Requires a DB unique constraint on (host_id, slot_start) |
-| PGS-F-005 | The system shall allow a Podcast Guest to release a confirmed slot and select a different one up to 24 hours before the scheduled start. | Functional | Low | Podcast Guest / UC-01 extend | AC-PGS-F-005: Reschedule succeeds at more than 24h and is refused with an explanatory message at 24h or less. Test: TC-SCH-05 | Triggers re-issue of the calendar invite (PGS-F-040) |
-
-### 4.2 Guest Content Submission
-
-Description: A Podcast Guest supplies the discussion material for the episode, so the Host can prepare around what the guest actually wants to cover. This section carries the outline half of the supplied FR-001.
+Description: Creation and lifecycle of customers and their accounts, from opening through modification to closure. This section owns the identifiers every other section depends on.
 
 | Req ID | Requirement (shall...) | Type | Priority | Source/Stakeholder | Acceptance criteria / Test case ref | Comments / Dependencies |
 |---|---|---|---|---|---|---|
-| PGS-F-010 | The system shall allow a Podcast Guest to submit an ordered list of structured bullet-point talking points, each up to 280 characters. | Functional | High | Podcast Guest / FR-001 (Lab 1) | AC-PGS-F-010: Submitted points persist in the order given; a point over 280 characters is rejected at input. Test: TC-OUT-01 | Ordering is user-controlled, not alphabetical |
-| PGS-F-011 | The system shall allow a Podcast Guest to attach biography and reference links, accepting only well-formed absolute http or https URLs. | Functional | Low | Podcast Guest / UC-02 extend | AC-PGS-F-011: A valid https URL is stored; javascript:, file: and relative URLs are rejected. Test: TC-OUT-02 | Optional per the extend relationship; see PGS-SR-005 |
-| PGS-F-012 | The system shall persist an outline as an editable draft and allow the Guest to revise it until the Host records an approval decision. | Functional | Medium | Podcast Guest | AC-PGS-F-012: A draft survives sign-out and sign-in; edits are refused once the outline is approved. Test: TC-OUT-03 | State machine: DRAFT to SUBMITTED to APPROVED or REJECTED |
-| PGS-F-013 | The system shall attach the submitted outline to the episode board of the booking it belongs to. | Functional | High | Show Host / FR-001 (Lab 1) | AC-PGS-F-013: Opening the episode board shows the booking and its outline together. Test: TC-OUT-04 | Realises the Pass condition of the supplied FR-001 |
+| BMS-F-001 | The system shall create a customer record capturing name, address, contact number and government ID reference, and shall assign a unique customer ID that is never reused. | Functional | High | Bank Teller / Business | AC-BMS-F-001: A new customer receives an ID unused by any existing or closed record. Test: TC-ACC-01 | Customer ID is the key used by BMS-F-002 |
+| BMS-F-002 | The system shall open a Savings or Current account against an existing customer ID, assign a unique account number, and set the opening balance to the amount deposited at opening. | Functional | High | Bank Teller / Business | AC-BMS-F-002: The account is created in ACTIVE state with the stated type and balance. Test: TC-ACC-02 | Account type drives BMS-F-032 and BMS-F-033 |
+| BMS-F-003 | The system shall allow a Bank Teller to modify a customer's address and contact number, recording both the previous and the new value. | Functional | Medium | Bank Teller | AC-BMS-F-003: The change succeeds and an audit entry holds the old and the new value. Test: TC-ACC-03 | Name and ID reference are not editable; audit via BMS-F-063 |
+| BMS-F-004 | The system shall close an account only when its balance is zero, shall set its state to CLOSED, and shall reject every subsequent transaction on it. | Functional | High | Bank Manager / Business | AC-BMS-F-004: Closure at zero balance succeeds; a later deposit to that account is refused. Test: TC-ACC-04 | Non-zero balances are handled by BMS-F-006 |
+| BMS-F-005 | The system shall retrieve an account by account number, and shall list every account belonging to a given customer ID. | Functional | Medium | Bank Teller / Customer | AC-BMS-F-005: Both lookups return the correct records; an unknown key returns a not-found message rather than a crash. Test: TC-ACC-05 | Read path used by every transaction module |
+| BMS-F-006 | The system shall, where closure is requested on an account holding a non-zero balance, transfer the residual to a nominated ACTIVE account before performing the closure. | Functional | Medium | Bank Manager / Business | AC-BMS-F-006: The residual is moved, the source reaches zero, and closure then succeeds, all as one unit. Test: TC-ACC-06 | Extension of BMS-F-004; reuses BMS-F-050 |
 
-### 4.3 Host Review & Approval
+### 4.2 Authentication & Access Control
 
-Description: The Show Host vets submitted material before it reaches the production sheet, and every decision is attributable after the fact.
-
-| Req ID | Requirement (shall...) | Type | Priority | Source/Stakeholder | Acceptance criteria / Test case ref | Comments / Dependencies |
-|---|---|---|---|---|---|---|
-| PGS-F-020 | The system shall allow a Show Host to approve, reject or reorder each submitted talking point individually. | Functional | Medium | Show Host / FR-004 (Lab 1) | AC-PGS-F-020: Each point carries an independent decision; reordering persists across sessions. Test: TC-REV-01 | Only approved points reach PGS-F-030 |
-| PGS-F-021 | The system shall require a non-empty comment when a Show Host rejects a talking point, and shall return that comment to the Guest. | Functional | Medium | Show Host / FR-004 (Lab 1) | AC-PGS-F-021: Rejection without a comment is refused; the Guest sees the comment on the rejected point. Test: TC-REV-02 | Notification delivered by PGS-F-042 |
-| PGS-F-022 | The system shall allow a Show Host to insert host-authored segments (intro, sponsor read, outro) at any position in the running order. | Functional | Medium | Show Host | AC-PGS-F-022: A host segment appears at the chosen position and is timed like any other segment. Test: TC-REV-03 | Host segments bypass the approval state machine |
-| PGS-F-023 | The system shall record every approval, rejection and reorder action in an append-only audit trail with actor, timestamp and previous value. | Functional | High | Assessment / Security | AC-PGS-F-023: Each decision produces exactly one immutable audit record. Test: TC-REV-04 | Supports SO-2; storage governed by PGS-SR-006 |
-
-### 4.4 Run-of-Show Generation & Export
-
-Description: Approved material becomes the timestamped running order the episode is recorded from, and the PDF production sheet handed to the producer.
+Description: Establishing who the operator is and what their role permits. Successful authentication is a precondition of every operation in sections 4.3 to 4.7.
 
 | Req ID | Requirement (shall...) | Type | Priority | Source/Stakeholder | Acceptance criteria / Test case ref | Comments / Dependencies |
 |---|---|---|---|---|---|---|
-| PGS-F-030 | The system shall generate a run-of-show sheet containing every approved talking point and host segment in running order, each with a planned duration. | Functional | High | Show Host / FR-003 (Lab 1) | AC-PGS-F-030: The generated sheet contains all approved segments and no rejected ones. Test: TC-ROS-01 | Default duration 5 minutes per segment |
-| PGS-F-031 | The system shall compute a cumulative start timestamp for each segment from the episode start time and the sum of the preceding durations. | Functional | High | Show Host / FR-003 (Lab 1) | AC-PGS-F-031: Segment n starts at episode_start plus the sum of durations 1..n-1, accurate to the second. Test: TC-ROS-02 | Pure function; unit-testable in isolation |
-| PGS-F-032 | The system shall allow a Show Host to edit any segment duration and shall recompute all downstream timestamps on save. | Functional | Medium | Show Host | AC-PGS-F-032: Changing segment 2 shifts segments 3..n by the delta and leaves segment 1 unchanged. Test: TC-ROS-03 | Recomputation reuses PGS-F-031 |
-| PGS-F-033 | The system shall export the run-of-show as a formatted PDF production sheet carrying the episode title, date, guest name and timed segment table. | Functional | High | Show Host / NFR-001 (Lab 1) | AC-PGS-F-033: The PDF opens in a standard reader and contains every field listed. Test: TC-ROS-04 | Latency budget defined in PGS-NF-001 |
+| BMS-F-010 | The system shall authenticate the operator by account number and PIN for customers, or staff ID and password for Tellers and Managers, before permitting any operation. | Functional | High | Security / Business | AC-BMS-F-010: Correct credentials open a session; incorrect credentials are refused without revealing which field was wrong. Test: TC-AUT-01 | Credential storage governed by BMS-SR-001 |
+| BMS-F-011 | The system shall lock an account after three consecutive failed PIN attempts and shall record an audit event naming the account and the time. | Functional | High | Security | AC-BMS-F-011: The fourth attempt is refused as LOCKED even when the PIN is correct. Test: TC-AUT-02 | Cleared only by BMS-F-013 |
+| BMS-F-012 | The system shall enforce role-based authorisation, restricting account opening and customer modification to Tellers, and closure, unlocking and reporting to Managers. | Functional | High | Security / Business | AC-BMS-F-012: A Teller requesting an end-of-day report is refused; a Manager succeeds. Test: TC-AUT-03 | Checked at the service layer per BMS-SR-007 |
+| BMS-F-013 | The system shall allow a Bank Manager to unlock a locked account, resetting the failed-attempt counter to zero and writing an audit entry. | Functional | Medium | Bank Manager | AC-BMS-F-013: After unlocking, the correct PIN authenticates and the counter reads zero. Test: TC-AUT-04 | Reverses BMS-F-011 |
+| BMS-F-014 | The system shall not echo a PIN or password to the terminal as it is typed, and shall overwrite the credential in memory once the comparison is complete. | Functional | High | Security | AC-BMS-F-014: Terminal echo is disabled during entry and the buffer is zeroed after use. Test: TC-SEC-02 | Implements part of BMS-SR-001 |
 
-### 4.5 Notifications & Calendar Integration
+### 4.3 Deposit
 
-Description: Both parties are told what they have committed to and are reminded before it happens. All delivery is via the external Calendar & Notification Service.
-
-| Req ID | Requirement (shall...) | Type | Priority | Source/Stakeholder | Acceptance criteria / Test case ref | Comments / Dependencies |
-|---|---|---|---|---|---|---|
-| PGS-F-040 | The system shall dispatch an iCalendar (RFC 5545) invite to the Guest and the Host within 60 seconds of a confirmed booking. | Functional | High | Calendar & Notification Service / FR-005 (Lab 1) | AC-PGS-F-040: Both parties receive an invite whose start time matches the booked slot. Test: TC-NOT-01 | Realises the Pass condition of the supplied FR-001 |
-| PGS-F-041 | The system shall send a reminder to both parties 24 hours before the scheduled recording start. | Functional | Medium | Calendar & Notification Service / FR-005 (Lab 1) | AC-PGS-F-041: A reminder is delivered in the window T-24h plus or minus 5 minutes. Test: TC-NOT-02 | Suppressed if the booking was cancelled |
-| PGS-F-042 | The system shall notify the Host on outline submission and the Guest on each approval decision, retrying failed deliveries with exponential backoff up to three attempts. | Functional | Medium | Calendar & Notification Service | AC-PGS-F-042: A simulated provider failure produces three retries and one logged permanent failure. Test: TC-NOT-03 | Delivery outcome written to the audit log |
-
-### 4.6 Accounts, Access & Administration
-
-Description: Identity, authorisation and operational oversight. This section is where NFR-002 from Lab 1 becomes enforceable behaviour.
+Description: Crediting an account, with the validation and journalling that make the credit trustworthy.
 
 | Req ID | Requirement (shall...) | Type | Priority | Source/Stakeholder | Acceptance criteria / Test case ref | Comments / Dependencies |
 |---|---|---|---|---|---|---|
-| PGS-F-050 | The system shall authenticate users with an email address and password, and shall require email verification before a Host may publish availability. | Functional | High | Security / Show Host | AC-PGS-F-050: An unverified Host cannot publish availability; a verified Host can. Test: TC-AUT-01 | Password storage governed by PGS-SR-002 |
-| PGS-F-051 | The system shall restrict every episode board to its owning Host and the invited Guest, denying access to all other authenticated users. | Functional | High | Security / NFR-002 (Lab 1) | AC-PGS-F-051: A third authenticated user requesting the board receives HTTP 403. Test: TC-AUT-02 | Enforced server-side per PGS-SR-003 |
-| PGS-F-052 | The system shall provide an Administrator function to suspend an account and to view booking, delivery and approval audit logs. | Functional | Low | Administrator | AC-PGS-F-052: A suspended account cannot sign in; audit entries are listed read-only. Test: TC-ADM-01 | Administrator role is distinct from the Host role |
+| BMS-F-020 | The system shall accept a deposit of a strictly positive amount into an ACTIVE account and shall credit the balance as a single atomic operation. | Functional | High | Customer / Bank Teller | AC-BMS-F-020: The balance increases by exactly the deposited amount; no partial credit is observable. Test: TC-DEP-01 | Atomicity depends on BMS-NF-002 |
+| BMS-F-021 | The system shall reject a deposit that is zero, negative, exceeds the single-transaction ceiling, or targets an account that is not ACTIVE, stating which condition failed. | Functional | High | Business / Security | AC-BMS-F-021: Each of the four rejection cases returns its own message and leaves the balance unchanged. Test: TC-DEP-02 | Input validation per BMS-SR-004 |
+| BMS-F-022 | The system shall append a ledger entry for every deposit, carrying the account number, amount, resulting balance, timestamp and operator identity. | Functional | High | Audit / Business | AC-BMS-F-022: Exactly one journal record exists per successful deposit. Test: TC-DEP-03 | Append-only per BMS-SR-005 |
+
+### 4.4 Withdrawal
+
+Description: Debiting an account within the limits set by account type, minimum balance, overdraft sanction and the daily ceiling.
+
+| Req ID | Requirement (shall...) | Type | Priority | Source/Stakeholder | Acceptance criteria / Test case ref | Comments / Dependencies |
+|---|---|---|---|---|---|---|
+| BMS-F-030 | The system shall verify that the available balance and the remaining daily withdrawal limit both cover the requested amount before debiting the account. | Functional | High | Business / Security | AC-BMS-F-030: A withdrawal breaching either limit is refused and the balance is unchanged. Test: TC-WDR-01 | Daily counter reset by BMS-F-062 |
+| BMS-F-031 | The system shall apply the debit and append the corresponding ledger entry as a single atomic operation, so that a failure leaves neither applied. | Functional | High | Business / Audit | AC-BMS-F-031: Terminating the process mid-write leaves balance and journal consistent on restart. Test: TC-REL-01 | Depends on the write-ahead journal in BMS-NF-002 |
+| BMS-F-032 | The system shall refuse a withdrawal from a Savings account that would take the balance below the configured minimum balance. | Functional | High | Business | AC-BMS-F-032: A withdrawal leaving less than the minimum is refused; one leaving exactly the minimum succeeds. Test: TC-WDR-02 | Applies to Savings only, not Current |
+| BMS-F-033 | The system shall permit a Current account to be overdrawn up to its sanctioned overdraft limit, and shall refuse any withdrawal beyond that limit. | Functional | Medium | Business | AC-BMS-F-033: A withdrawal inside the overdraft succeeds and yields a negative balance; beyond it is refused. Test: TC-WDR-03 | Optional extension of the withdrawal flow |
+
+### 4.5 Balance Inquiry & Statements
+
+Description: Read-only views of an account's current position and its transaction history.
+
+| Req ID | Requirement (shall...) | Type | Priority | Source/Stakeholder | Acceptance criteria / Test case ref | Comments / Dependencies |
+|---|---|---|---|---|---|---|
+| BMS-F-040 | The system shall display the current balance of an account to its authenticated holder, or to a Teller acting on that account. | Functional | High | Customer | AC-BMS-F-040: The figure displayed equals the stored balance to the paisa. Test: TC-BAL-01 | Read-only; writes no ledger entry |
+| BMS-F-041 | The system shall generate a mini-statement listing the last ten transactions on an account, most recent first. | Functional | Medium | Customer | AC-BMS-F-041: Exactly ten entries are listed newest first, or fewer if the account has fewer. Test: TC-BAL-02 | Reads the journal written by BMS-F-060 |
+| BMS-F-042 | The system shall generate a statement of all transactions on an account between two given dates inclusive, together with a closing balance. | Functional | Medium | Customer / Bank Teller | AC-BMS-F-042: Entries outside the range are excluded and the closing balance reconciles. Test: TC-BAL-03 | Reconciliation per BMS-F-061 |
+
+### 4.6 Funds Transfer
+
+Description: Moving money between two accounts at the bank. The atomicity requirement here is the hardest correctness obligation in the system.
+
+| Req ID | Requirement (shall...) | Type | Priority | Source/Stakeholder | Acceptance criteria / Test case ref | Comments / Dependencies |
+|---|---|---|---|---|---|---|
+| BMS-F-050 | The system shall transfer a stated amount between two accounts held at the bank, applying the debit and the credit as one atomic unit so that both succeed or neither does. | Functional | High | Customer / Business | AC-BMS-F-050: After an injected failure between the two legs, both balances read their original values. Test: TC-TRF-01 | The core integrity obligation of the system |
+| BMS-F-051 | The system shall reject a transfer where source and destination are the same account, or where either account is not ACTIVE. | Functional | High | Business / Security | AC-BMS-F-051: Self-transfer and transfer to a CLOSED account are refused with distinct messages. Test: TC-TRF-02 | Checked before any balance is touched |
+| BMS-F-052 | The system shall enforce the per-transaction and per-day transfer ceilings, maintaining a running daily total for each source account. | Functional | Medium | Business | AC-BMS-F-052: A transfer crossing the daily ceiling is refused even where each individual transfer is within the per-transaction limit. Test: TC-TRF-03 | Shares the daily counter with BMS-F-030 |
+
+### 4.7 Ledger, Audit & Reporting
+
+Description: The record that makes every balance explicable. This section is where security objective SO-2 becomes enforceable behaviour.
+
+| Req ID | Requirement (shall...) | Type | Priority | Source/Stakeholder | Acceptance criteria / Test case ref | Comments / Dependencies |
+|---|---|---|---|---|---|---|
+| BMS-F-060 | The system shall append every balance-changing operation to a transaction journal, and shall expose no operation that updates or deletes an existing journal record. | Functional | High | Audit / Security | AC-BMS-F-060: No code path writes to an existing journal offset; the file is opened in append mode only. Test: TC-LED-01 | Realises security objective SO-2 |
+| BMS-F-061 | The system shall provide a reconciliation check verifying that every account balance equals its opening balance plus the sum of its journal entries. | Functional | High | Audit / Bank Manager | AC-BMS-F-061: Reconciliation passes on clean data and names the offending account on tampered data. Test: TC-LED-02 | The detection mechanism behind SO-2 |
+| BMS-F-062 | The system shall generate an end-of-day report totalling deposits, withdrawals and transfers for the day, with the closing balance of every account. | Functional | Medium | Bank Manager | AC-BMS-F-062: Totals equal the sum of that day's journal entries by type. Test: TC-LED-03 | Manager-only per BMS-F-012; resets daily counters |
+| BMS-F-063 | The system shall record every privileged action - account closure, customer modification, account unlocking and report generation - in an audit log naming the operator, the action and the timestamp. | Functional | High | Audit / Security | AC-BMS-F-063: Each privileged action produces exactly one audit record. Test: TC-LED-04 | Viewed through BMS-F-064; storage per BMS-SR-005 |
+| BMS-F-064 | The system shall allow a Bank Manager to view the audit log filtered by operator or by date, in read-only form. | Functional | Low | Bank Manager | AC-BMS-F-064: Filters return the matching subset and the view offers no edit or delete action. Test: TC-LED-05 | Manager-only per BMS-F-012 |
 
 ## 5. Non-functional requirements (detailed)
 
-NFRs below are measurable and tied to the test plan. IDs follow PGS-NF-###.
+NFRs below are measurable and tied to the test plan. IDs follow BMS-NF-###. Two of them - BMS-NF-002 on crash-safety and BMS-NF-003 on integer currency - are properties the functional requirements silently depend on, and are stated here so that they are tested rather than assumed.
 
 | Req ID | Requirement | Category | Priority | Acceptance criteria / Measurement |
 |---|---|---|---|---|
-| PGS-NF-001 | The run-of-show PDF export shall complete in under 1 second for outlines of up to 30 segments, at the 95th percentile. | Performance | High | 95th percentile at or below 1.000 s over 500 exports at 50 concurrent users. Test: TC-PERF-01 |
-| PGS-NF-002 | The slot-availability page shall render within 2 seconds at the 90th percentile under a load of 100 concurrent guests. | Performance | Medium | 90th percentile at or below 2.0 s in a JMeter run at 100 concurrent users. Test: TC-PERF-02 |
-| PGS-NF-003 | The system shall provide 99.5% monthly availability, excluding announced maintenance windows. | Reliability / Availability | High | Uptime report shows 99.5% or better per calendar month. Test: TC-OPS-01 |
-| PGS-NF-004 | All episode-board content and guest contact details shall be transmitted over TLS 1.2 or higher and shall not be readable by unauthenticated users. | Security / Confidentiality | High | TLS scan reports no protocol below 1.2; anonymous board request returns 401. Test: TC-SEC-01 |
-| PGS-NF-005 | The guest booking and outline submission flows shall conform to WCAG 2.1 Level AA. | Usability / Accessibility | Medium | Automated axe-core scan reports zero Level AA violations; keyboard-only walkthrough passes. Test: TC-UX-01 |
-| PGS-NF-006 | The system shall support 500 active Hosts and 5,000 bookings per month with no change to the deployed architecture. | Scalability | Low | Soak test at the stated volume holds the PGS-NF-002 latency target. Test: TC-PERF-03 |
-| PGS-NF-007 | The system shall store all instants in UTC and render them in each user's IANA timezone, remaining correct across daylight-saving transitions. | Correctness / Portability | High | A booking made across a DST boundary displays the same wall-clock time to both parties. Test: TC-SCH-06 |
+| BMS-NF-001 | Any single transaction - deposit, withdrawal, transfer or balance inquiry - shall complete within 500 ms on the reference machine for a data set of up to 10,000 accounts. | Performance | High | Mean over 1,000 operations at or below 500 ms on the stated configuration. Test: TC-PERF-01 |
+| BMS-NF-002 | No committed transaction shall be lost if the process terminates abnormally; the system shall write to a journal before mutating the account file and shall recover a consistent state on restart. | Reliability / Durability | High | Process killed at 20 randomised points mid-write; every account reconciles on restart. Test: TC-REL-01 |
+| BMS-NF-003 | All monetary values shall be stored and computed as 64-bit signed integers denominated in paise; floating-point types shall not appear anywhere in the money path. | Data Integrity | High | Source inspection finds no float or double in the money path; decimal rounding error is unreproducible. Test: TC-SEC-03 |
+| BMS-NF-004 | The system shall compile without warnings under g++ -std=c++17 -Wall -Wextra -Werror on both Linux and Windows (MinGW), with platform-specific code confined to a single portability header. | Portability | Medium | Clean build on both toolchains. Test: TC-PORT-01 |
+| BMS-NF-005 | Every rejected operation shall state the reason and the corrective action in one line of plain English, and shall return the operator to the menu rather than terminating the program. | Usability | Medium | Every rejection path in section 4 reviewed against this rule; none terminates the program. Test: TC-UX-01 |
+| BMS-NF-006 | The system shall be organised in presentation, service and persistence layers with no global mutable state, so that each service module is unit-testable without the menu layer. | Maintainability | Medium | Every service module has at least one unit test that links without the CLI translation unit. Test: TC-PORT-02 |
+| BMS-NF-007 | The system shall hold 10,000 accounts and 100,000 journal entries without any operation exceeding 2 seconds. | Capacity / Scalability | Low | Soak test at the stated volume; the slowest recorded operation is under 2 s. Test: TC-PERF-02 |
 
 ## 5.1. Security
 
 ## 5.1.1 Security Objectives
 
-Three security objectives govern this system. They are stated as the properties an attacker must not be able to violate, and each security requirement in 5.1.2 traces to at least one of them.
+Four security objectives govern this system. They are stated as the properties an attacker must not be able to violate. Every security requirement in 5.1.2 traces to at least one of them, and the trace is recorded in the RTM Comments column.  
+The threat model is shaped by section 3.4: with no network, the adversary is someone with access to the host machine or to the data files, or an operator acting outside their role.
 
-SO-1 - Confidentiality of unreleased episode material  
-Episode outlines, guest contact details and run-of-show sheets are commercially sensitive before broadcast. Only the owning Host and the invited Guest may read an episode board, in transit and at rest. This objective is the security reading of NFR-002 from Lab 1.
+SO-1 - Confidentiality of customer data and credentials at rest  
+The system stores personally identifiable customer data and authentication secrets in local files. Neither a PIN nor a password may be recoverable from those files, and account data must not be readable by other users of the host machine.
 
-SO-2 - Integrity and non-repudiation of the approved running order  
-The run-of-show is the artefact the episode is recorded from. Every approval, rejection and reorder must be attributable to an actor and a time, and must not be silently alterable after the fact.
+SO-2 - Integrity and non-repudiation of the transaction ledger  
+A balance is only as trustworthy as the record that explains it. Every balance change must be attributable to an operator and a time, must be append-only, and any tampering with the stored data must be detectable by reconciliation rather than silently absorbed.
 
-SO-3 - Availability and abuse resistance of the public booking endpoint  
-The booking page is reachable without authentication by design. It must resist automated slot-hoarding and credential brute-forcing without degrading service for legitimate guests.
+SO-3 - Memory safety and input robustness  
+The system is written in C/C++, where an unchecked buffer write or an unvalidated numeric input is a direct route to memory corruption. No input from an operator or a data file may write outside its buffer, overflow an integer, or drive the program into undefined behaviour.
+
+SO-4 - Least privilege across operator roles  
+A Customer, a Teller and a Manager hold materially different powers. No operator may perform an action outside their role, and the check enforcing this must not live in the menu code, where reaching the operation by another path would bypass it.
 
 ## 5.1.2 Security Requirements
 
 | Req ID | Requirement (shall...) | Type | Priority | Acceptance criteria / Test case ref |
 |---|---|---|---|---|
-| PGS-SR-001 | The system shall enforce TLS 1.2 or higher on all network connections and shall send an HTTP Strict-Transport-Security header on every response. | Security | High | AC: TLS scan shows no protocol below 1.2 and an HSTS header with max-age of at least 31536000. Test: TC-SEC-01 |
-| PGS-SR-002 | The system shall store passwords only as Argon2id hashes with a per-user salt, and shall never write a password or session token to any log. | Security | High | AC: Database inspection shows no plaintext password; a log search for credential patterns returns nothing. Test: TC-SEC-02 |
-| PGS-SR-003 | The system shall perform a server-side authorisation check on every episode-board resource, keyed to the authenticated principal rather than to a client-supplied identifier. | Security | High | AC: Substituting another user's board id returns HTTP 403, not 200. Test: TC-SEC-03 |
-| PGS-SR-004 | The system shall rate-limit the sign-in endpoint to 5 attempts per account per 15 minutes and the booking endpoint to 10 requests per IP address per minute. | Security | Medium | AC: The 6th sign-in attempt and the 11th booking request return HTTP 429. Test: TC-SEC-04 |
-| PGS-SR-005 | The system shall HTML-escape all guest-supplied talking points and link text on output, and shall reject any URL scheme other than http or https. | Security | High | AC: A stored script payload renders as inert text; a javascript: URL is refused at input. Test: TC-SEC-05 |
-| PGS-SR-006 | The system shall write booking, approval and notification-delivery events to an append-only audit log retained for 12 months, with no delete or update path exposed to any application role. | Security / Audit | Medium | AC: An attempted UPDATE on the audit table fails on privileges; a 12-month-old entry is still retrievable. Test: TC-SEC-06 |
+| BMS-SR-001 | The system shall store customer PINs and staff passwords only as salted cryptographic hashes, and shall never write a credential in plaintext to any file, log or terminal. | Security | High | AC: Inspection of every data file finds no plaintext credential and each record carries a distinct salt. Test: TC-SEC-01 |
+| BMS-SR-002 | The system shall bounds-check every write to a fixed-size buffer, and the functions gets, strcpy, strcat, sprintf and scanf with an unbounded string conversion shall not appear in the source. | Security | High | AC: A search for the banned functions returns no hit; an over-length name input is truncated safely rather than overflowing. Test: TC-SEC-04 |
+| BMS-SR-003 | The system shall perform every monetary addition and subtraction in 64-bit signed integer paise with an explicit overflow check before the operation, and shall refuse the transaction rather than wrap. | Security / Data Integrity | High | AC: A deposit that would overflow the balance is refused with a stated reason; no wrap is observable. Test: TC-SEC-03 |
+| BMS-SR-004 | The system shall validate every numeric and menu input for type and range before use, and shall re-prompt on invalid input rather than proceeding with an indeterminate value. | Security | High | AC: Alphabetic input to an amount field, and a menu choice outside range, both re-prompt with no state change. Test: TC-SEC-05 |
+| BMS-SR-005 | The system shall open the transaction journal and the audit log in append mode only, and shall expose no operation capable of modifying or removing an existing record in either. | Security / Audit | High | AC: Source inspection finds no non-append open of either file, and no menu path offers edit or delete. Test: TC-SEC-06 |
+| BMS-SR-006 | The system shall create its data files with owner-only permissions and shall refuse to start when the data directory is group- or world-writable. | Security | Medium | AC: Files are created with owner-only permissions; loosening the directory causes a refusal to start with a clear message. Test: TC-SEC-07 |
+| BMS-SR-007 | The system shall perform the role authorisation check inside the service layer immediately before the privileged operation, not in the menu layer that routes to it. | Security | High | AC: A unit test calling the service function directly with a Teller role is refused, with no menu involved. Test: TC-SEC-08 |
 
 ## 6. Quality attributes & Acceptance tests
 
-Exit criteria for acceptance: every High-priority functional requirement implemented and verified; no failing non-functional requirement in the High priority band; zero open critical or major defects; and an RTM in which every requirement maps to at least one executed test case with a Pass result.
+Exit criteria for acceptance: every High-priority functional requirement implemented and verified; no failing High-priority non-functional requirement; zero open critical or major defects; reconciliation (BMS-F-061) passing across the full test data set; and an RTM in which every requirement maps to at least one executed test case with a Pass result.
 
 Acceptance test suites, each named for the test-case prefix it owns:  
-- Scheduling (TC-SCH-01..06) - availability, blocking, slot presentation, concurrency, reschedule, timezone correctness  
-- Outline (TC-OUT-01..04) - talking points, links, drafts, episode-board attachment  
-- Review (TC-REV-01..04) - approve, reject with comment, host segments, audit trail  
-- Run-of-show (TC-ROS-01..04) - generation, timestamps, recompute, PDF export  
-- Notification (TC-NOT-01..03) - invite, reminder, retry and permanent-failure logging  
-- Authentication & Admin (TC-AUT-01..02, TC-ADM-01) - verification gate, board isolation, suspension and audit view  
-- Performance (TC-PERF-01..03) - export latency, page latency, soak  
-- Security (TC-SEC-01..06) - TLS/HSTS, password storage, authorisation, rate limiting, output escaping, audit immutability  
-- Usability (TC-UX-01) - WCAG 2.1 AA conformance
+- Account (TC-ACC-01..06) - customer creation, account opening, modification, closure, lookup, residual transfer  
+- Authentication (TC-AUT-01..04) - credential check, lockout, role enforcement, unlock  
+- Deposit (TC-DEP-01..03) - credit, rejection cases, journalling  
+- Withdrawal (TC-WDR-01..03) - limits, minimum balance, overdraft  
+- Balance & Statements (TC-BAL-01..03) - balance, mini-statement, date-range statement  
+- Transfer (TC-TRF-01..03) - atomicity, rejection cases, ceilings  
+- Ledger & Reporting (TC-LED-01..05) - append-only journal, reconciliation, end-of-day report, audit capture, audit view  
+- Performance (TC-PERF-01..02) - transaction latency, capacity soak  
+- Reliability (TC-REL-01) - crash-safety of the write-ahead journal  
+- Security (TC-SEC-01..08) - credential storage, no echo, integer overflow, buffer safety, input validation, append-only enforcement, file permissions, service-layer role check  
+- Usability (TC-UX-01) - every rejection states reason and remedy  
+- Portability (TC-PORT-01..02) - clean build on both toolchains, modules unit-testable in isolation
 
-Quality attributes in priority order: security and confidentiality first, because the product holds unreleased commercial material; then correctness of scheduling, because a double-booked or mistimed slot destroys the product's core promise; then performance, bounded by the one-second export target; then usability and accessibility; then scalability, which the expected volume does not yet stress.
+Quality attributes in priority order. Data integrity comes first: a banking system that loses or invents money has failed regardless of every other property, which is why BMS-NF-003 and BMS-F-061 are High priority. Security follows, because the data is personal and the ledger must be trustworthy. Reliability is third - a crash mid-transaction must not corrupt the ledger. Performance, usability and portability follow, in that order; none of them can be traded against the first three.
 
 ## 7. System models and diagrams
 
 ## 7.1 UML Use-Case diagrams
 
-Two use-case diagrams model the system. Diagram 1 covers the guest-facing scheduling and submission half; Diagram 2 covers host-side production and administration. Together they carry all fifteen use cases, four «include» relationships and three «extend» relationships.  
-Arrow direction follows UML: «include» points from the base use case to the included one; «extend» points from the extending use case to the base it extends. Extension use cases (UC-08, UC-09, UC-12) are deliberately not given a direct actor association, because they are entered from an extension point in the base use case rather than initiated independently.
+Two use-case diagrams model the system. Diagram 1 covers the account transactions a Customer or Teller performs; Diagram 2 covers account administration, audit and reporting. Together they carry eighteen use cases, eight «include» relationships and two «extend» relationships.  
+Arrow direction follows UML: «include» points from the base use case to the included one; «extend» points from the extending use case to the base it extends. Two included use cases are deliberately shared by several bases - UC-07 Record Ledger Entry is included by Deposit, Withdraw Cash and Funds Transfer, and UC-15 Record Audit Entry by Close Account, Modify Customer Details and Unlock Locked Account. That sharing is the point of «include»: the behaviour is specified once and reused, which is also why BMS-F-060 and BMS-F-063 are each a single requirement rather than one per calling feature.  
+The included and extending use cases (UC-06, UC-07, UC-08, UC-15, UC-16, UC-17, UC-18) carry no direct actor association, because they are entered from within a base use case rather than initiated on their own.
 
-![Figure 1 - Use-Case Diagram 1: Scheduling & Guest Content Submission](../diagrams/UseCase_1_Scheduling.png)
+![Figure 1 - Use-Case Diagram 1: Account Transactions](../diagrams/UseCase_1_Transactions.png)
 
-*Figure 1 - Use-Case Diagram 1: Scheduling & Guest Content Submission*
+*Figure 1 - Use-Case Diagram 1: Account Transactions*
 
-![Figure 2 - Use-Case Diagram 2: Episode Production & Administration](../diagrams/UseCase_2_Production.png)
+![Figure 2 - Use-Case Diagram 2: Account Administration, Audit & Reporting](../diagrams/UseCase_2_Administration.png)
 
-*Figure 2 - Use-Case Diagram 2: Episode Production & Administration*
+*Figure 2 - Use-Case Diagram 2: Account Administration, Audit & Reporting*
 
-Use-case inventory: UC-01 Book Interview Slot, UC-02 Submit Talking-Point Outline, UC-03 Publish Availability, UC-04 Review & Approve Outline, UC-05 Generate Run-of-Show Sheet, UC-06 Validate Slot Availability, UC-07 Send Booking Notification, UC-08 Request Reschedule, UC-09 Attach Biography Links, UC-10 Export PDF Production Sheet, UC-11 Recompute Segment Timestamps, UC-12 Insert Host Segment, UC-13 Notify Approval Decision, UC-14 Manage User Accounts, UC-15 View Audit Log.
+Use-case inventory: UC-01 Deposit, UC-02 Withdraw Cash, UC-03 Funds Transfer, UC-04 Balance Inquiry, UC-05 Mini Statement, UC-06 Validate Sufficient Balance, UC-07 Record Ledger Entry, UC-08 Apply Overdraft, UC-09 Open Account, UC-10 Close Account, UC-11 Modify Customer Details, UC-12 Unlock Locked Account, UC-13 Generate End-of-Day Report, UC-14 View Audit Log, UC-15 Record Audit Entry, UC-16 Verify Zero Balance, UC-17 Authenticate User, UC-18 Transfer Residual Balance.
 
 ## 8. Requirements Traceability Matrix (RTM)
 
-Status legend: N = Not started, P = Partially implemented, A = Accepted (implemented and test passed). Every requirement in sections 4, 5 and 5.1.2 appears exactly once. The Comments column names the Lab 2 Jira story that carries the work, so a grader can walk requirement to backlog item to test case without leaving the repository.
+Status legend: N = Not started, P = Partially implemented, A = Accepted (implemented and test passed). Every requirement in sections 4, 5 and 5.1.2 appears exactly once. The Module column names the C/C++ module that will own the behaviour, and the Comments column names either the backlog story that carries the work or the security objective the requirement serves, so a requirement can be walked to its code, its test and its plan without leaving the repository.
 
 | Req ID | Requirement short | Section ref / Design Spec | Module | Test case(s) | Status (N/P/A) | Comments |
 |---|---|---|---|---|---|---|
-| PGS-F-001 | Publish availability windows | 4.1 / DS-SCH-01 | SchedulingService | TC-SCH-01 | N | Jira story 1.1 |
-| PGS-F-002 | Block dates | 4.1 / DS-SCH-02 | SchedulingService | TC-SCH-02 | N | Jira story 1.1 |
-| PGS-F-003 | Show bookable slots only | 4.1 / DS-SCH-03 | SchedulingService, WebUI | TC-SCH-03 | N | Jira story 1.2 |
-| PGS-F-004 | Atomic slot re-validation | 4.1 / DS-SCH-04 | SchedulingService | TC-SCH-04 | N | Jira story 1.3 |
-| PGS-F-005 | Reschedule booking | 4.1 / DS-SCH-05 | SchedulingService | TC-SCH-05 | N | Jira story 1.4 |
-| PGS-F-010 | Submit talking points | 4.2 / DS-OUT-01 | OutlineService | TC-OUT-01 | N | Jira story 2.1 |
-| PGS-F-011 | Attach biography links | 4.2 / DS-OUT-02 | OutlineService | TC-OUT-02 | N | Jira story 2.2 |
-| PGS-F-012 | Editable outline drafts | 4.2 / DS-OUT-03 | OutlineService | TC-OUT-03 | N | Jira story 2.1 |
-| PGS-F-013 | Attach outline to episode board | 4.2 / DS-OUT-04 | OutlineService | TC-OUT-04 | N | Jira story 2.1 |
-| PGS-F-020 | Approve, reject or reorder points | 4.3 / DS-REV-01 | ReviewService | TC-REV-01 | N | Jira story 3.1 |
-| PGS-F-021 | Mandatory rejection comment | 4.3 / DS-REV-02 | ReviewService | TC-REV-02 | N | Jira story 3.1 |
-| PGS-F-022 | Insert host segments | 4.3 / DS-REV-03 | ReviewService | TC-REV-03 | N | New in mini project |
-| PGS-F-023 | Audit approval decisions | 4.3 / DS-REV-04 | AuditService | TC-REV-04 | N | Supports SO-2 |
-| PGS-F-030 | Generate run-of-show | 4.4 / DS-ROS-01 | RunOfShowService | TC-ROS-01 | N | Jira story 3.2 |
-| PGS-F-031 | Cumulative timestamps | 4.4 / DS-ROS-02 | RunOfShowService | TC-ROS-02 | N | Jira story 3.2 |
-| PGS-F-032 | Edit durations and recompute | 4.4 / DS-ROS-03 | RunOfShowService | TC-ROS-03 | N | New in mini project |
-| PGS-F-033 | Export PDF production sheet | 4.4 / DS-EXP-01 | ExportService | TC-ROS-04 | N | Jira story 3.3 |
-| PGS-F-040 | Send calendar invite | 4.5 / DS-NOT-01 | NotificationService | TC-NOT-01 | N | Jira story 4.1 |
-| PGS-F-041 | 24-hour reminder | 4.5 / DS-NOT-02 | NotificationService | TC-NOT-02 | N | Jira story 4.1 |
-| PGS-F-042 | Submission and decision notices with retry | 4.5 / DS-NOT-03 | NotificationService | TC-NOT-03 | N | New in mini project |
-| PGS-F-050 | Authenticate users | 4.6 / DS-AUT-01 | AuthService | TC-AUT-01 | N | Jira story 4.2 |
-| PGS-F-051 | Restrict episode board | 4.6 / DS-AUT-02 | AuthService | TC-AUT-02 | N | Jira story 4.2 |
-| PGS-F-052 | Admin suspend and audit view | 4.6 / DS-ADM-01 | AdminConsole | TC-ADM-01 | N | New in mini project |
-| PGS-NF-001 | PDF export under 1 s (p95) | 5 / DS-EXP-01 | ExportService | TC-PERF-01 | N | Given NFR-001 |
-| PGS-NF-002 | Slot page within 2 s (p90) | 5 / DS-SCH-03 | WebUI, SchedulingService | TC-PERF-02 | N |  |
-| PGS-NF-003 | 99.5% availability | 5 / DS-OPS-01 | Platform | TC-OPS-01 | N |  |
-| PGS-NF-004 | TLS and private boards | 5 / DS-AUT-02 | Platform, AuthService | TC-SEC-01 | N | Given NFR-002 |
-| PGS-NF-005 | WCAG 2.1 AA | 5 / DS-UX-01 | WebUI | TC-UX-01 | N |  |
-| PGS-NF-006 | 500 hosts, 5,000 bookings per month | 5 / DS-OPS-02 | Platform | TC-PERF-03 | N |  |
-| PGS-NF-007 | UTC storage, timezone-correct display | 5 / DS-SCH-06 | SchedulingService, WebUI | TC-SCH-06 | N |  |
-| PGS-SR-001 | TLS 1.2+ and HSTS | 5.1.2 / DS-SEC-01 | Platform | TC-SEC-01 | N | SO-1 |
-| PGS-SR-002 | Argon2id password hashing | 5.1.2 / DS-SEC-02 | AuthService | TC-SEC-02 | N | SO-1 |
-| PGS-SR-003 | Server-side authorisation | 5.1.2 / DS-SEC-03 | AuthService | TC-SEC-03 | N | SO-1 |
-| PGS-SR-004 | Rate limiting | 5.1.2 / DS-SEC-04 | ApiGateway | TC-SEC-04 | N | SO-3 |
-| PGS-SR-005 | Output escaping and URL allowlist | 5.1.2 / DS-SEC-05 | WebUI, OutlineService | TC-SEC-05 | N | SO-1 |
-| PGS-SR-006 | Append-only audit log | 5.1.2 / DS-SEC-06 | AuditService | TC-SEC-06 | N | SO-2 |
+| BMS-F-001 | Create customer record | 4.1 / DS-ACC-01 | AccountModule | TC-ACC-01 | N | Story 1.1 |
+| BMS-F-002 | Open account | 4.1 / DS-ACC-02 | AccountModule | TC-ACC-02 | N | Story 1.2 |
+| BMS-F-003 | Modify customer details | 4.1 / DS-ACC-03 | AccountModule | TC-ACC-03 | N | Story 1.3 |
+| BMS-F-004 | Close account at zero balance | 4.1 / DS-ACC-04 | AccountModule | TC-ACC-04 | N | Story 1.4 |
+| BMS-F-005 | Retrieve account by number or customer | 4.1 / DS-ACC-05 | AccountModule | TC-ACC-05 | N | Story 1.2 |
+| BMS-F-006 | Transfer residual balance on closure | 4.1 / DS-ACC-06 | AccountModule, TransactionModule | TC-ACC-06 | N | Story 1.5 |
+| BMS-F-010 | Authenticate customer or staff | 4.2 / DS-AUT-01 | AuthModule | TC-AUT-01 | N | Story 2.1 |
+| BMS-F-011 | Lock after 3 failed PIN attempts | 4.2 / DS-AUT-02 | AuthModule | TC-AUT-02 | N | Story 2.2 |
+| BMS-F-012 | Role-based authorisation | 4.2 / DS-AUT-03 | AuthModule | TC-AUT-03 | N | Story 2.3 |
+| BMS-F-013 | Manager unlocks account | 4.2 / DS-AUT-04 | AuthModule | TC-AUT-04 | N | Story 2.4 |
+| BMS-F-014 | No echo, clear credential buffer | 4.2 / DS-AUT-05 | AuthModule | TC-SEC-02 | N | Story 2.1 |
+| BMS-F-020 | Atomic deposit credit | 4.3 / DS-DEP-01 | TransactionModule | TC-DEP-01 | N | Story 3.1 |
+| BMS-F-021 | Reject invalid deposit | 4.3 / DS-DEP-02 | ValidationModule | TC-DEP-02 | N | Story 3.1 |
+| BMS-F-022 | Journal every deposit | 4.3 / DS-DEP-03 | LedgerModule | TC-DEP-03 | N | Story 3.1 |
+| BMS-F-030 | Check balance and daily limit | 4.4 / DS-WDR-01 | TransactionModule | TC-WDR-01 | N | Story 3.2 |
+| BMS-F-031 | Atomic debit plus journal | 4.4 / DS-WDR-02 | TransactionModule, LedgerModule | TC-REL-01 | N | Story 3.2 |
+| BMS-F-032 | Savings minimum balance | 4.4 / DS-WDR-03 | TransactionModule | TC-WDR-02 | N | Story 3.3 |
+| BMS-F-033 | Current account overdraft | 4.4 / DS-WDR-04 | TransactionModule | TC-WDR-03 | N | Story 3.4 |
+| BMS-F-040 | Display current balance | 4.5 / DS-BAL-01 | TransactionModule | TC-BAL-01 | N | Story 4.1 |
+| BMS-F-041 | Mini-statement, last ten | 4.5 / DS-BAL-02 | LedgerModule | TC-BAL-02 | N | Story 4.2 |
+| BMS-F-042 | Date-range statement | 4.5 / DS-BAL-03 | LedgerModule | TC-BAL-03 | N | Story 4.3 |
+| BMS-F-050 | Atomic two-leg transfer | 4.6 / DS-TRF-01 | TransactionModule | TC-TRF-01 | N | Story 5.1 |
+| BMS-F-051 | Reject self or inactive transfer | 4.6 / DS-TRF-02 | ValidationModule | TC-TRF-02 | N | Story 5.1 |
+| BMS-F-052 | Transfer ceilings | 4.6 / DS-TRF-03 | TransactionModule | TC-TRF-03 | N | Story 5.2 |
+| BMS-F-060 | Append-only journal | 4.7 / DS-LED-01 | LedgerModule | TC-LED-01 | N | Story 6.1 |
+| BMS-F-061 | Reconciliation check | 4.7 / DS-LED-02 | LedgerModule | TC-LED-02 | N | Story 6.2 |
+| BMS-F-062 | End-of-day report | 4.7 / DS-RPT-01 | ReportModule | TC-LED-03 | N | Story 6.3 |
+| BMS-F-063 | Audit privileged actions | 4.7 / DS-LED-03 | LedgerModule | TC-LED-04 | N | Story 6.1 |
+| BMS-F-064 | View audit log | 4.7 / DS-RPT-02 | ReportModule | TC-LED-05 | N | Story 6.4 |
+| BMS-NF-001 | Transaction within 500 ms | 5 / DS-PERF-01 | All service modules | TC-PERF-01 | N | Story 7.7 |
+| BMS-NF-002 | Crash-safe write-ahead journal | 5 / DS-REL-01 | PersistenceModule | TC-REL-01 | N | Story 7.2 - hardest NFR |
+| BMS-NF-003 | Integer paise, no floats | 5 / DS-INT-01 | TransactionModule | TC-SEC-03 | N | Story 7.1 |
+| BMS-NF-004 | Clean -Wall -Wextra -Werror build | 5 / DS-PORT-01 | Build system | TC-PORT-01 | N | Story 7.6 |
+| BMS-NF-005 | Reason and remedy on rejection | 5 / DS-UX-01 | CLI / MenuLayer | TC-UX-01 | N | Story 7.6 |
+| BMS-NF-006 | Layered, unit-testable modules | 5 / DS-ARCH-01 | All modules | TC-PORT-02 | N | Story 7.6 |
+| BMS-NF-007 | 10,000 accounts under 2 s | 5 / DS-PERF-02 | PersistenceModule | TC-PERF-02 | N | Story 7.7 |
+| BMS-SR-001 | Salted credential hashing | 5.1.2 / DS-SEC-01 | AuthModule | TC-SEC-01 | N | SO-1 / Story 7.3 |
+| BMS-SR-002 | Bounds-checked buffers, banned functions | 5.1.2 / DS-SEC-02 | All modules | TC-SEC-04 | N | SO-3 / Story 7.4 |
+| BMS-SR-003 | Integer overflow checks on money | 5.1.2 / DS-SEC-03 | TransactionModule | TC-SEC-03 | N | SO-3 / Story 7.1 |
+| BMS-SR-004 | Validate all input before use | 5.1.2 / DS-SEC-04 | ValidationModule | TC-SEC-05 | N | SO-3 / Story 7.4 |
+| BMS-SR-005 | Append-only journal and audit log | 5.1.2 / DS-SEC-05 | LedgerModule | TC-SEC-06 | N | SO-2 / Story 7.2 |
+| BMS-SR-006 | Owner-only file permissions | 5.1.2 / DS-SEC-06 | PersistenceModule | TC-SEC-07 | N | SO-1 / Story 7.5 |
+| BMS-SR-007 | Role check in the service layer | 5.1.2 / DS-SEC-07 | AuthModule | TC-SEC-08 | N | SO-4 / Story 7.5 |

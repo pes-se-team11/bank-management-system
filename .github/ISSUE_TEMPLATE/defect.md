@@ -17,7 +17,7 @@ labels: defect
 
 ## Requirement violated
 
-`PGS-F-0__` / `PGS-NF-00_` / `PGS-SR-00_` — quote the acceptance criterion it fails.
+`BMS-F-0__` / `BMS-NF-00_` / `BMS-SR-00_` — quote the acceptance criterion it fails.
 
 ## Steps to reproduce
 
@@ -35,4 +35,4 @@ labels: defect
 
 ## Environment
 
-<!-- Browser, OS, build or commit sha. -->
+<!-- OS, compiler and version, build or commit sha. -->

@@ -2,7 +2,7 @@
 
 # Requirements Traceability Matrix
 
-**Project:** Podcast Guest Scheduling & Outline Builder  
+**Project:** Bank Management System  
 **SRS version:** 1.0  
 **Date:** 05-09-2025
 
@@ -10,45 +10,52 @@ Identical to SRS section 8, extracted here so coverage can be reviewed without o
 
 | Req ID | Requirement short | Section ref / Design Spec | Module | Test case(s) | Status (N/P/A) | Comments |
 |---|---|---|---|---|---|---|
-| PGS-F-001 | Publish availability windows | 4.1 / DS-SCH-01 | SchedulingService | TC-SCH-01 | N | Jira story 1.1 |
-| PGS-F-002 | Block dates | 4.1 / DS-SCH-02 | SchedulingService | TC-SCH-02 | N | Jira story 1.1 |
-| PGS-F-003 | Show bookable slots only | 4.1 / DS-SCH-03 | SchedulingService, WebUI | TC-SCH-03 | N | Jira story 1.2 |
-| PGS-F-004 | Atomic slot re-validation | 4.1 / DS-SCH-04 | SchedulingService | TC-SCH-04 | N | Jira story 1.3 |
-| PGS-F-005 | Reschedule booking | 4.1 / DS-SCH-05 | SchedulingService | TC-SCH-05 | N | Jira story 1.4 |
-| PGS-F-010 | Submit talking points | 4.2 / DS-OUT-01 | OutlineService | TC-OUT-01 | N | Jira story 2.1 |
-| PGS-F-011 | Attach biography links | 4.2 / DS-OUT-02 | OutlineService | TC-OUT-02 | N | Jira story 2.2 |
-| PGS-F-012 | Editable outline drafts | 4.2 / DS-OUT-03 | OutlineService | TC-OUT-03 | N | Jira story 2.1 |
-| PGS-F-013 | Attach outline to episode board | 4.2 / DS-OUT-04 | OutlineService | TC-OUT-04 | N | Jira story 2.1 |
-| PGS-F-020 | Approve, reject or reorder points | 4.3 / DS-REV-01 | ReviewService | TC-REV-01 | N | Jira story 3.1 |
-| PGS-F-021 | Mandatory rejection comment | 4.3 / DS-REV-02 | ReviewService | TC-REV-02 | N | Jira story 3.1 |
-| PGS-F-022 | Insert host segments | 4.3 / DS-REV-03 | ReviewService | TC-REV-03 | N | New in mini project |
-| PGS-F-023 | Audit approval decisions | 4.3 / DS-REV-04 | AuditService | TC-REV-04 | N | Supports SO-2 |
-| PGS-F-030 | Generate run-of-show | 4.4 / DS-ROS-01 | RunOfShowService | TC-ROS-01 | N | Jira story 3.2 |
-| PGS-F-031 | Cumulative timestamps | 4.4 / DS-ROS-02 | RunOfShowService | TC-ROS-02 | N | Jira story 3.2 |
-| PGS-F-032 | Edit durations and recompute | 4.4 / DS-ROS-03 | RunOfShowService | TC-ROS-03 | N | New in mini project |
-| PGS-F-033 | Export PDF production sheet | 4.4 / DS-EXP-01 | ExportService | TC-ROS-04 | N | Jira story 3.3 |
-| PGS-F-040 | Send calendar invite | 4.5 / DS-NOT-01 | NotificationService | TC-NOT-01 | N | Jira story 4.1 |
-| PGS-F-041 | 24-hour reminder | 4.5 / DS-NOT-02 | NotificationService | TC-NOT-02 | N | Jira story 4.1 |
-| PGS-F-042 | Submission and decision notices with retry | 4.5 / DS-NOT-03 | NotificationService | TC-NOT-03 | N | New in mini project |
-| PGS-F-050 | Authenticate users | 4.6 / DS-AUT-01 | AuthService | TC-AUT-01 | N | Jira story 4.2 |
-| PGS-F-051 | Restrict episode board | 4.6 / DS-AUT-02 | AuthService | TC-AUT-02 | N | Jira story 4.2 |
-| PGS-F-052 | Admin suspend and audit view | 4.6 / DS-ADM-01 | AdminConsole | TC-ADM-01 | N | New in mini project |
-| PGS-NF-001 | PDF export under 1 s (p95) | 5 / DS-EXP-01 | ExportService | TC-PERF-01 | N | Given NFR-001 |
-| PGS-NF-002 | Slot page within 2 s (p90) | 5 / DS-SCH-03 | WebUI, SchedulingService | TC-PERF-02 | N |  |
-| PGS-NF-003 | 99.5% availability | 5 / DS-OPS-01 | Platform | TC-OPS-01 | N |  |
-| PGS-NF-004 | TLS and private boards | 5 / DS-AUT-02 | Platform, AuthService | TC-SEC-01 | N | Given NFR-002 |
-| PGS-NF-005 | WCAG 2.1 AA | 5 / DS-UX-01 | WebUI | TC-UX-01 | N |  |
-| PGS-NF-006 | 500 hosts, 5,000 bookings per month | 5 / DS-OPS-02 | Platform | TC-PERF-03 | N |  |
-| PGS-NF-007 | UTC storage, timezone-correct display | 5 / DS-SCH-06 | SchedulingService, WebUI | TC-SCH-06 | N |  |
-| PGS-SR-001 | TLS 1.2+ and HSTS | 5.1.2 / DS-SEC-01 | Platform | TC-SEC-01 | N | SO-1 |
-| PGS-SR-002 | Argon2id password hashing | 5.1.2 / DS-SEC-02 | AuthService | TC-SEC-02 | N | SO-1 |
-| PGS-SR-003 | Server-side authorisation | 5.1.2 / DS-SEC-03 | AuthService | TC-SEC-03 | N | SO-1 |
-| PGS-SR-004 | Rate limiting | 5.1.2 / DS-SEC-04 | ApiGateway | TC-SEC-04 | N | SO-3 |
-| PGS-SR-005 | Output escaping and URL allowlist | 5.1.2 / DS-SEC-05 | WebUI, OutlineService | TC-SEC-05 | N | SO-1 |
-| PGS-SR-006 | Append-only audit log | 5.1.2 / DS-SEC-06 | AuditService | TC-SEC-06 | N | SO-2 |
+| BMS-F-001 | Create customer record | 4.1 / DS-ACC-01 | AccountModule | TC-ACC-01 | N | Story 1.1 |
+| BMS-F-002 | Open account | 4.1 / DS-ACC-02 | AccountModule | TC-ACC-02 | N | Story 1.2 |
+| BMS-F-003 | Modify customer details | 4.1 / DS-ACC-03 | AccountModule | TC-ACC-03 | N | Story 1.3 |
+| BMS-F-004 | Close account at zero balance | 4.1 / DS-ACC-04 | AccountModule | TC-ACC-04 | N | Story 1.4 |
+| BMS-F-005 | Retrieve account by number or customer | 4.1 / DS-ACC-05 | AccountModule | TC-ACC-05 | N | Story 1.2 |
+| BMS-F-006 | Transfer residual balance on closure | 4.1 / DS-ACC-06 | AccountModule, TransactionModule | TC-ACC-06 | N | Story 1.5 |
+| BMS-F-010 | Authenticate customer or staff | 4.2 / DS-AUT-01 | AuthModule | TC-AUT-01 | N | Story 2.1 |
+| BMS-F-011 | Lock after 3 failed PIN attempts | 4.2 / DS-AUT-02 | AuthModule | TC-AUT-02 | N | Story 2.2 |
+| BMS-F-012 | Role-based authorisation | 4.2 / DS-AUT-03 | AuthModule | TC-AUT-03 | N | Story 2.3 |
+| BMS-F-013 | Manager unlocks account | 4.2 / DS-AUT-04 | AuthModule | TC-AUT-04 | N | Story 2.4 |
+| BMS-F-014 | No echo, clear credential buffer | 4.2 / DS-AUT-05 | AuthModule | TC-SEC-02 | N | Story 2.1 |
+| BMS-F-020 | Atomic deposit credit | 4.3 / DS-DEP-01 | TransactionModule | TC-DEP-01 | N | Story 3.1 |
+| BMS-F-021 | Reject invalid deposit | 4.3 / DS-DEP-02 | ValidationModule | TC-DEP-02 | N | Story 3.1 |
+| BMS-F-022 | Journal every deposit | 4.3 / DS-DEP-03 | LedgerModule | TC-DEP-03 | N | Story 3.1 |
+| BMS-F-030 | Check balance and daily limit | 4.4 / DS-WDR-01 | TransactionModule | TC-WDR-01 | N | Story 3.2 |
+| BMS-F-031 | Atomic debit plus journal | 4.4 / DS-WDR-02 | TransactionModule, LedgerModule | TC-REL-01 | N | Story 3.2 |
+| BMS-F-032 | Savings minimum balance | 4.4 / DS-WDR-03 | TransactionModule | TC-WDR-02 | N | Story 3.3 |
+| BMS-F-033 | Current account overdraft | 4.4 / DS-WDR-04 | TransactionModule | TC-WDR-03 | N | Story 3.4 |
+| BMS-F-040 | Display current balance | 4.5 / DS-BAL-01 | TransactionModule | TC-BAL-01 | N | Story 4.1 |
+| BMS-F-041 | Mini-statement, last ten | 4.5 / DS-BAL-02 | LedgerModule | TC-BAL-02 | N | Story 4.2 |
+| BMS-F-042 | Date-range statement | 4.5 / DS-BAL-03 | LedgerModule | TC-BAL-03 | N | Story 4.3 |
+| BMS-F-050 | Atomic two-leg transfer | 4.6 / DS-TRF-01 | TransactionModule | TC-TRF-01 | N | Story 5.1 |
+| BMS-F-051 | Reject self or inactive transfer | 4.6 / DS-TRF-02 | ValidationModule | TC-TRF-02 | N | Story 5.1 |
+| BMS-F-052 | Transfer ceilings | 4.6 / DS-TRF-03 | TransactionModule | TC-TRF-03 | N | Story 5.2 |
+| BMS-F-060 | Append-only journal | 4.7 / DS-LED-01 | LedgerModule | TC-LED-01 | N | Story 6.1 |
+| BMS-F-061 | Reconciliation check | 4.7 / DS-LED-02 | LedgerModule | TC-LED-02 | N | Story 6.2 |
+| BMS-F-062 | End-of-day report | 4.7 / DS-RPT-01 | ReportModule | TC-LED-03 | N | Story 6.3 |
+| BMS-F-063 | Audit privileged actions | 4.7 / DS-LED-03 | LedgerModule | TC-LED-04 | N | Story 6.1 |
+| BMS-F-064 | View audit log | 4.7 / DS-RPT-02 | ReportModule | TC-LED-05 | N | Story 6.4 |
+| BMS-NF-001 | Transaction within 500 ms | 5 / DS-PERF-01 | All service modules | TC-PERF-01 | N | Story 7.7 |
+| BMS-NF-002 | Crash-safe write-ahead journal | 5 / DS-REL-01 | PersistenceModule | TC-REL-01 | N | Story 7.2 - hardest NFR |
+| BMS-NF-003 | Integer paise, no floats | 5 / DS-INT-01 | TransactionModule | TC-SEC-03 | N | Story 7.1 |
+| BMS-NF-004 | Clean -Wall -Wextra -Werror build | 5 / DS-PORT-01 | Build system | TC-PORT-01 | N | Story 7.6 |
+| BMS-NF-005 | Reason and remedy on rejection | 5 / DS-UX-01 | CLI / MenuLayer | TC-UX-01 | N | Story 7.6 |
+| BMS-NF-006 | Layered, unit-testable modules | 5 / DS-ARCH-01 | All modules | TC-PORT-02 | N | Story 7.6 |
+| BMS-NF-007 | 10,000 accounts under 2 s | 5 / DS-PERF-02 | PersistenceModule | TC-PERF-02 | N | Story 7.7 |
+| BMS-SR-001 | Salted credential hashing | 5.1.2 / DS-SEC-01 | AuthModule | TC-SEC-01 | N | SO-1 / Story 7.3 |
+| BMS-SR-002 | Bounds-checked buffers, banned functions | 5.1.2 / DS-SEC-02 | All modules | TC-SEC-04 | N | SO-3 / Story 7.4 |
+| BMS-SR-003 | Integer overflow checks on money | 5.1.2 / DS-SEC-03 | TransactionModule | TC-SEC-03 | N | SO-3 / Story 7.1 |
+| BMS-SR-004 | Validate all input before use | 5.1.2 / DS-SEC-04 | ValidationModule | TC-SEC-05 | N | SO-3 / Story 7.4 |
+| BMS-SR-005 | Append-only journal and audit log | 5.1.2 / DS-SEC-05 | LedgerModule | TC-SEC-06 | N | SO-2 / Story 7.2 |
+| BMS-SR-006 | Owner-only file permissions | 5.1.2 / DS-SEC-06 | PersistenceModule | TC-SEC-07 | N | SO-1 / Story 7.5 |
+| BMS-SR-007 | Role check in the service layer | 5.1.2 / DS-SEC-07 | AuthModule | TC-SEC-08 | N | SO-4 / Story 7.5 |
 
 ## Coverage summary
 
-- Requirements tracked: **36** (23 functional, 7 non-functional, 6 security)
+- Requirements tracked: **43** (29 functional, 7 non-functional, 7 security)
 - Every row names at least one test case: **yes**
-- Status counts: `N` = 36
+- Status counts: `N` = 43

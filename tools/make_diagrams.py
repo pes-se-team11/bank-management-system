@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Render the two UML use-case diagrams to SVG, PNG and PDF.
+"""Render the two UML use-case diagrams to SVG, PNG and PDF (Bank Management System).
 
     python tools/make_diagrams.py
 
@@ -95,11 +95,19 @@ def assoc(ax, ay, uc):
             f'stroke="{LINE}" stroke-width="1.6"/>')
 
 
-def stereo(src, dst, kind):
-    """Dashed, open-arrowed dependency. kind is 'include' or 'extend'."""
+def stereo(src, dst, kind, t=0.30):
+    """Dashed, open-arrowed dependency. kind is 'include' or 'extend'.
+
+    Several use cases here are shared hubs with fan-in from three bases, so
+    include lines necessarily cross. Two things keep that readable: the label
+    sits at `t` along the line rather than the midpoint, which spreads labels
+    apart because the sources are at different heights; and the text is drawn
+    with a white halo so a line passing behind it does not run through the
+    glyphs. Pass a different `t` to nudge one label clear of another.
+    """
     sx, sy = _edge_point(src[0], src[1], dst[0], dst[1])
     dx, dy = _edge_point(dst[0], dst[1], src[0], src[1])
-    mx, my = (sx + dx) / 2, (sy + dy) / 2
+    mx, my = sx + (dx - sx) * t, sy + (dy - sy) * t
     ang = math.degrees(math.atan2(dy - sy, dx - sx))
     if ang > 90:
         ang -= 180
@@ -112,11 +120,17 @@ def stereo(src, dst, kind):
     else:
         placement = (f'x="{mx:.1f}" y="{my-6:.1f}" text-anchor="middle" '
                      f'transform="rotate({ang:.1f} {mx:.1f} {my:.1f})"')
+    # The halo is a separate underlay rather than paint-order="stroke":
+    # cairosvg ignores paint-order and would paint the white stroke over the
+    # fill, erasing the label.
+    common = (f'font-family="{FONT}" font-size="11.5" font-style="italic"')
+    label = f'&#171;{kind}&#187;'
     return (f'<line x1="{sx:.1f}" y1="{sy:.1f}" x2="{dx:.1f}" y2="{dy:.1f}" '
             f'stroke="{LINE}" stroke-width="1.5" stroke-dasharray="7,5" '
             f'marker-end="url(#open)"/>\n'
-            f'<text {placement} font-family="{FONT}" font-size="11.5" '
-            f'font-style="italic" fill="{LINE}">&#171;{kind}&#187;</text>')
+            f'<text {placement} {common} fill="#FFFFFF" stroke="#FFFFFF" '
+            f'stroke-width="4" stroke-linejoin="round">{label}</text>\n'
+            f'<text {placement} {common} fill="{LINE}">{label}</text>')
 
 
 def boundary(x1, y1, x2, y2, title):
@@ -139,92 +153,103 @@ def svg(width, height, body, caption):
 </svg>'''
 
 
+
 # --------------------------------------------------------------------------- diagram 1
 
 def diagram_one():
-    W, H = 1120, 760
-    uc03 = (430, 130)
-    uc01 = (430, 268)
-    uc08 = (430, 400)
-    uc02 = (430, 532)
-    uc09 = (430, 664)
-    uc06 = (740, 330)
-    uc07 = (740, 470)
+    """Customer-facing account transactions."""
+    W, H = 1200, 800
+    uc01 = (470, 155)   # Deposit
+    uc02 = (470, 300)   # Withdraw Cash
+    uc03 = (470, 445)   # Funds Transfer
+    uc04 = (470, 590)   # Balance Inquiry
+    uc05 = (470, 710)   # Mini Statement
+    uc07 = (800, 225)   # Record Ledger Entry   - included by 01, 02, 03
+    uc06 = (800, 415)   # Validate Sufficient Balance - included by 02, 03
+    uc08 = (800, 600)   # Apply Overdraft       - extends 02
 
-    host = (150, 100)
-    guest = (150, 430)
-    svc = (975, 470)
+    customer = (135, 290)
+    teller = (135, 600)
 
     body = [
-        boundary(280, 62, 900, 720, "Podcast Guest Scheduling & Outline Builder"),
-        actor(host[0], host[1], "Show Host"),
-        actor(guest[0], guest[1], "Podcast Guest"),
-        actor(svc[0], svc[1], "Calendar & Notification Service"),
-        usecase(*uc03, "UC-03", "Publish Availability"),
-        usecase(*uc01, "UC-01", "Book Interview Slot"),
-        usecase(*uc08, "UC-08", "Request Reschedule"),
-        usecase(*uc02, "UC-02", "Submit Talking-Point Outline"),
-        usecase(*uc09, "UC-09", "Attach Biography Links"),
-        usecase(*uc06, "UC-06", "Validate Slot Availability"),
-        usecase(*uc07, "UC-07", "Send Booking Notification"),
-        assoc(host[0] + 20, host[1] + 30, uc03),
-        assoc(guest[0] + 20, guest[1] + 30, uc01),
-        assoc(guest[0] + 20, guest[1] + 30, uc02),
-        stereo(uc01, uc06, "include"),
+        boundary(275, 60, 955, 770, "Bank Management System"),
+        actor(customer[0], customer[1], "Customer"),
+        actor(teller[0], teller[1], "Bank Teller"),
+        usecase(*uc01, "UC-01", "Deposit"),
+        usecase(*uc02, "UC-02", "Withdraw Cash"),
+        usecase(*uc03, "UC-03", "Funds Transfer"),
+        usecase(*uc04, "UC-04", "Balance Inquiry"),
+        usecase(*uc05, "UC-05", "Mini Statement"),
+        usecase(*uc07, "UC-07", "Record Ledger Entry"),
+        usecase(*uc06, "UC-06", "Validate Sufficient Balance"),
+        usecase(*uc08, "UC-08", "Apply Overdraft"),
+        assoc(customer[0] + 20, customer[1] + 30, uc01),
+        assoc(customer[0] + 20, customer[1] + 30, uc02),
+        assoc(customer[0] + 20, customer[1] + 30, uc03),
+        assoc(customer[0] + 20, customer[1] + 30, uc04),
+        assoc(customer[0] + 20, customer[1] + 30, uc05),
+        assoc(teller[0] + 20, teller[1] + 30, uc01),
+        assoc(teller[0] + 20, teller[1] + 30, uc02),
         stereo(uc01, uc07, "include"),
-        stereo(uc08, uc01, "extend"),
-        stereo(uc09, uc02, "extend"),
-        assoc(svc[0] - 20, svc[1] + 30, uc07),
+        stereo(uc02, uc07, "include"),
+        stereo(uc02, uc06, "include", t=0.62),
+        stereo(uc03, uc06, "include"),
+        stereo(uc03, uc07, "include", t=0.55),
+        stereo(uc08, uc02, "extend"),
     ]
     return W, H, svg(W, H, "\n".join(body),
-                     "Use-Case Diagram 1 - Scheduling & Guest Content Submission")
+                     "Use-Case Diagram 1 - Account Transactions")
 
 
 # --------------------------------------------------------------------------- diagram 2
 
 def diagram_two():
-    W, H = 1120, 760
-    uc04 = (430, 150)
-    uc13 = (740, 150)
-    uc05 = (430, 330)
-    uc11 = (740, 300)
-    uc10 = (740, 430)
-    uc12 = (430, 470)
-    uc14 = (430, 610)
-    uc15 = (430, 700)
+    """Account administration, audit and reporting."""
+    W, H = 1200, 880
+    uc09 = (470, 150)   # Open Account
+    uc11 = (470, 290)   # Modify Customer Details
+    uc10 = (470, 430)   # Close Account
+    uc12 = (470, 570)   # Unlock Locked Account
+    uc13 = (470, 700)   # Generate End-of-Day Report
+    uc14 = (470, 820)   # View Audit Log
+    uc17 = (800, 215)   # Authenticate User      - included by 09, 11
+    uc16 = (800, 365)   # Verify Zero Balance    - included by 10
+    uc15 = (800, 505)   # Record Audit Entry     - included by 10, 11, 12
+    uc18 = (800, 645)   # Transfer Residual Balance - extends 10
 
-    host = (150, 200)
-    admin = (150, 590)
-    svc = (975, 150)
-    guest = (975, 560)
+    teller = (135, 190)
+    manager = (135, 600)
 
     body = [
-        boundary(280, 62, 900, 745, "Podcast Guest Scheduling & Outline Builder"),
-        actor(host[0], host[1], "Show Host"),
-        actor(admin[0], admin[1], "Administrator"),
-        actor(svc[0], svc[1], "Calendar & Notification Service"),
-        actor(guest[0], guest[1], "Podcast Guest"),
-        usecase(*uc04, "UC-04", "Review & Approve Outline"),
-        usecase(*uc13, "UC-13", "Notify Approval Decision"),
-        usecase(*uc05, "UC-05", "Generate Run-of-Show Sheet"),
-        usecase(*uc11, "UC-11", "Recompute Segment Timestamps"),
-        usecase(*uc10, "UC-10", "Export PDF Production Sheet"),
-        usecase(*uc12, "UC-12", "Insert Host Segment"),
-        usecase(*uc14, "UC-14", "Manage User Accounts"),
-        usecase(*uc15, "UC-15", "View Audit Log"),
-        assoc(host[0] + 20, host[1] + 30, uc04),
-        assoc(host[0] + 20, host[1] + 30, uc05),
-        assoc(admin[0] + 20, admin[1] + 30, uc14),
-        assoc(admin[0] + 20, admin[1] + 30, uc15),
-        stereo(uc04, uc13, "include"),
-        stereo(uc05, uc11, "include"),
-        stereo(uc05, uc10, "include"),
-        stereo(uc12, uc05, "extend"),
-        assoc(svc[0] - 20, svc[1] + 30, uc13),
-        assoc(guest[0] - 20, guest[1] + 30, uc10),
+        boundary(275, 60, 955, 850, "Bank Management System"),
+        actor(teller[0], teller[1], "Bank Teller"),
+        actor(manager[0], manager[1], "Bank Manager"),
+        usecase(*uc09, "UC-09", "Open Account"),
+        usecase(*uc11, "UC-11", "Modify Customer Details"),
+        usecase(*uc10, "UC-10", "Close Account"),
+        usecase(*uc12, "UC-12", "Unlock Locked Account"),
+        usecase(*uc13, "UC-13", "Generate End-of-Day Report"),
+        usecase(*uc14, "UC-14", "View Audit Log"),
+        usecase(*uc17, "UC-17", "Authenticate User"),
+        usecase(*uc16, "UC-16", "Verify Zero Balance"),
+        usecase(*uc15, "UC-15", "Record Audit Entry"),
+        usecase(*uc18, "UC-18", "Transfer Residual Balance"),
+        assoc(teller[0] + 20, teller[1] + 30, uc09),
+        assoc(teller[0] + 20, teller[1] + 30, uc11),
+        assoc(manager[0] + 20, manager[1] + 30, uc10),
+        assoc(manager[0] + 20, manager[1] + 30, uc12),
+        assoc(manager[0] + 20, manager[1] + 30, uc13),
+        assoc(manager[0] + 20, manager[1] + 30, uc14),
+        stereo(uc09, uc17, "include"),
+        stereo(uc11, uc17, "include"),
+        stereo(uc10, uc16, "include"),
+        stereo(uc10, uc15, "include"),
+        stereo(uc11, uc15, "include", t=0.78),
+        stereo(uc12, uc15, "include"),
+        stereo(uc18, uc10, "extend"),
     ]
     return W, H, svg(W, H, "\n".join(body),
-                     "Use-Case Diagram 2 - Episode Production & Administration")
+                     "Use-Case Diagram 2 - Account Administration, Audit & Reporting")
 
 
 # --------------------------------------------------------------------------- main
@@ -232,8 +257,8 @@ def diagram_two():
 def main():
     import cairosvg
     os.makedirs(OUT, exist_ok=True)
-    for name, fn in (("UseCase_1_Scheduling", diagram_one),
-                     ("UseCase_2_Production", diagram_two)):
+    for name, fn in (("UseCase_1_Transactions", diagram_one),
+                     ("UseCase_2_Administration", diagram_two)):
         w, h, src = fn()
         svg_path = os.path.join(OUT, name + ".svg")
         with open(svg_path, "w", encoding="utf-8") as fh:
