@@ -6,7 +6,7 @@
 **Team:** Team 11  
 **Implementation language:** C / C++  
 **Version:** 1.0  
-**Authors:** <Name> (PES1UG24AM305); <Name> (PES1UG24AM318); <Name> (PES1UG24AM334); Dhanush S (PES1UG24AM360)  
+**Authors:** Vidit Soni (PES1UG24AM318); Adarsha E (PES1UG24AM334); Dhanush S (PES1UG24AM360)  
 **Date:** 05-09-2025  
 **Status:** Draft - for review
 
@@ -22,8 +22,9 @@
 | Role | Name | Signature / Email | Date |
 |---|---|---|---|
 | Course Coordinator |  |  |  |
-| Requirements Lead | Dhanush S (PES1UG24AM360) |  |  |
-| QA / Test Lead | PES1UG24AM318 |  |  |
+| Requirements (Person 1) | Dhanush S (PES1UG24AM360) |  |  |
+| Design / Test (Person 2) | Adarsha E (PES1UG24AM334) |  |  |
+| Design / Test (Person 3) | Vidit Soni (PES1UG24AM318) |  |  |
 
 ## Table of Contents
 

@@ -60,8 +60,9 @@ def build_blocks():
     add(("table", W_APR, [
         ["Role", "Name", "Signature / Email", "Date"],
         ["Course Coordinator", "", "", ""],
-        ["Requirements Lead", "Dhanush S (PES1UG24AM360)", "", ""],
-        ["QA / Test Lead", "PES1UG24AM318", "", ""],
+        ["Requirements (Person 1)", "Dhanush S (PES1UG24AM360)", "", ""],
+        ["Design / Test (Person 2)", "Adarsha E (PES1UG24AM334)", "", ""],
+        ["Design / Test (Person 3)", "Vidit Soni (PES1UG24AM318)", "", ""],
     ]))
 
     add(("h2", "Table of Contents"))

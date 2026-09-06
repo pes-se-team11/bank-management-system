@@ -18,10 +18,9 @@ META = {
 }
 
 TEAM = [
-    ("<Name>", "PES1UG24AM305", "Design Lead"),
-    ("<Name>", "PES1UG24AM318", "QA / Test Lead"),
-    ("<Name>", "PES1UG24AM334", "Jira & Traceability Lead"),
-    ("Dhanush S", "PES1UG24AM360", "Requirements Lead / Repo Maintainer"),
+    ("Vidit Soni", "PES1UG24AM318", "Design / Test - role to confirm"),
+    ("Adarsha E", "PES1UG24AM334", "Design / Test - role to confirm"),
+    ("Dhanush S", "PES1UG24AM360", "Requirements & Auth/Account module"),
 ]
 
 # ---------------------------------------------------------------------------

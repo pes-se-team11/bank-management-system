@@ -15,14 +15,14 @@ every balance explicable.
 
 ## Team & roles
 
-| Person | SRN | Documentation | Code | Points |
-|---|---|---|---|---|
-| 1 — Requirements & Auth/Account | PES1UG24AM360 (Dhanush S) | SRS, RTM, use-case diagrams | `AccountModule`, `AuthModule`, `ValidationModule` | 43 |
-| 2 — Architecture & Transactions | `<to confirm>` | SAD, sequence diagrams, threat model | `TransactionModule`, `PersistenceModule` | 48 |
-| 3 — Test Plan & Reporting | `<to confirm>` | Test Plan, test cases | `LedgerModule` (read), `ReportModule` | 35 |
+| Person | Name | SRN | GitHub | Documentation | Code | Points |
+|---|---|---|---|---|---|---|
+| 1 | Dhanush S | PES1UG24AM360 | `@dhanushs1912-svg` | SRS, RTM, use-case diagrams | `AccountModule`, `AuthModule`, `ValidationModule` | 43 |
+| 2 | Adarsha E | PES1UG24AM334 | `@Adarsh-031` | SAD **or** Test Plan — to confirm | see `ROLES.md` | — |
+| 3 | Vidit Soni | PES1UG24AM318 | `@itsvidit1702` | SAD **or** Test Plan — to confirm | see `ROLES.md` | — |
 
-Team 11's roster lists four SRNs; one member is asking the coordinator about moving teams, so the
-split above is provisional. Two gaps still unowned: **the Jira board** and the **CLI/menu layer**.
+Team of three. `PES1UG24AM305` has moved to another team. Adarsha owns the Jira site
+(`pes1ug24am334.atlassian.net`, project key `BMS`).
 
 Full responsibility breakdown: [`ROLES.md`](ROLES.md). **Names and GitHub handles still to be filled in.**
 
