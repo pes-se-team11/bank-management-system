@@ -15,12 +15,14 @@ every balance explicable.
 
 ## Team & roles
 
-| Role | SRN | Owns |
-|---|---|---|
-| Person 1 — Requirements & Auth/Account | PES1UG24AM360 (Dhanush S) | SRS, RTM, repo admin · AccountModule, AuthModule, ValidationModule |
-| Person 2 — Jira & backlog | `<SRN to confirm>` | Jira board, sprint plan · code area TBA |
-| Person 3 — proposed | `<SRN to confirm>` | SAD, UML diagrams · TransactionModule |
-| Person 4 — proposed | `<SRN to confirm>` | Test Plan, test cases · LedgerModule, ReportModule |
+| Person | SRN | Documentation | Code | Points |
+|---|---|---|---|---|
+| 1 — Requirements & Auth/Account | PES1UG24AM360 (Dhanush S) | SRS, RTM, use-case diagrams | `AccountModule`, `AuthModule`, `ValidationModule` | 43 |
+| 2 — Architecture & Transactions | `<to confirm>` | SAD, sequence diagrams, threat model | `TransactionModule`, `PersistenceModule` | 48 |
+| 3 — Test Plan & Reporting | `<to confirm>` | Test Plan, test cases | `LedgerModule` (read), `ReportModule` | 35 |
+
+Team 11's roster lists four SRNs; one member is asking the coordinator about moving teams, so the
+split above is provisional. Two gaps still unowned: **the Jira board** and the **CLI/menu layer**.
 
 Full responsibility breakdown: [`ROLES.md`](ROLES.md). **Names and GitHub handles still to be filled in.**
 
