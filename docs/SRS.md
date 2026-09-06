@@ -22,9 +22,9 @@
 | Role | Name | Signature / Email | Date |
 |---|---|---|---|
 | Course Coordinator |  |  |  |
-| Requirements (Person 1) | Dhanush S (PES1UG24AM360) |  |  |
-| Design / Test (Person 2) | Adarsha E (PES1UG24AM334) |  |  |
-| Design / Test (Person 3) | Vidit Soni (PES1UG24AM318) |  |  |
+| Person 1 - Requirements | Dhanush S (PES1UG24AM360) |  |  |
+| Person 2 - Architecture & Design | Vidit Soni (PES1UG24AM318) |  |  |
+| Person 3 - Test Plan | Adarsha E (PES1UG24AM334) |  |  |
 
 ## Table of Contents
 

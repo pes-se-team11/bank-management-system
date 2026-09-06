@@ -5,14 +5,13 @@
 | | Name | SRN | GitHub | Atlassian |
 |---|---|---|---|---|
 | Person 1 | Dhanush S | PES1UG24AM360 | `@dhanushs1912-svg` | member |
-| Person 2 or 3 | Adarsha E | PES1UG24AM334 | `@Adarsh-031` | **site owner** — `pes1ug24am334.atlassian.net` |
-| Person 2 or 3 | Vidit Soni | PES1UG24AM318 | `@itsvidit1702` | member |
+| Person 2 | Vidit Soni | PES1UG24AM318 | `@itsvidit1702` | member |
+| Person 3 | Adarsha E | PES1UG24AM334 | `@Adarsh-031` | **site owner** — `pes1ug24am334.atlassian.net` |
 
 `PES1UG24AM305` has moved to another team.
 
-> **One thing still to settle:** which of Adarsha and Vidit is Person 2 (Architecture/Design +
-> Transactions) and which is Person 3 (Test Plan + Reporting). Everything below is written against
-> the person numbers, so agreeing it is a two-line edit to this table.
+Adarsha is Person 3 and already owns the Atlassian site, so the Jira board sits with its owner and
+no admin transfer is needed.
 
 ---
 
@@ -43,6 +42,8 @@ password, input validation.
 
 ## Person 2 — Architecture/Design & Transaction module
 
+**Vidit Soni · PES1UG24AM318 · `@itsvidit1702`**
+
 **Documentation — the SAD.** Layered architecture pattern, component diagram, two or more sequence
 diagrams (**withdraw** and **transfer** are the right pair — between them they exercise every
 layer), module interface definitions, technology stack, threat model against `SO-1`…`SO-4`.
@@ -67,6 +68,8 @@ transfer, file persistence.
 
 ## Person 3 — Test Plan & Reporting/Admin module
 
+**Adarsha E · PES1UG24AM334 · `@Adarsh-031`**
+
 **Documentation — the Test Plan.** Test items, features to and not to be tested, test levels, entry
 and exit criteria, schedule, risk table, and **linking Person 1's requirement IDs to real test-case
 IDs**.
@@ -88,8 +91,8 @@ starts.
 
 **Person 3 also owns the Jira board** — the 3-way split left it unassigned, and *"complete Jira
 backlog"* is graded on 15 September. It belongs here because Person 3 already owns the RTM, and the
-backlog is the third leg of the same traceability chain. Adarsha owns the Atlassian site, so if
-Adarsha is Person 2 the site stays theirs and Person 3 is given project admin.
+backlog is the third leg of the same traceability chain — and Adarsha already owns the Atlassian
+site, so ownership and responsibility land on the same person.
 
 ---
 
