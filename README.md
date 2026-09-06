@@ -21,7 +21,7 @@ modules.
 | If you are | Read these three, ignore the rest |
 |---|---|
 | **Vidit (P2)** — architecture & transactions | [`docs/SRS.md`](docs/SRS.md) §4.3–4.6 (your requirements) · [`ROLES.md`](ROLES.md) Person 2 · [`docs/Jira_Backlog.md`](docs/Jira_Backlog.md) Epics 3, 5, 7 |
-| **Adarsha (P3)** — test plan & reporting | [`docs/Test_Plan.md`](docs/Test_Plan.md) (yours to finish) · [`docs/SRS.md`](docs/SRS.md) §8 (the RTM — link your `TC-` ids here) · [`ROLES.md`](ROLES.md) Person 3 |
+| **Adarsha (P3)** — test plan & reporting | [`docs/Test_Plan.md`](docs/Test_Plan.md) — **read the box at the top first** · [`docs/SRS.md`](docs/SRS.md) §8 (the RTM — link your `TC-` ids here) · [`ROLES.md`](ROLES.md) Person 3 |
 | **Dhanush (P1)** — requirements & auth | [`tools/srs_content.py`](tools/srs_content.py) (the SRS source) · [`ROLES.md`](ROLES.md) Person 1 |
 
 **`tools/` is Person 1's build machinery — nobody else needs to open it.** The SRS and its diagrams
@@ -49,7 +49,7 @@ Full responsibility breakdown: [`ROLES.md`](ROLES.md). **Names and GitHub handle
 | # | Deliverable | Due | Status |
 |---|---|---|---|
 | 1 | Project SRS · Jira update started | **6 September 2025** | Drafted — [`docs/SRS.md`](docs/SRS.md) · [`.docx`](docs/SRS_Bank_Management_System_v1.0.docx) |
-| 2 | Project Test Plan · complete Jira backlog | **15 September 2025** | Draft — [`docs/Test_Plan.md`](docs/Test_Plan.md), [`docs/Jira_Backlog.md`](docs/Jira_Backlog.md) |
+| 2 | Project Test Plan · complete Jira backlog | **15 September 2025** | Scaffold — [`docs/Test_Plan.md`](docs/Test_Plan.md) (P3 writes 11 of 15 sections), [`docs/Jira_Backlog.md`](docs/Jira_Backlog.md) |
 | — | Software Architecture & Design (SAD) | template supplied, date TBC | Not started |
 
 ---
