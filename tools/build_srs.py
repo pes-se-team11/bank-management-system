@@ -380,6 +380,18 @@ def render_docx(blocks):
         if child.tag != qn("w:sectPr"):
             body.remove(child)
 
+    # The template carries the instructor's identity in its document
+    # properties. Overwrite them, or the submitted file names him as the
+    # last person to edit it.
+    cp = doc.core_properties
+    cp.author = "; ".join(f"{n} ({srn})" for n, srn, _ in TEAM)
+    cp.last_modified_by = TEAM[-1][0]
+    cp.title = f"{C.META['title']} - {C.META['project']}"
+    cp.subject = f"{C.META['team']} - PES University, Dept. of CSE"
+    cp.category = "Software Engineering Mini Project"
+    cp.comments = ""
+    cp.keywords = "SRS, Bank Management System, Team 11"
+
     for blk in blocks:
         kind = blk[0]
         if kind in ("h1", "h2", "h3"):
