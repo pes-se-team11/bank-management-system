@@ -1,16 +1,21 @@
 # -*- coding: utf-8 -*-
-"""Render the two UML use-case diagrams to SVG, PNG and PDF (Bank Management System).
+"""Render the two UML use-case diagrams (Bank Management System).
 
     python tools/make_diagrams.py
 
 Everything is emitted from the LAYOUT tables below, so a diagram change is a
-data edit rather than a fight with a drawing tool. PNG is what gets embedded
-in the DOCX; PDF is the submittable copy; SVG is the editable source.
+data edit rather than a fight with a drawing tool.
+
+SVG in diagrams/ is the committed, editable source. The PNG the .docx embeds
+is written to build/ and gitignored, because python-docx cannot embed SVG and
+a raster derived from a committed source does not itself need committing.
 """
 import os
 import math
 
-OUT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "diagrams")
+_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+OUT = os.path.join(_ROOT, "diagrams")      # committed: the editable SVG source
+BUILD = os.path.join(_ROOT, "build")       # gitignored: the PNG the .docx embeds
 
 FONT = "Segoe UI, Calibri, Helvetica, Arial, sans-serif"
 INK = "#111111"
@@ -257,17 +262,18 @@ def diagram_two():
 def main():
     import cairosvg
     os.makedirs(OUT, exist_ok=True)
+    os.makedirs(BUILD, exist_ok=True)
     for name, fn in (("UseCase_1_Transactions", diagram_one),
                      ("UseCase_2_Administration", diagram_two)):
         w, h, src = fn()
-        svg_path = os.path.join(OUT, name + ".svg")
-        with open(svg_path, "w", encoding="utf-8") as fh:
+        with open(os.path.join(OUT, name + ".svg"), "w", encoding="utf-8") as fh:
             fh.write(src)
-        data = src.encode("utf-8")
-        cairosvg.svg2png(bytestring=data, write_to=os.path.join(OUT, name + ".png"),
+        # python-docx cannot embed SVG, so the .docx needs a raster. It is a
+        # derivative of the SVG, so it is generated rather than committed.
+        cairosvg.svg2png(bytestring=src.encode("utf-8"),
+                         write_to=os.path.join(BUILD, name + ".png"),
                          output_width=w * 2, output_height=h * 2)
-        cairosvg.svg2pdf(bytestring=data, write_to=os.path.join(OUT, name + ".pdf"))
-        print("wrote", name, "svg/png/pdf")
+        print("wrote", name + ".svg (diagrams/) and .png (build/)")
 
 
 if __name__ == "__main__":

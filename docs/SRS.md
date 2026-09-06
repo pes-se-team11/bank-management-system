@@ -281,11 +281,11 @@ Two use-case diagrams model the system. Diagram 1 covers the account transaction
 Arrow direction follows UML: «include» points from the base use case to the included one; «extend» points from the extending use case to the base it extends. Two included use cases are deliberately shared by several bases - UC-07 Record Ledger Entry is included by Deposit, Withdraw Cash and Funds Transfer, and UC-15 Record Audit Entry by Close Account, Modify Customer Details and Unlock Locked Account. That sharing is the point of «include»: the behaviour is specified once and reused, which is also why BMS-F-060 and BMS-F-063 are each a single requirement rather than one per calling feature.  
 The included and extending use cases (UC-06, UC-07, UC-08, UC-15, UC-16, UC-17, UC-18) carry no direct actor association, because they are entered from within a base use case rather than initiated on their own.
 
-![Figure 1 - Use-Case Diagram 1: Account Transactions](../diagrams/UseCase_1_Transactions.png)
+![Figure 1 - Use-Case Diagram 1: Account Transactions](../build/UseCase_1_Transactions.png)
 
 *Figure 1 - Use-Case Diagram 1: Account Transactions*
 
-![Figure 2 - Use-Case Diagram 2: Account Administration, Audit & Reporting](../diagrams/UseCase_2_Administration.png)
+![Figure 2 - Use-Case Diagram 2: Account Administration, Audit & Reporting](../build/UseCase_2_Administration.png)
 
 *Figure 2 - Use-Case Diagram 2: Account Administration, Audit & Reporting*
 

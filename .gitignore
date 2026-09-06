@@ -20,3 +20,6 @@ Desktop.ini
 .vscode/
 .idea/
 *.swp
+
+# Generated build artefacts (derivatives of diagrams/*.svg)
+build/

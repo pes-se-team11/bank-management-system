@@ -145,7 +145,7 @@ module — the second is usually less painful, as long as everyone stays out of 
 | Branch naming | `docs/<topic>`, `feat/<module>`, `fix/<topic>` |
 | PR approvals | 1 required, and not from the PR author |
 | Requirement changes | Person 1 approves; add a row to the SRS revision history |
-| Generated files | Never hand-edit `docs/SRS.md`, `docs/RTM.md` or the `.docx` — edit `tools/srs_content.py` and rebuild |
+| Generated files | Never hand-edit `docs/SRS.md` or the `.docx` — edit `tools/srs_content.py` and rebuild |
 | Naming | Jira issue = `BMS-12`. Requirement = `BMS-F-012`. Never write `BMS-12` meaning a requirement. |
 | C/C++ build gate | `g++ -std=c++17 -Wall -Wextra -Werror` must pass before review (BMS-NF-004) |
 | Banned functions | `gets`, `strcpy`, `strcat`, `sprintf`, unbounded `scanf("%s")` (BMS-SR-002) |

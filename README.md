@@ -57,17 +57,16 @@ Full responsibility breakdown: [`ROLES.md`](ROLES.md). **Names and GitHub handle
 ├── docs/
 │   ├── SRS.md                                # SRS, reviewable + diffable
 │   ├── SRS_Bank_Management_System_v1.0.docx  # submission copy, template-styled
-│   ├── RTM.md                                # requirement → module → test case
 │   ├── Test_Plan.md                          # due 15 Sep
 │   ├── Jira_Backlog.md                       # epics, stories, sprint plan
 │   └── jira_import.csv                       # same backlog, ready for Jira CSV import
 ├── diagrams/
-│   ├── UseCase_1_Transactions.{svg,png,pdf}
-│   └── UseCase_2_Administration.{svg,png,pdf}
+│   ├── UseCase_1_Transactions.svg            # editable source; PNG builds to build/
+│   └── UseCase_2_Administration.svg
 ├── templates/                                # instructor templates, unmodified
 ├── tools/
 │   ├── srs_content.py                        # single source of truth for the SRS
-│   ├── build_srs.py                          # renders SRS.md + RTM.md + .docx
+│   ├── build_srs.py                          # renders SRS.md + .docx
 │   ├── make_diagrams.py                      # renders both use-case diagrams
 │   └── make_jira_csv.py                      # renders docs/jira_import.csv
 ```
@@ -76,13 +75,13 @@ Full responsibility breakdown: [`ROLES.md`](ROLES.md). **Names and GitHub handle
 
 ## Rebuilding the documents
 
-`docs/SRS.md`, `docs/RTM.md` and the `.docx` are **generated** from `tools/srs_content.py`, so they
+`docs/SRS.md` and the `.docx` are **generated** from `tools/srs_content.py`, so they
 cannot disagree with each other. Edit the source, never the outputs.
 
 ```bash
 pip install python-docx cairosvg
 python tools/make_diagrams.py    # diagrams first — the SRS embeds them
-python tools/build_srs.py        # -> docs/SRS.md, docs/RTM.md, docs/SRS_...v1.0.docx
+python tools/build_srs.py        # -> docs/SRS.md, docs/SRS_...v1.0.docx
 ```
 
 For a PDF of the SRS, open the `.docx` in Word and **File ▸ Export ▸ Create PDF/XPS**.

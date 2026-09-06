@@ -143,7 +143,7 @@ def main():
                 f"Delivers: {reqs}\n"
                 f"Owner: {owner}\n"
                 f"Acceptance criteria: see the acceptance criterion for each requirement above in "
-                f"docs/SRS.md section 4/5, and the matching TC- id in docs/RTM.md.")
+                f"docs/SRS.md section 4/5, and the matching TC- id in the RTM at section 8.")
         labels = " ".join([owner.replace("+", "-"), "sprint" + str(sprint)]
                           + [r.strip() for r in reqs.split(",")])
         rows.append([f"{sid} {summary}", "Story", desc, prio, pts,

@@ -19,7 +19,7 @@ resources, schedule and responsibilities for verifying the system against the SR
 balance inquiry and statements, funds transfer, and the ledger, audit and reporting behaviour.
 Exclusions in section 4.
 
-**References.** SRS v1.0 (`docs/SRS.md`), RTM (`docs/RTM.md`), Jira backlog (`docs/Jira_Backlog.md`),
+**References.** SRS v1.0 (`docs/SRS.md`, RTM in section 8), Jira backlog (`docs/Jira_Backlog.md`),
 SAD (pending).
 
 **Definitions.** STP (Software Test Plan), SRS, RTM, UAT (User Acceptance Testing), WAL
@@ -215,7 +215,7 @@ invalidates every other result), or when a critical defect against SO-1 or SO-2 
 
 ## 13. Test case management and traceability
 
-The RTM (`docs/RTM.md`, mirrored in SRS §8) is the single coverage record and is not duplicated here.
+The RTM in SRS section 8 is the single coverage record and is not duplicated here.
 A requirement counts as covered only when its row names at least one `TC-` id **and** that case has
 been executed with a result.
 
