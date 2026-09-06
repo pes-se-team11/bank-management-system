@@ -48,7 +48,7 @@ Full responsibility breakdown: [`ROLES.md`](ROLES.md). **Names and GitHub handle
 
 | # | Deliverable | Due | Status |
 |---|---|---|---|
-| 1 | Project SRS · Jira update started | **6 September 2025** | Drafted — [`docs/SRS.md`](docs/SRS.md) · [`.docx`](docs/SRS_Bank_Management_System_v1.0.docx) |
+| 1 | Project SRS · Jira update started | **6 September 2025** | Done — [`docs/SRS.md`](docs/SRS.md) · [`.docx`](docs/SRS_Bank_Management_System_v1.0.docx) |
 | 2 | Project Test Plan · complete Jira backlog | **15 September 2025** | Scaffold — [`docs/Test_Plan.md`](docs/Test_Plan.md) (P3 writes 11 of 15 sections), [`docs/Jira_Backlog.md`](docs/Jira_Backlog.md) |
 | — | Software Architecture & Design (SAD) | template supplied, date TBC | Not started |
 
@@ -78,8 +78,7 @@ docs/              <- the deliverables
 ├── SRS.md                                # readable + diffable
 ├── SRS_Bank_Management_System_v1.0.docx  # the submission copy
 ├── Test_Plan.md                          # due 15 Sep
-├── Jira_Backlog.md                       # 7 epics, 29 stories
-└── jira_import.csv                       # same backlog, for Jira import
+└── Jira_Backlog.md                       # 7 epics, 29 stories (live in Jira as BMS-1..BMS-36)
 
 diagrams/          <- editable SVG source for the two use-case diagrams
 
@@ -87,7 +86,6 @@ tools/             <- Person 1 only: generates docs/ and diagrams/
 ├── srs_content.py       # single source of truth for the SRS
 ├── build_srs.py         # -> SRS.md + .docx
 ├── make_diagrams.py     # -> the SVGs, and PNGs into build/ (gitignored)
-├── make_jira_csv.py     # -> jira_import.csv
 └── srs_template.docx    # instructor's template, used only for its styles
 ```
 
