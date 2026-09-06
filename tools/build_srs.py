@@ -3,7 +3,7 @@
 
     python tools/build_srs.py
 
-The .docx is built on top of the instructor's SRS_Template for SE.docx so it
+The .docx is built on top of the instructor's template (tools/srs_template.docx) so it
 inherits that file's page setup, heading styles and table style. Content comes
 from tools/srs_content.py, so the Markdown and the Word document cannot drift.
 """
@@ -22,7 +22,7 @@ sys.path.insert(0, HERE)
 
 import srs_content as C  # noqa: E402
 
-TEMPLATE = os.path.join(ROOT, "templates", "SRS_Template for SE.docx")
+TEMPLATE = os.path.join(HERE, "srs_template.docx")   # style source for the .docx
 DOCX_OUT = os.path.join(ROOT, "docs", "SRS_Bank_Management_System_v1.0.docx")
 MD_OUT = os.path.join(ROOT, "docs", "SRS.md")
 
