@@ -59,15 +59,17 @@ Full responsibility breakdown: [`ROLES.md`](ROLES.md). **Names and GitHub handle
 │   ├── SRS_Bank_Management_System_v1.0.docx  # submission copy, template-styled
 │   ├── RTM.md                                # requirement → module → test case
 │   ├── Test_Plan.md                          # due 15 Sep
-│   └── Jira_Backlog.md                       # epics, stories, sprint plan
+│   ├── Jira_Backlog.md                       # epics, stories, sprint plan
+│   └── jira_import.csv                       # same backlog, ready for Jira CSV import
 ├── diagrams/
 │   ├── UseCase_1_Transactions.{svg,png,pdf}
 │   └── UseCase_2_Administration.{svg,png,pdf}
 ├── templates/                                # instructor templates, unmodified
-└── tools/
-    ├── srs_content.py                        # single source of truth for the SRS
-    ├── build_srs.py                          # renders SRS.md + RTM.md + .docx
-    └── make_diagrams.py                      # renders both use-case diagrams
+├── tools/
+│   ├── srs_content.py                        # single source of truth for the SRS
+│   ├── build_srs.py                          # renders SRS.md + RTM.md + .docx
+│   ├── make_diagrams.py                      # renders both use-case diagrams
+│   └── make_jira_csv.py                      # renders docs/jira_import.csv
 ```
 
 ---
