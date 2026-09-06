@@ -17,10 +17,10 @@ every balance explicable.
 
 | Role | SRN | Owns |
 |---|---|---|
-| Requirements Lead / Repo Maintainer | PES1UG24AM360 (Dhanush S) | SRS, RTM, branch protection, merges |
-| Design Lead | PES1UG24AM305 | SAD, UML class & sequence diagrams, API/module design |
-| QA / Test Lead | PES1UG24AM318 | Test Plan, test cases, defect triage |
-| Jira & Traceability Lead | PES1UG24AM334 | Jira backlog, sprint board, requirement→story mapping |
+| Person 1 — Requirements & Auth/Account | PES1UG24AM360 (Dhanush S) | SRS, RTM, repo admin · AccountModule, AuthModule, ValidationModule |
+| Person 2 — Jira & backlog | `<SRN to confirm>` | Jira board, sprint plan · code area TBA |
+| Person 3 — proposed | `<SRN to confirm>` | SAD, UML diagrams · TransactionModule |
+| Person 4 — proposed | `<SRN to confirm>` | Test Plan, test cases · LedgerModule, ReportModule |
 
 Full responsibility breakdown: [`ROLES.md`](ROLES.md). **Names and GitHub handles still to be filled in.**
 
