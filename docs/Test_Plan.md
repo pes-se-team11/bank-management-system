@@ -2,7 +2,7 @@
 
 **Project:** Bank Management System · **Team 11** · Implementation language: C / C++
 **Author:** Adarsha E (PES1UG24AM334) — Person 3
-**Version:** 0.1 (scaffold) · **Status:** Draft — **due 15 September 2025**
+**Version:** 0.1 (scaffold) · **Status:** Draft — **due 2 October 2026**
 
 ---
 

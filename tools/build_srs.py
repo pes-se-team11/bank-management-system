@@ -50,8 +50,8 @@ def build_blocks():
     add(("h2", "Revision history"))
     add(("table", W_REV, [
         ["Version", "Date", "Author", "Change summary", "Approval"],
-        ["0.1", "04-09-2025", "Requirements Lead", "Skeleton raised against the SRS template; scope and actor set agreed by the team", "Draft"],
-        ["1.0", "05-09-2025", "Team 11", f"Full SRS: {len(C.all_frs())} FRs, {len(C.NFRS)} NFRs, {len(C.SECURITY_OBJECTIVES)} security "
+        ["0.1", "04-09-2026", "Requirements Lead", "Skeleton raised against the SRS template; scope and actor set agreed by the team", "Draft"],
+        ["1.0", "05-09-2026", "Team 11", f"Full SRS: {len(C.all_frs())} FRs, {len(C.NFRS)} NFRs, {len(C.SECURITY_OBJECTIVES)} security "
          f"objectives, {len(C.SECURITY_REQS)} security requirements, 2 use-case diagrams, "
          f"{len(C.RTM)}-row RTM", "Pending review"],
     ]))
@@ -478,10 +478,159 @@ def render_md(blocks):
     return MD_OUT
 
 
+
+# --------------------------------------------------------------------------- SAD traceability
+
+TRACE_MD = os.path.join(ROOT, "docs", "SAD_Traceability.md")
+TRACE_DOCX = os.path.join(ROOT, "build", "SAD_Traceability.docx")   # gitignored; for pasting into the SAD
+
+W_TR_COMP = [1500, 1000, 1500, 3910, 700]
+W_TR_REQ = [1150, 2400, 1900, 1000, 1080, 1080]
+W_TR_DS = [1900, 6010, 700]
+W_TR_IF = [2300, 1900, 4410]
+W_TR_STRIDE = [1400, 1100, 3510, 1700, 900]
+
+CROSS = "All modules (cross-cutting)"
+
+
+def traceability_blocks():
+    names = [c[0] for c in C.COMPONENTS]
+    layer = {c[0]: c[1] for c in C.COMPONENTS}
+
+    realises = {n: [] for n in names}
+    for r in C.RTM:
+        for comp in C.components_for(r[3]):
+            realises[comp].append(r[0])
+
+    ds_by = {n: [] for n in names}
+    ds_by[CROSS] = []
+    for r in C.RTM:
+        ds = r[2].split("/")[-1].strip()
+        key = CROSS if r[3].startswith("All") else C.components_for(r[3])[0]
+        ds_by[key].append(ds)
+
+    def layer_of(field):
+        if field.startswith("All"):
+            return "Cross-cutting"
+        return ", ".join(dict.fromkeys(layer[c] for c in C.components_for(field)))
+
+    stride_order = ["Spoofing", "Tampering", "Repudiation", "Information disclosure",
+                    "Denial of service", "Elevation of privilege"]
+    stride_n = {k: sum(1 for x in C.SECURITY_STRIDE if x[0] == k) for k in stride_order}
+    empty = [n for n in names if not realises[n]]
+    unowned = [c[0] for c in C.COMPONENTS if c[2] == "Unassigned"]
+
+    b = []
+    add = b.append
+    add(("h1", "Requirements Traceability for the SAD"))
+    add(("p", "Project: Bank Management System - Team 11 - C / C++\n"
+              "Prepared by: Dhanush S (PES1UG24AM360) - Person 1, Requirements\n"
+              "For: the Software Architecture & Design document - Vidit Soni (PES1UG24AM318), Person 2\n"
+              "Source: SRS v1.0 section 8 (RTM), generated from the same data so the two cannot disagree\n"
+              "Date: 29-09-2026"))
+    add(("p", "Every table below is derived from the SRS requirements and is labelled with the SAD template "
+              "section it feeds. It states which requirements each part of the architecture must answer. The "
+              "architecture itself - the pattern and its justification, the component diagram, the sequence "
+              "diagrams, the API definitions and the threat model - is for the SAD to decide."))
+
+    add(("h2", "1. Components  (feeds SAD 3.4 Component Descriptions)"))
+    add(("p", f"{len(names)} components in three layers. The layering is what BMS-NF-006 requires: "
+              "presentation, service and persistence kept separate with no global state, so every service "
+              "module can be unit-tested without the menu."))
+    add(("table", W_TR_COMP, [["Component", "Layer", "Owner", "Responsibility", "Reqs"]] +
+         [[c[0], c[1], c[2], c[3], str(len(realises[c[0]]))] for c in C.COMPONENTS]))
+
+    add(("h2", "2. Requirement to component  (feeds SAD 3.8 Traceability to Requirements)"))
+    add(("p", f"All {len(C.RTM)} requirements, each mapped to the component that realises it. "
+              "'All modules' marks a property every component must honour."))
+    add(("table", W_TR_REQ, [["Req ID", "Requirement", "Component(s)", "Layer", "Design spec", "Test case"]] +
+         [[r[0], r[1], r[3], layer_of(r[3]), r[2].split("/")[-1].strip(), r[4]] for r in C.RTM]))
+
+    add(("h2", "3. Design specs the SAD must define"))
+    add(("p", f"The SRS RTM already cites a design-spec ID for every requirement - {len(C.RTM)} in all. "
+              "Those IDs point into the SAD, so the SAD needs a subsection or table row for each one. "
+              "Grouped by the component that owns them."))
+    add(("table", W_TR_DS, [["Component", "Design specs to define", "Count"]] +
+         [[k, ", ".join(v), str(len(v))] for k, v in ds_by.items() if v]))
+
+    add(("h2", "4. Interfaces the requirements force  (feeds SAD 4.3 API Design)"))
+    add(("p", "The template asks for interface definitions for at least two components. These are the "
+              "interfaces the requirements imply: who calls whom, and what both owners must agree before "
+              "either can write code. The first two block another team member and should be settled first."))
+    add(("table", W_TR_IF, [["Caller -> Callee", "Forced by", "What must be agreed"]] +
+         [[f"{i[0]} -> {i[1]}", i[2], i[3]] for i in C.INTERFACES]))
+
+    add(("h2", "5. Security requirements by STRIDE category  (feeds SAD 3.9 Security Architecture)"))
+    add(("p", "Which existing requirement answers each STRIDE threat category, and where it lives. This is "
+              "the input to the threat model, not the threat model."))
+    add(("table", W_TR_STRIDE, [["STRIDE", "Requirement", "Threat it answers", "Component", "Objective"]] +
+         [list(x) for x in C.SECURITY_STRIDE]))
+    add(("p", "Coverage: " + " - ".join(f"{k} {stride_n[k]}" for k in stride_order) + ".\n"
+              "Denial of service is covered by a single requirement (BMS-NF-002). That is defensible - the "
+              "system has no network interface, so there is no remote denial of service - but the threat "
+              "model should say so explicitly rather than leave the category looking overlooked."))
+
+    add(("h2", "6. Coverage check"))
+    mapped = sum(1 for r in C.RTM if C.components_for(r[3]))
+    add(("p", f"Requirements mapped to a component: {mapped} / {len(C.RTM)}\n"
+              f"Components realising at least one requirement: {len(names) - len(empty)} / {len(names)}"
+              + (f" (none: {', '.join(empty)})" if empty else "") + "\n"
+              f"Interfaces the requirements force: {len(C.INTERFACES)}\n"
+              f"Components without an owner: {', '.join(unowned) if unowned else 'none'}"
+              + (" - every module needs a menu entry, so this needs an owner before integration."
+                 if unowned else "")))
+    return b
+
+
+def render_traceability():
+    blocks = traceability_blocks()
+
+    md = ["<!-- Generated by tools/build_srs.py from tools/srs_content.py. -->", ""]
+    for blk in blocks:
+        kind = blk[0]
+        if kind == "h1":
+            md += ["# " + blk[1], ""]
+        elif kind == "h2":
+            md += ["## " + blk[1], ""]
+        elif kind == "p":
+            md += [blk[1].replace("\n", "  \n"), ""]
+        elif kind == "table":
+            md += [md_table(blk[2]), ""]
+    with open(TRACE_MD, "w", encoding="utf-8") as fh:
+        fh.write("\n".join(md))
+
+    doc = docx.Document(TEMPLATE)
+    body = doc.element.body
+    for child in list(body):
+        if child.tag != qn("w:sectPr"):
+            body.remove(child)
+    cp = doc.core_properties
+    cp.author = "Dhanush S (PES1UG24AM360)"
+    cp.last_modified_by = "Dhanush S"
+    cp.title = "Requirements Traceability for the SAD - Bank Management System"
+    cp.comments = ""
+    for blk in blocks:
+        kind = blk[0]
+        if kind == "h1":
+            doc.add_paragraph(blk[1], style="Heading 1")
+        elif kind == "h2":
+            doc.add_paragraph(blk[1], style="Heading 2")
+        elif kind == "p":
+            for line in blk[1].split("\n"):
+                doc.add_paragraph(line)
+        elif kind == "table":
+            add_table(doc, blk[1], blk[2])
+    os.makedirs(os.path.dirname(TRACE_DOCX), exist_ok=True)
+    doc.save(TRACE_DOCX)
+    return TRACE_MD, TRACE_DOCX
+
+
 def main():
     blocks = build_blocks()
     print("wrote", render_md(blocks))
     print("wrote", render_docx(blocks))
+    for path in render_traceability():
+        print("wrote", path)
     frs = C.all_frs()
     print(f"counts: {len(frs)} FRs, {len(C.NFRS)} NFRs, "
           f"{len(C.SECURITY_OBJECTIVES)} security objectives, "
