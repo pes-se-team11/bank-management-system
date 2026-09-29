@@ -7,15 +7,15 @@
 **Implementation language:** C / C++  
 **Version:** 1.0  
 **Authors:** Vidit Soni (PES1UG24AM318); Adarsha E (PES1UG24AM334); Dhanush S (PES1UG24AM360)  
-**Date:** 05-09-2025  
+**Date:** 05-09-2026  
 **Status:** Draft - for review
 
 ## Revision history
 
 | Version | Date | Author | Change summary | Approval |
 |---|---|---|---|---|
-| 0.1 | 04-09-2025 | Requirements Lead | Skeleton raised against the SRS template; scope and actor set agreed by the team | Draft |
-| 1.0 | 05-09-2025 | Team 11 | Full SRS: 29 FRs, 7 NFRs, 4 security objectives, 7 security requirements, 2 use-case diagrams, 43-row RTM | Pending review |
+| 0.1 | 04-09-2026 | Requirements Lead | Skeleton raised against the SRS template; scope and actor set agreed by the team | Draft |
+| 1.0 | 05-09-2026 | Team 11 | Full SRS: 29 FRs, 7 NFRs, 4 security objectives, 7 security requirements, 2 use-case diagrams, 43-row RTM | Pending review |
 
 ## Approvals
 

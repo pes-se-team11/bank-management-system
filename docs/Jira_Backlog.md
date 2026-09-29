@@ -1,6 +1,6 @@
 # Jira Backlog — Bank Management System
 
-**Team 11** · **complete backlog due 15 September 2025**
+**Team 11** · **complete backlog due 15 September 2026**
 
 Jira project: `Bank Management System` — Software Development → **SCRUM** → Company-managed.
 Owned by the Jira & Traceability Lead. Keep this file and the Jira board in agreement; where they

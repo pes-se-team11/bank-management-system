@@ -13,7 +13,7 @@ META = {
     "team": "Team 11",
     "language": "C / C++",
     "version": "1.0",
-    "date": "05-09-2025",
+    "date": "05-09-2026",
     "status": "Draft - for review",
 }
 
@@ -371,3 +371,121 @@ def all_frs():
     for _, _, rows in FR_SECTIONS:
         out.extend(rows)
     return out
+
+
+# ---------------------------------------------------------------------------
+# Traceability input for the SAD (Person 2's document).
+#
+# Everything below is derived from the requirements above - it states which
+# component each requirement lands in and which interfaces the requirements
+# force into existence. The architecture itself (pattern choice, component
+# diagram, sequence diagrams, API definitions, threat model) is the SAD's.
+# ---------------------------------------------------------------------------
+
+# name, layer, owner, responsibility
+COMPONENTS = [
+    ("CLI / MenuLayer", "Presentation", "Unassigned",
+     "Role-specific menus, input capture and formatted output. Holds no business logic and is not "
+     "a security boundary (BMS-SR-007)."),
+    ("AuthModule", "Service", "P1 - Dhanush",
+     "Authenticates customers and staff, enforces lockout, and provides the role check every "
+     "privileged operation calls."),
+    ("AccountModule", "Service", "P1 - Dhanush",
+     "Customer and account lifecycle: create, open, look up, modify and close."),
+    ("ValidationModule", "Service", "P1 - Dhanush",
+     "Type and range validation of every operator input before any other module uses it."),
+    ("TransactionModule", "Service", "P2 - Vidit",
+     "Deposit, withdrawal and transfer, their limits, and all integer-paise money arithmetic."),
+    ("LedgerModule", "Service", "P2 - Vidit (write), P3 - Adarsha (read)",
+     "The append-only transaction journal and audit log; statements and reconciliation read from it."),
+    ("ReportModule", "Service", "P3 - Adarsha",
+     "End-of-day report and read-only audit-log views."),
+    ("PersistenceModule", "Persistence", "P2 - Vidit",
+     "All file I/O: record formats, the write-ahead protocol, crash recovery, file permissions and "
+     "the instance lock."),
+    ("Build & toolchain", "Cross-cutting", "P3 - Adarsha",
+     "Warning-free portable build on g++ and MinGW; the gate that enforces the banned-function rule."),
+]
+
+# How the free-text RTM "Module" column maps onto COMPONENTS.
+MODULE_ALIASES = {
+    "Build system": ["Build & toolchain"],
+    "All modules": ["*"],            # every component
+    "All service modules": ["service"],  # every service-layer component
+}
+
+# caller, callee, requirement(s) that force the interface, what must be agreed
+INTERFACES = [
+    ("AccountModule", "PersistenceModule", "BMS-F-001, BMS-F-002, BMS-F-004",
+     "The customer and account record formats. AccountModule cannot save anything until these "
+     "are fixed."),
+    ("TransactionModule", "LedgerModule", "BMS-F-022, BMS-F-031, BMS-F-060",
+     "The journal record format and the append call. A debit and its journal entry must commit as "
+     "one unit. LedgerModule's read side cannot be written until this format is fixed."),
+    ("CLI / MenuLayer", "AuthModule", "BMS-F-010, BMS-F-012",
+     "The login call and the role it returns - the menu shown depends on it."),
+    ("Every service module", "AuthModule", "BMS-SR-007",
+     "An authorise(role, operation) check, called inside the service function immediately before "
+     "the privileged action, never only in the menu."),
+    ("Every service module", "ValidationModule", "BMS-SR-004, BMS-F-021, BMS-F-051",
+     "The validation functions and the error codes they return, so every rejection can state its "
+     "reason (BMS-NF-005)."),
+    ("TransactionModule", "AccountModule", "BMS-F-020, BMS-F-030, BMS-F-051",
+     "Account lookup, account state (ACTIVE / LOCKED / CLOSED), and balance read and update."),
+    ("AccountModule", "TransactionModule", "BMS-F-006",
+     "The transfer call used when a closure moves a residual balance, and which side owns the "
+     "atomicity."),
+    ("AuthModule, AccountModule", "LedgerModule", "BMS-F-003, BMS-F-011, BMS-F-013, BMS-F-063",
+     "The audit-entry format for lockout, unlock and customer-modification events."),
+    ("LedgerModule, ReportModule", "PersistenceModule", "BMS-F-041, BMS-F-042, BMS-F-062",
+     "Read access over the journal: the last N entries, a date range, and per-day totals."),
+    ("Every module that writes", "PersistenceModule", "BMS-NF-002, BMS-SR-005, BMS-SR-006",
+     "The write-ahead protocol, append-only open modes, file locations and permissions."),
+]
+
+# STRIDE category, requirement, threat it answers, component, security objective
+SECURITY_STRIDE = [
+    ("Spoofing", "BMS-F-010", "Operating the system under someone else's identity",
+     "AuthModule", "SO-4"),
+    ("Spoofing", "BMS-F-011", "Guessing a PIN by repeated attempts", "AuthModule", "SO-1"),
+    ("Tampering", "BMS-SR-003", "An integer overflow silently changing a balance",
+     "TransactionModule", "SO-3"),
+    ("Tampering", "BMS-SR-004", "Malformed input driving the program into undefined behaviour",
+     "ValidationModule", "SO-3"),
+    ("Tampering", "BMS-F-061", "Hand-editing a balance in the data file", "LedgerModule", "SO-2"),
+    ("Repudiation", "BMS-SR-005", "Denying an action by rewriting the record of it",
+     "LedgerModule", "SO-2"),
+    ("Repudiation", "BMS-F-063", "A privileged action leaving no attributable record",
+     "LedgerModule", "SO-2"),
+    ("Information disclosure", "BMS-SR-001", "Reading credentials out of the data files",
+     "AuthModule", "SO-1"),
+    ("Information disclosure", "BMS-F-014", "Shoulder-surfing a PIN, or recovering it from memory",
+     "AuthModule", "SO-1"),
+    ("Information disclosure", "BMS-SR-006", "Another user of the host reading account data",
+     "PersistenceModule", "SO-1"),
+    ("Denial of service", "BMS-NF-002", "A crash mid-write leaving the ledger unusable",
+     "PersistenceModule", "SO-2"),
+    ("Elevation of privilege", "BMS-SR-007", "Reaching a Manager operation by bypassing the menu",
+     "AuthModule", "SO-4"),
+    ("Elevation of privilege", "BMS-F-012", "A Teller performing a Manager-only operation",
+     "AuthModule", "SO-4"),
+    ("Elevation of privilege", "BMS-SR-002", "A buffer overflow corrupting memory to take control",
+     "All modules", "SO-3"),
+]
+
+
+def components_for(module_field):
+    """Expand one RTM 'Module' cell into the list of COMPONENTS it names."""
+    names = [c[0] for c in COMPONENTS]
+    out = []
+    for part in [p.strip() for p in module_field.split(",")]:
+        for alias in MODULE_ALIASES.get(part, [part]):
+            if alias == "*":
+                out.extend(names)
+            elif alias == "service":
+                out.extend(c[0] for c in COMPONENTS if c[1] == "Service")
+            elif alias in names:
+                out.append(alias)
+            else:
+                raise KeyError(f"RTM module '{part}' does not match any component")
+    return list(dict.fromkeys(out))

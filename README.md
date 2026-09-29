@@ -48,9 +48,9 @@ Full responsibility breakdown: [`ROLES.md`](ROLES.md). **Names and GitHub handle
 
 | # | Deliverable | Due | Status |
 |---|---|---|---|
-| 1 | Project SRS · Jira update started | **6 September 2025** | Done — [`docs/SRS.md`](docs/SRS.md) · [`.docx`](docs/SRS_Bank_Management_System_v1.0.docx) |
-| 2 | Project Test Plan · complete Jira backlog | **15 September 2025** | Scaffold — [`docs/Test_Plan.md`](docs/Test_Plan.md) (P3 writes 11 of 15 sections), [`docs/Jira_Backlog.md`](docs/Jira_Backlog.md) |
-| — | Software Architecture & Design (SAD) | template supplied, date TBC | Not started |
+| 1 | Project SRS · Jira update started | **6 September 2026** | Done — [`docs/SRS.md`](docs/SRS.md) · [`.docx`](docs/SRS_Bank_Management_System_v1.0.docx) |
+| 2 | Project Test Plan | **2 October 2026** | Scaffold — [`docs/Test_Plan.md`](docs/Test_Plan.md) (P3 writes 11 of 15 sections), [`docs/Jira_Backlog.md`](docs/Jira_Backlog.md) |
+| 3 | Software Architecture & Design (SAD) | **30 September 2026** | Traceability input done — [`docs/SAD_Traceability.md`](docs/SAD_Traceability.md) |
 
 ---
 
