@@ -21,7 +21,7 @@ modules.
 | If you are | Read these three, ignore the rest |
 |---|---|
 | **Vidit (P2)** — architecture & transactions | [`docs/SRS.md`](docs/SRS.md) §4.3–4.6 (your requirements) · [`ROLES.md`](ROLES.md) Person 2 · [`docs/Jira_Backlog.md`](docs/Jira_Backlog.md) Epics 3, 5, 7 |
-| **Adarsha (P3)** — test plan & reporting | [`docs/Test_Plan.md`](docs/Test_Plan.md) — **read the box at the top first** · [`docs/SRS.md`](docs/SRS.md) §8 (the RTM — link your `TC-` ids here) · [`ROLES.md`](ROLES.md) Person 3 |
+| **Adarsha (P3)** — test plan & reporting | [`docs/Test_Plan.md`](docs/Test_Plan.md) · [`docs/SRS.md`](docs/SRS.md) §8 (RTM) · [`ROLES.md`](ROLES.md) Person 3 |
 | **Dhanush (P1)** — requirements & auth | [`tools/srs_content.py`](tools/srs_content.py) (the SRS source) · [`ROLES.md`](ROLES.md) Person 1 |
 
 **`tools/` is Person 1's build machinery — nobody else needs to open it.** The SRS and its diagrams
@@ -49,7 +49,7 @@ Full responsibility breakdown: [`ROLES.md`](ROLES.md). **Names and GitHub handle
 | # | Deliverable | Due | Status |
 |---|---|---|---|
 | 1 | Project SRS · Jira update started | **6 September 2026** | Done — [`docs/SRS.md`](docs/SRS.md) · [`.docx`](docs/SRS_Bank_Management_System_v1.0.docx) |
-| 2 | Project Test Plan | **2 October 2026** | Scaffold — [`docs/Test_Plan.md`](docs/Test_Plan.md) (P3 writes 11 of 15 sections), [`docs/Jira_Backlog.md`](docs/Jira_Backlog.md) |
+| 2 | Project Test Plan | **2 October 2026** | Submission draft — [`docs/Test_Plan.md`](docs/Test_Plan.md) · [`.docx`](docs/Test_Plan_Bank_Management_System_v1.0.docx); review pending |
 | 3 | Software Architecture & Design (SAD) | **30 September 2026** | Traceability input done — [`docs/SAD_Traceability.md`](docs/SAD_Traceability.md) |
 
 ---
@@ -77,7 +77,8 @@ CONTRIBUTING.md    <- branch, commit, PR
 docs/              <- the deliverables
 ├── SRS.md                                # readable + diffable
 ├── SRS_Bank_Management_System_v1.0.docx  # the submission copy
-├── Test_Plan.md                          # due 15 Sep
+├── Test_Plan.md                          # editable submission draft, due 2 Oct
+├── Test_Plan_Bank_Management_System_v1.0.docx  # Word submission copy
 └── Jira_Backlog.md                       # 7 epics, 29 stories (live in Jira as BMS-1..BMS-36)
 
 diagrams/          <- editable SVG source for the two use-case diagrams
