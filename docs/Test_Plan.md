@@ -2,9 +2,9 @@
 
 Project: Bank Management System
 Version: 1.0
-Authors: Adarsha E (PES1UG24AM334)
-Date: 01-10-2026
-Status: Draft
+Author: Adarsha E (PES1UG24AM334)
+Date: 02-10-2026
+Status: Done
 
 ## 1. Introduction
 
