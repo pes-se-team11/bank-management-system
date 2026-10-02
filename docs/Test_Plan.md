@@ -183,7 +183,7 @@ Reports:
 - Sprint execution status
 - Final Test Summary Report
 
-## Approvals
+## 15. Approvals
 
 | Role | Name | Signature / Email | Date |
 |---|---|---|---|
