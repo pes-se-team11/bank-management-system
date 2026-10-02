@@ -50,7 +50,7 @@ Full responsibility breakdown: [`ROLES.md`](ROLES.md). **Names and GitHub handle
 |---|---|---|---|
 | 1 | Project SRS · Jira update started | **6 September 2026** | Done — [`docs/SRS.md`](docs/SRS.md) · [`.docx`](docs/SRS_Bank_Management_System_v1.0.docx) |
 | 2 | Project Test Plan | **2 October 2026** | Submission draft — [`docs/Test_Plan.md`](docs/Test_Plan.md) · [`.docx`](docs/Test_Plan_Bank_Management_System_v1.0.docx); review pending |
-| 3 | Software Architecture & Design (SAD) | **30 September 2026** | Traceability input done — [`docs/SAD_Traceability.md`](docs/SAD_Traceability.md) |
+| 3 | Software Architecture & Design (SAD) | **30 September 2026** | Done — [`.docx`](docs/SAD_Bank_Management_System_v1.0.docx) · [traceability](docs/SAD_Traceability.md) |
 
 ---
 
@@ -79,6 +79,8 @@ docs/              <- the deliverables
 ├── SRS_Bank_Management_System_v1.0.docx  # the submission copy
 ├── Test_Plan.md                          # editable submission draft, due 2 Oct
 ├── Test_Plan_Bank_Management_System_v1.0.docx  # Word submission copy
+├── SAD_Bank_Management_System_v1.0.docx  # architecture & design (Person 2)
+├── SAD_Traceability.md                   # requirement -> component input for the SAD
 └── Jira_Backlog.md                       # 7 epics, 29 stories (live in Jira as BMS-1..BMS-36)
 
 diagrams/          <- editable SVG source for the two use-case diagrams
