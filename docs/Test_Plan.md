@@ -1,237 +1,193 @@
-# Software Test Plan (STP) — Bank Management System
+# Software Test Plan (STP) - Bank Management System
 
-**Project:** Bank Management System · **Team 11** · Implementation language: C / C++
-**Author:** Adarsha E (PES1UG24AM334) — Person 3
-**Version:** 0.1 (scaffold) · **Status:** Draft — **due 2 October 2026**
+Project: Bank Management System
+Version: 1.0
+Author: Adarsha E (PES1UG24AM334)
+Date: 02-10-2026
+Status: Done
 
----
+## 1. Introduction
 
-> ## How to use this file — read this first
->
-> This is a **scaffold, not a draft**. It follows `Test_Plan_Template for SE.docx` section for
-> section, so the numbering is already what the submission needs.
->
-> Sections are marked one of two ways:
->
-> - **`[FROM SRS]`** — filled in already, because the content is *derived from the requirements* and
->   Person 1 owns those. The requirement-to-test-case mapping, the scope exclusions, the boundary
->   values and the security checks all fall out of the SRS. Check them, correct anything you
->   disagree with, but you shouldn't need to invent them.
-> - **`[YOU WRITE]`** — yours. These are test *thinking*, not requirement restatement, and they're
->   what you'll be asked about. Each one says what belongs there and gives you the SRS facts you'd
->   otherwise have to go digging for.
->
-> **One rule that matters more than anything else here:** the `TC-` ids below are already cited by
-> acceptance criteria in the SRS and by the RTM in SRS §8. **Use these exact ids**, or tell Dhanush
-> to change the SRS. Inventing different ids silently breaks traceability, and that is the first
-> thing an evaluator checks.
+Purpose: This document defines the test plan for Bank Management System v1.0. It outlines objectives, scope, strategy, resources, schedule, and responsibilities for testing.
 
----
+Scope: Testing covers customer and account management, authentication, deposits, withdrawals, balance and statements, transfers, ledger, audit, and reporting. The exclusions are listed in section 4.
 
-## 1. Introduction `[FROM SRS]`
+References: Bank Management System SRS v1.0, Jira Backlog, Software Architecture and Design traceability.
 
-**Purpose.** Defines the test plan for the Bank Management System v1.0 — objectives, scope,
-strategy, resources, schedule and responsibilities for verifying the system against the SRS.
+Definitions: SRS (Software Requirements Specification), RTM (Requirements Traceability Matrix), UAT (User Acceptance Testing), PIN (Personal Identification Number), CLI (Command Line Interface), paise (integer unit of currency).
 
-**Scope.** Customer and account management, authentication and role enforcement, deposit,
-withdrawal, balance inquiry and statements, funds transfer, and the ledger, audit and reporting
-behaviour. Exclusions in section 4.
+## 2. Test Items
 
-**References.** SRS v1.0 (`docs/SRS.md`; the RTM is section 8), Jira backlog
-(`docs/Jira_Backlog.md`), SAD (pending, Person 2).
+- Account and customer module
+- Authentication and authorisation module
+- Deposit, withdrawal, and transfer module
+- Balance, statement, ledger, and reporting module
+- Validation and file persistence module
+- CLI and C++17 build
 
-**Definitions.** STP (Software Test Plan), SRS, RTM (Requirements Traceability Matrix), UAT (User
-Acceptance Testing), WAL (write-ahead log), paise (smallest currency unit — all money is stored as
-integer paise), reconciliation (an account's balance equals its opening balance plus the sum of its
-journal entries).
 
----
 
-## 2. Test items `[FROM SRS]`
+## 3. Features to be Tested
 
-`AuthModule` · `AccountModule` · `TransactionModule` · `LedgerModule` · `ReportModule` ·
-`ValidationModule` · `PersistenceModule` · `CLI / MenuLayer` · and the build itself — a warning-free
-compile is a tested property under BMS-NF-004.
+Features mapped to SRS requirement IDs:
 
----
+- BMS-F-001 to BMS-F-006: Customer records and account lifecycle
+- BMS-F-010 to BMS-F-014: Authentication, lockout, and role control
+- BMS-F-020 to BMS-F-022: Deposit and journal entry
+- BMS-F-030 to BMS-F-033: Withdrawal and account limits
+- BMS-F-040 to BMS-F-042: Balance and statements
+- BMS-F-050 to BMS-F-052: Atomic fund transfer
+- BMS-F-060 to BMS-F-064: Ledger, reconciliation, audit, and reporting
+- BMS-NF-001 to BMS-NF-007: Performance, reliability, and build quality
+- BMS-SR-001 to BMS-SR-007: Credential, data, input, and access security
 
-## 3. Features to be tested `[FROM SRS]`
 
-Every functional, non-functional and security requirement, mapped to the test-case id the SRS
-already cites for it.
 
-| Requirement(s) | Feature | Test case(s) |
-|---|---|---|
-| BMS-F-001 – BMS-F-006 | Customer records, account open/close/lookup, residual transfer | TC-ACC-01 … TC-ACC-06 |
-| BMS-F-010 – BMS-F-013 | Authentication, lockout, role enforcement, unlock | TC-AUT-01 … TC-AUT-04 |
-| BMS-F-014, BMS-SR-001 | No terminal echo, credential hashing | TC-SEC-01, TC-SEC-02 |
-| BMS-F-020 – BMS-F-022 | Deposit, rejection cases, journalling | TC-DEP-01 … TC-DEP-03 |
-| BMS-F-030, BMS-F-032, BMS-F-033 | Withdrawal limits, minimum balance, overdraft | TC-WDR-01 … TC-WDR-03 |
-| BMS-F-031, BMS-NF-002 | Atomic debit + journal, crash recovery | TC-REL-01 |
-| BMS-F-040 – BMS-F-042 | Balance, mini-statement, date-range statement | TC-BAL-01 … TC-BAL-03 |
-| BMS-F-050 – BMS-F-052 | Transfer atomicity, rejection cases, ceilings | TC-TRF-01 … TC-TRF-03 |
-| BMS-F-060 – BMS-F-064 | Append-only journal, reconciliation, EOD report, audit capture and view | TC-LED-01 … TC-LED-05 |
-| BMS-NF-001, BMS-NF-007 | Transaction latency, capacity soak | TC-PERF-01, TC-PERF-02 |
-| BMS-NF-003, BMS-SR-003 | Integer paise, overflow refusal | TC-SEC-03 |
-| BMS-SR-002, BMS-SR-004 | Buffer safety, input validation | TC-SEC-04, TC-SEC-05 |
-| BMS-SR-005 – BMS-SR-007 | Append-only enforcement, file permissions, service-layer role check | TC-SEC-06 … TC-SEC-08 |
-| BMS-NF-004, BMS-NF-006 | Warning-free portable build, modules testable in isolation | TC-PORT-01, TC-PORT-02 |
-| BMS-NF-005 | Every rejection states reason and remedy | TC-UX-01 |
+## 4. Features Not to be Tested
 
----
+- ATM hardware, card readers, cash dispensers, and kiosk interfaces
+- Inter-bank settlement, cheque clearing, loans, and card issuance
+- Internet and mobile banking interfaces and statutory reporting
 
-## 4. Features not to be tested `[FROM SRS]`
 
-Taken from the scope exclusions in SRS §1.2 and §2.4.
 
-- Compiler and standard-library correctness
-- OS file-permission enforcement itself — we test that the program *requests* owner-only
-  permissions (TC-SEC-07), not that the OS honours the request
-- Terminal emulator behaviour
-- Out of product scope: ATM terminal hardware, inter-bank settlement (NEFT/RTGS/UPI), cheque
-  clearing, loans and interest, card issuance, internet and mobile banking
-- Concurrent multi-instance operation — explicitly unsupported and prevented by an instance lock
+## 5. Test Approach / Strategy
 
----
+Levels:
 
-## 5. Test approach / strategy `[YOU WRITE]`
+- Unit tests (validation, money arithmetic, and service methods)
+- Integration tests (transactions with persistence and ledger)
+- System tests (end-to-end CLI workflows)
+- Acceptance tests (Customer, Teller, and Manager use cases)
 
-Cover: **test levels** (unit, integration, system, acceptance) and what you'd verify at each;
-**test types** (functional, regression, boundary-value, negative, fault injection, performance,
-security, usability, portability); and **entry / exit criteria**.
+Types:
 
-Facts you'll need, so you don't have to dig:
+- Functional and boundary-value testing
+- Regression and recovery testing before and after COMMIT and between transfer legs
+- Performance testing (latency and 10,000-account startup)
+- Usability and security testing
 
-- BMS-NF-006 requires the service modules to be unit-testable *without* the CLI layer — that's what
-  makes real unit testing possible here, and worth saying so.
-- The money arithmetic (BMS-SR-003) and reconciliation (BMS-F-061) are pure functions — they can be
-  tested exhaustively at boundaries with no files involved.
-- BMS-NF-002 and BMS-F-050 can only be tested by **fault injection** — killing the process
-  mid-write, and forcing a failure between the two legs of a transfer. Decide how.
-- The UI is a line-based CLI so tests can be scripted: `printf "2\n5000\n4\n" | ./bank | diff - expected.txt`
+Entry Criteria: Relevant module built, test data and environment ready, expected results defined; journal format and failure hooks agreed.
+Exit Criteria: All planned cases executed, high-priority requirements pass, no critical or major defect open, and reconciliation passes.
 
-### Boundary values `[FROM SRS]`
+## 5.1 Security Validation
 
-Derived from the numeric limits in the requirements. This is where the system will actually fail.
+- Verify salted credential hashes and no plaintext or terminal echo
+- Check role restrictions in the service layer
+- Test invalid input, long strings, and monetary overflow
+- Verify owner-only files, append-only logs, and rejection of a second instance
+- Inject write and disk-full failures; check COMMIT replay, account CRC recovery, and reconciliation
 
-| Requirement | Boundaries to test |
-|---|---|
-| BMS-F-021 | amount = −1, 0, 1, ceiling−1, ceiling, ceiling+1 |
-| BMS-F-032 | balance after withdrawal = minimum−1, minimum, minimum+1 |
-| BMS-F-033 | overdraft used = limit−1, limit, limit+1 |
-| BMS-F-030, BMS-F-052 | daily total = ceiling−1, ceiling, ceiling+1 |
-| BMS-SR-003 | balance near `INT64_MAX`; a deposit that would overflow |
-| BMS-F-011 | 1st, 2nd, 3rd, 4th failed PIN attempt |
-| BMS-F-041 | account with 0, 9, 10, 11 transactions |
-| BMS-F-042 | range with no entries; boundaries inclusive at both ends |
 
-### 5.1 Security validation `[FROM SRS]`
 
-Each check traces to a security objective in SRS §5.1.1.
+## 6. Test Environment
 
-| Check | Requirement | Objective |
-|---|---|---|
-| Inspect data files for plaintext PIN or password; confirm a per-record salt | BMS-SR-001 | SO-1 |
-| Confirm terminal echo disabled and the credential buffer zeroed after use | BMS-F-014 | SO-1 |
-| Deposit near `INT64_MAX`; confirm refusal, not wraparound | BMS-SR-003 | SO-3 |
-| Source search for `gets`, `strcpy`, `strcat`, `sprintf`, unbounded `scanf("%s")` | BMS-SR-002 | SO-3 |
-| Over-length name; alphabetic input to an amount field; out-of-range menu choice | BMS-SR-004 | SO-3 |
-| Attempt to modify a journal record through any menu path; inspect file open modes | BMS-SR-005 | SO-2 |
-| Confirm files created owner-only; loosen the directory and confirm refusal to start | BMS-SR-006 | SO-1 |
-| Call a Manager-only service function directly with a Teller role, bypassing the menu | BMS-SR-007 | SO-4 |
-| Edit a balance in the data file by hand; confirm reconciliation names the account | BMS-F-061 | SO-2 |
+Hardware: Standard desktop or laptop; record specifications for performance tests.
+Software: Bank Management System C++17 console application on Linux and Windows.
+Tools: g++, MinGW, unit-test harness, scripted CLI tests, Jira for defects.
+Test Data: Synthetic Savings and Current accounts, ACTIVE/LOCKED/CLOSED states, transaction histories, and boundary amounts.
 
-The last two are the ones worth arguing in a viva — they test that the property holds when the
-attacker does **not** come through the front door.
+## 7. Test Schedule
 
----
+Milestones:
 
-## 6. Test environment `[YOU WRITE]`
+- Test plan and case design: 02-Oct-2026
+- Environment setup: Sprint 1, before execution
+- Unit and integration execution: Sprints 1 to 3 as modules merge
+- System and regression execution: Sprint 4
+- UAT and summary report: After full regression in Sprint 4
 
-Cover: hardware, software, tools, and test data.
 
-- **Fix one reference machine and record its spec.** Every BMS-NF-001 and TC-PERF number is
-  meaningless without it, and results from two different laptops can't be compared.
-- Toolchain is g++ `-std=c++17` on Linux and MinGW on Windows, no third-party libraries — so decide
-  what your unit-test harness is. A hand-rolled assert harness is fine and avoids a dependency.
-- Test data worth building: a Savings account at exactly the minimum balance, a Current account at
-  exactly its overdraft limit, a LOCKED account, a CLOSED account, one near `INT64_MAX`, and
-  accounts with exactly 9, 10 and 11 journal entries. **Synthetic names only.**
 
----
+## 8. Test Deliverables
 
-## 7. Test schedule `[YOU WRITE]`
+- Test Plan (this document)
+- Test Cases (manual and automated)
+- Test Scripts
+- Synthetic Test Data
+- Test Execution Logs
+- Defect Reports
+- Test Summary Report
 
-Milestones with dates: test case design, environment ready, execution start and end, UAT.
-Anchor them to the sprint plan in `Jira_Backlog.md` — Sprint 1 is foundations, so unit tests for the
-money type and journal belong there, not at the end.
 
----
 
-## 8. Test deliverables `[YOU WRITE]`
+## 9. Roles and Responsibilities
 
-What testing produces: this plan, test cases, the harness and its sources, test data, execution
-logs, defect reports, a coverage report from the RTM, and a final test summary report.
 
----
+| Role                  | Name       | Responsibility                                        |
+| --------------------- | ---------- | ----------------------------------------------------- |
+| QA Lead               | Adarsha E  | Prepare plan, coordinate and record testing           |
+| Account and Auth Lead | Dhanush S  | Support account, authentication, and validation tests |
+| Transaction Lead      | Vidit Soni | Support transaction and persistence tests and fixes   |
+| Review Team           | Team 11    | Review results and release readiness                  |
 
-## 9. Roles and responsibilities `[YOU WRITE]`
 
-Who does what during testing. The team is three — see `ROLES.md`. Note that you both write the plan
-*and* execute the cases against Dhanush's and Vidit's modules, so say who fixes what when a case
-fails.
 
----
 
-## 10. Risks and mitigation `[YOU WRITE]`
+## 10. Risks and Mitigation
 
-A table of risk → mitigation. Some real ones for this project, if useful:
 
-- Crash-safety and transfer atomicity can't be tested by hand — they need scripted fault injection
-- A transfer-atomicity failure is *silent*; money just disappears unless you reconcile after runs
-- Floating point creeping into the money path late — catch it with a build-time source scan
-- Performance measured on different machines gives incomparable numbers
+| Risk                            | Mitigation                                                                        |
+| ------------------------------- | --------------------------------------------------------------------------------- |
+| Delay in stable build delivery  | Request early builds and run module tests as code merges                          |
+| Incomplete or repeated recovery | Fail before/after COMMIT and between transfer legs; verify once-only replay       |
+| Corrupt record or full disk     | Corrupt an account CRC and simulate disk full; verify recovery or no state change |
 
----
 
-## 11. Assumptions and dependencies `[YOU WRITE]`
 
-What you're relying on. Note the hard one: **you are blocked by Person 2 on the journal record
-format** (BMS-F-060). You can't write TC-BAL-02 for the mini-statement until the on-disk format is
-fixed. Get that from Vidit early.
 
----
+## 11. Assumptions & Dependencies
 
-## 12. Suspension and resumption criteria `[YOU WRITE]`
+- The SRS v1.0 and its requirement IDs remain the test baseline
+- Journal format, COMMIT rules, and test hooks are approved before integration
+- Synthetic accounts and a stable build are available before execution
 
-When testing stops and when it restarts. Worth stating that reconciliation failing on clean data
-invalidates every other result, so it's a stop condition.
 
----
 
-## 13. Test case management and traceability
+## 12. Suspension & Resumption Criteria
 
-**`[FROM SRS]`** — The RTM in SRS §8 is the single coverage record and is not duplicated here. A
-requirement counts as covered only when its RTM row names at least one `TC-` id **and** that case has
-been executed with a result. Status legend: `N` not started, `P` partial, `A` accepted.
+Suspend testing if:
 
-**`[YOU WRITE]`** — the actual test cases behind each id: preconditions, steps, test data, expected
-result. That's the bulk of your work between now and the 15th.
+- A build or environment failure blocks execution
+- Recovery or reconciliation fails on clean test data
 
----
+Resume testing if:
 
-## 14. Test metrics and reporting `[YOU WRITE]`
+- Blocking defects are fixed and the build is stable
+- Failed cases and affected regression cases pass
 
-Which metrics you collect (cases executed, pass/fail, requirement coverage, defect density, defect
-aging, compiler warnings) and what you report, to whom, how often.
 
----
+
+## 13. Test Case Management & Traceability
+
+The SRS section 8 RTM maps each requirement to a test case. TC-REL-01 checks incomplete batches, once-only replay, and account-record recovery. Examples:
+
+- BMS-F-011 (account lockout) -> TC-AUT-02
+- BMS-F-050 (fund transfer) -> TC-TRF-01
+- BMS-NF-002 (crash-safe journal) -> TC-REL-01
+
+
+
+## 14. Test Metrics & Reporting
+
+Metrics collected:
+
+- % test cases executed
+- % passed/failed
+- Defect density
+- Defect aging
+- Requirement coverage
+
+Reports:
+
+- Sprint execution status
+- Final Test Summary Report
 
 ## 15. Approvals
 
-| Role | Name | Signature / Date |
-|---|---|---|
-| Person 3 — Test Plan | Adarsha E (PES1UG24AM334) | |
-| Person 2 — Design | Vidit Soni (PES1UG24AM318) | |
-| Person 1 — Requirements | Dhanush S (PES1UG24AM360) | |
-| Course Coordinator | | |
+| Role | Name | Signature / Email | Date |
+|---|---|---|---|
+| Course Coordinator |  |  |  |
+| Person 1 - Requirements | Dhanush S (PES1UG24AM360) |  |  |
+| Person 2 - Architecture & Design | Vidit Soni (PES1UG24AM318) |  |  |
+| Person 3 - Test Plan | Adarsha E (PES1UG24AM334) |  |  |
