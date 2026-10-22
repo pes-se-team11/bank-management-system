@@ -24,6 +24,10 @@ add_executable(bms_tests
     # Add test_money.cpp, test_auth.cpp, etc. when created.
 )
 
+# Use standard headers instead of doctest 2.4.11's std forward declarations,
+# which trigger C5285 on newer MSVC versions under /WX.
+target_compile_definitions(bms_tests PRIVATE DOCTEST_CONFIG_USE_STD_HEADERS)
+
 target_link_libraries(bms_tests PRIVATE
     bms_core
     doctest::doctest
