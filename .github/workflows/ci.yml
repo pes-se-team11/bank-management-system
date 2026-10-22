@@ -1,0 +1,53 @@
+name: C++ CI
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, closed]
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    if: github.event.action == 'opened' || github.event.pull_request.merged == true
+    name: Build and test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Scan for disallowed functions
+        if: runner.os == 'Linux'
+        run: bash tools/check_banned.sh
+
+      - name: Configure with doctest
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON
+
+      - name: Build
+        run: cmake --build build --config Debug --parallel 2
+
+      - name: Run unit tests
+        run: ctest --test-dir build -C Debug --output-on-failure --no-tests=error
+
+      - name: Run application (Linux)
+        if: runner.os == 'Linux'
+        run: ./build/bms
+
+      - name: Run application (Windows)
+        if: runner.os == 'Windows'
+        run: .\build\Debug\bms.exe
+
+      - name: Configure without test dependencies
+        run: cmake -S . -B build-app -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=OFF
+
+      - name: Build application only
+        run: cmake --build build-app --config Debug --parallel 2
