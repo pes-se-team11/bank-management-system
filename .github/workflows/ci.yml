@@ -3,14 +3,14 @@ name: C++ CI
 on:
   pull_request:
     branches: [main]
-    types: [opened, closed]
+    types: [opened, synchronize, reopened, closed]
 
 permissions:
   contents: read
 
 jobs:
   build-and-test:
-    if: github.event.action == 'opened' || github.event.pull_request.merged == true
+    if: github.event.action != 'closed' || github.event.pull_request.merged == true
     name: Build and test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
