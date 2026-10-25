@@ -1,3 +1,4 @@
+
 include(FetchContent)
 
 FetchContent_Declare(
@@ -19,14 +20,19 @@ endif()
 
 FetchContent_MakeAvailable(doctest)
 
+# Bank Management System unit tests
 add_executable(bms_tests
     test_main.cpp
-    # Add test_money.cpp, test_auth.cpp, etc. when created.
+    test_money.cpp
+    # Add test_auth.cpp and other test files when created.
 )
 
-# Use standard headers instead of doctest 2.4.11's std forward declarations,
-# which trigger C5285 on newer MSVC versions under /WX.
-target_compile_definitions(bms_tests PRIVATE DOCTEST_CONFIG_USE_STD_HEADERS)
+# Use standard headers instead of doctest 2.4.11's
+# std forward declarations, which trigger C5285
+# on newer MSVC versions under /WX.
+target_compile_definitions(
+    bms_tests PRIVATE DOCTEST_CONFIG_USE_STD_HEADERS
+)
 
 target_link_libraries(bms_tests PRIVATE
     bms_core
