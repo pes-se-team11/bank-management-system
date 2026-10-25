@@ -5,5 +5,9 @@
 #include <cstdint>
 
 namespace bms {
-// TODO(7.1): Money type and checked arithmetic.
+// The money type itself (SAD 9.1). Defined early because account opening
+// (story 1.2) and amount parsing need it before 7.1 lands.
+using Paise = std::int64_t;
+
+// TODO(7.1): checked arithmetic (checkedAdd / checkedSub).
 }  // namespace bms

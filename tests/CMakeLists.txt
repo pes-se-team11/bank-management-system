@@ -21,7 +21,11 @@ FetchContent_MakeAvailable(doctest)
 
 add_executable(bms_tests
     test_main.cpp
-    # Add test_money.cpp, test_auth.cpp, etc. when created.
+    test_validation.cpp
+    test_crypto.cpp
+    test_account.cpp
+    test_auth.cpp
+    # Add test_money.cpp etc. when created.
 )
 
 # Use standard headers instead of doctest 2.4.11's std forward declarations,
