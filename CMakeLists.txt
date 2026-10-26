@@ -22,6 +22,8 @@ add_library(bms_core STATIC
     src/account/account_service.cpp
     src/auth/crypto.cpp
     src/auth/auth_service.cpp
+    src/ledger/ledger.cpp
+    src/persistence/append_file.cpp
     # Add service implementation files here as they are created.
 )
 

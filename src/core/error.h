@@ -13,5 +13,6 @@ enum class Error {
     CredentialNotFound,  // the store has no credential for that login ID
     BadCredentials,      // wrong ID *or* wrong secret - never says which (BMS-F-010)
     Io,                  // a store or file operation failed
+    CorruptRecord,       // a journal or audit line failed to parse (BMS-SR-005)
 };
 }  // namespace bms
