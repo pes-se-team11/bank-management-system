@@ -10,7 +10,6 @@ FetchContent_Declare(
 set(DOCTEST_WITH_TESTS OFF CACHE BOOL "" FORCE)
 set(DOCTEST_NO_INSTALL ON CACHE BOOL "" FORCE)
 
-# Compatibility for this dependency's older CMake minimum.
 if(CMAKE_VERSION VERSION_GREATER_EQUAL "4.0")
     if(NOT DEFINED CMAKE_POLICY_VERSION_MINIMUM)
         set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
@@ -19,19 +18,21 @@ endif()
 
 FetchContent_MakeAvailable(doctest)
 
+# Bank Management System unit tests
 add_executable(bms_tests
+    test_transaction.cpp
     test_main.cpp
+    test_money.cpp
     test_validation.cpp
     test_crypto.cpp
     test_account.cpp
     test_auth.cpp
     test_ledger.cpp
-    # Add test_money.cpp etc. when created.
 )
 
-# Use standard headers instead of doctest 2.4.11's std forward declarations,
-# which trigger C5285 on newer MSVC versions under /WX.
-target_compile_definitions(bms_tests PRIVATE DOCTEST_CONFIG_USE_STD_HEADERS)
+target_compile_definitions(
+    bms_tests PRIVATE DOCTEST_CONFIG_USE_STD_HEADERS
+)
 
 target_link_libraries(bms_tests PRIVATE
     bms_core

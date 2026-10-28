@@ -1,13 +1,55 @@
 #pragma once
-// Story 7.1 (BMS-NF-003, BMS-SR-003) - owner: Vidit.
-// Money is int64_t paise, never float or double. Every add/subtract is
-// overflow-checked before it happens and refuses rather than wraps.
+
 #include <cstdint>
+#include <limits>
+#include <stdexcept>
 
 namespace bms {
-// The money type itself (SAD 9.1). Defined early because account opening
-// (story 1.2) and amount parsing need it before 7.1 lands.
+
 using Paise = std::int64_t;
 
-// TODO(7.1): checked arithmetic (checkedAdd / checkedSub).
+class Money {
+private:
+    std::int64_t paise_;
+
+public:
+    explicit Money(std::int64_t paise = 0) : paise_(paise) {}
+
+    std::int64_t paise() const noexcept {
+        return paise_;
+    }
+
+    Money operator+(const Money& other) const {
+        const auto max = std::numeric_limits<std::int64_t>::max();
+        const auto min = std::numeric_limits<std::int64_t>::min();
+
+        if ((other.paise_ > 0 && paise_ > max - other.paise_) ||
+            (other.paise_ < 0 && paise_ < min - other.paise_)) {
+            throw std::overflow_error("Money addition overflow");
+        }
+
+        return Money(paise_ + other.paise_);
+    }
+
+    Money operator-(const Money& other) const {
+        const auto max = std::numeric_limits<std::int64_t>::max();
+        const auto min = std::numeric_limits<std::int64_t>::min();
+
+        if ((other.paise_ < 0 && paise_ > max + other.paise_) ||
+            (other.paise_ > 0 && paise_ < min + other.paise_)) {
+            throw std::overflow_error("Money subtraction overflow");
+        }
+
+        return Money(paise_ - other.paise_);
+    }
+
+    bool operator==(const Money& other) const noexcept {
+        return paise_ == other.paise_;
+    }
+
+    bool operator<(const Money& other) const noexcept {
+        return paise_ < other.paise_;
+    }
+};
+
 }  // namespace bms
