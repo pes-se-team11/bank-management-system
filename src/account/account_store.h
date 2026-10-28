@@ -23,6 +23,7 @@ public:
     virtual Error readCustomer(CustomerId id, Customer& out) = 0;  // CustomerNotFound
 
     virtual Error createAccount(const AccountRecord& account) = 0;
+    virtual Error updateAccount(const AccountRecord& account) = 0;
     virtual Error readAccount(AccountNo no, AccountRecord& out) = 0;  // AccountNotFound
     virtual Error listAccounts(CustomerId id, std::vector<AccountRecord>& out) = 0;
 };
