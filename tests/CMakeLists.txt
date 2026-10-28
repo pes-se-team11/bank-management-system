@@ -20,6 +20,7 @@ FetchContent_MakeAvailable(doctest)
 
 # Bank Management System unit tests
 add_executable(bms_tests
+    test_transaction.cpp
     test_main.cpp
     test_money.cpp
     test_validation.cpp

@@ -1,3 +1,4 @@
+
 cmake_minimum_required(VERSION 3.20)
 project(bms VERSION 0.1.0 LANGUAGES CXX)
 
@@ -23,8 +24,8 @@ add_library(bms_core STATIC
     src/auth/crypto.cpp
     src/auth/auth_service.cpp
     src/ledger/ledger.cpp
+    src/transaction/transaction_service.cpp
     src/persistence/append_file.cpp
-    # Add service implementation files here as they are created.
 )
 
 target_include_directories(
@@ -42,7 +43,6 @@ endif()
 
 add_executable(bms
     src/cli/main.cpp
-    # Future CLI implementation files belong here.
 )
 
 target_link_libraries(bms PRIVATE bms_core)
