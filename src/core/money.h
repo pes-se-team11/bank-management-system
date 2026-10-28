@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include <cstdint>
@@ -6,6 +5,8 @@
 #include <stdexcept>
 
 namespace bms {
+
+using Paise = std::int64_t;
 
 class Money {
 private:

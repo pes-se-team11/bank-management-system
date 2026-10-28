@@ -18,6 +18,12 @@ endif()
 
 add_library(bms_core STATIC
     src/core/version.cpp
+    src/validation/validation.cpp
+    src/account/account_service.cpp
+    src/auth/crypto.cpp
+    src/auth/auth_service.cpp
+    src/ledger/ledger.cpp
+    src/persistence/append_file.cpp
     # Add service implementation files here as they are created.
 )
 
@@ -26,13 +32,13 @@ target_include_directories(
 )
 target_link_libraries(bms_core PUBLIC bms_options)
 
-# Add these files only after implementing them:
-#
-# if(WIN32)
-#     target_sources(bms_core PRIVATE src/platform/platform_win.cpp)
-# else()
-#     target_sources(bms_core PRIVATE src/platform/platform_posix.cpp)
-# endif()
+if(WIN32)
+    target_sources(bms_core PRIVATE src/platform/platform_win.cpp)
+    # BCryptGenRandom, the OS random source for credential salts.
+    target_link_libraries(bms_core PUBLIC bcrypt)
+else()
+    target_sources(bms_core PRIVATE src/platform/platform_posix.cpp)
+endif()
 
 add_executable(bms
     src/cli/main.cpp
