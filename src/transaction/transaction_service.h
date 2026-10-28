@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include <cstdint>
@@ -19,6 +18,12 @@ public:
     );
 
     Error deposit(
+        AccountNo account,
+        Paise amount,
+        const std::string& operator_id
+    );
+
+    Error withdraw(
         AccountNo account,
         Paise amount,
         const std::string& operator_id

@@ -36,6 +36,15 @@ public:
         accounts[account.acct_no] = account;
         return Error::Ok;
     }
+    Error updateAccount(const AccountRecord& account) override {
+        const auto it = accounts.find(account.acct_no);
+        if (it == accounts.end()) {
+            return Error::AccountNotFound;
+        }
+        it->second = account;
+        return Error::Ok;
+    }
+
     Error readAccount(AccountNo no, AccountRecord& out) override {
         const auto it = accounts.find(no);
         if (it == accounts.end()) {

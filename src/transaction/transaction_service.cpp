@@ -61,4 +61,69 @@ Error TransactionService::deposit(
     return account_store_.updateAccount(record);
 }
 
+Error TransactionService::withdraw(
+    AccountNo account,
+    Paise amount,
+    const std::string& operator_id
+) {
+    if (amount <= 0 || operator_id.empty()) {
+        return Error::InvalidInput;
+    }
+
+    AccountRecord record{};
+    Error result = account_store_.readAccount(account, record);
+    if (result != Error::Ok) {
+        return result;
+    }
+
+    if (record.state != AccountState::Active) {
+        return Error::InvalidInput;
+    }
+
+    Paise minimum_balance = 0;
+
+    if (record.type == AccountType::Current) {
+        if (record.overdraft_limit < 0) {
+            return Error::InvalidInput;
+        }
+        minimum_balance = -record.overdraft_limit;
+    }
+
+    if (record.balance < minimum_balance) {
+        return Error::InvalidInput;
+    }
+
+    const Paise max_balance =
+        std::numeric_limits<Paise>::max();
+
+    if (minimum_balance >= 0 ||
+        record.balance <= max_balance + minimum_balance) {
+        const Paise available = record.balance - minimum_balance;
+        if (amount > available) {
+            return Error::InvalidInput;
+        }
+    }
+
+    const Paise new_balance = record.balance - amount;
+
+    std::uint64_t sequence = 0;
+    result = ledger_.appendTransaction(
+        ledger::TxnType::Withdraw,
+        account,
+        amount,
+        new_balance,
+        operator_id,
+        sequence
+    );
+
+    if (result != Error::Ok) {
+        return result;
+    }
+
+    record.balance = new_balance;
+    record.last_seq = sequence;
+
+    return account_store_.updateAccount(record);
+}
+
 }  // namespace bms
