@@ -16,6 +16,7 @@ constexpr std::size_t kMaxName = 60;
 constexpr std::size_t kMaxAddress = 120;
 constexpr std::size_t kMaxContact = 15;
 constexpr std::size_t kMaxGovIdRef = 20;
+constexpr std::size_t kMaxStaffId = 16;
 
 // Free text: 1..max printable ASCII characters, not all spaces, and no '|'
 // (the journal and audit files use '|' as their field separator, so it is
@@ -27,6 +28,9 @@ Error validateContact(std::string_view text);
 
 // 4..20 letters or digits, e.g. a PAN or Aadhaar reference.
 Error validateGovIdRef(std::string_view text);
+
+// Staff login ID: 3..16 letters or digits, e.g. "teller1".
+Error validateStaffId(std::string_view text);
 
 // Customer PIN: 4..6 digits.
 Error validatePin(std::string_view pin);

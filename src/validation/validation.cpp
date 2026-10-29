@@ -64,6 +64,18 @@ Error validateGovIdRef(std::string_view text) {
     return Error::Ok;
 }
 
+Error validateStaffId(std::string_view text) {
+    if (text.size() < 3 || text.size() > kMaxStaffId) {
+        return Error::InvalidInput;
+    }
+    for (const char c : text) {
+        if (!isAlnum(c)) {
+            return Error::InvalidInput;
+        }
+    }
+    return Error::Ok;
+}
+
 Error validatePin(std::string_view pin) {
     if (pin.size() < 4 || pin.size() > 6 || !allDigits(pin)) {
         return Error::InvalidInput;

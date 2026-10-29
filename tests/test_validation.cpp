@@ -25,6 +25,10 @@ TEST_CASE("validation: contact number and ID reference") {
     CHECK(v::validateContact("98765-43210") == Error::InvalidInput);
     CHECK(v::validateGovIdRef("ABCDE1234F") == Error::Ok);
     CHECK(v::validateGovIdRef("AB C") == Error::InvalidInput);
+    CHECK(v::validateStaffId("teller1") == Error::Ok);
+    CHECK(v::validateStaffId("ab") == Error::InvalidInput);
+    CHECK(v::validateStaffId("teller 1") == Error::InvalidInput);
+    CHECK(v::validateStaffId("abcdefghijklmnopq") == Error::InvalidInput);
 }
 
 TEST_CASE("validation: PIN and password rules") {

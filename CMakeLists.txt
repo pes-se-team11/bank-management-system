@@ -41,11 +41,17 @@ else()
     target_sources(bms_core PRIVATE src/platform/platform_posix.cpp)
 endif()
 
+# Console menu, kept separate from main() so tests can drive it.
+add_library(bms_cli STATIC
+    src/cli/menu.cpp
+)
+target_link_libraries(bms_cli PUBLIC bms_core)
+
 add_executable(bms
     src/cli/main.cpp
 )
 
-target_link_libraries(bms PRIVATE bms_core)
+target_link_libraries(bms PRIVATE bms_cli)
 
 include(CTest)
 
