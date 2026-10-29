@@ -31,7 +31,7 @@ std::string runScript(const std::string& script, const std::string& tag) {
 
         std::istringstream in(script);
         std::ostringstream out;
-        bms::cli::Menu menu(in, out, accounts, auth, transactions,
+        bms::cli::Menu menu(in, out, accounts, auth, transactions, ledger,
                             !credential_store.hasStaff());
         menu.run();
         output = out.str();
@@ -51,6 +51,45 @@ TEST_CASE("formatPaise shows rupees with two decimals") {
     CHECK(bms::cli::formatPaise(5) == "0.05");
     CHECK(bms::cli::formatPaise(125050) == "1250.50");
     CHECK(bms::cli::formatPaise(-1500) == "-15.00");
+}
+
+TEST_CASE("formatTimestamp shows Indian Standard Time") {
+    CHECK(bms::cli::formatTimestamp(0) == "01-01-1970 05:30");
+    // 2026-10-29 13:10:00 UTC is 18:40 IST.
+    CHECK(bms::cli::formatTimestamp(1793279400) == "29-10-2026 18:40");
+    // Late UTC evening rolls over to the next day in IST.
+    CHECK(bms::cli::formatTimestamp(1798741800) == "01-01-2027 00:00");
+}
+
+TEST_CASE("Mini-statement lists the newest transactions for staff and customers") {
+    const std::string script =
+        "admin\nPassword123\n"
+        "1\nadmin\nPassword123\n"
+        "1\nAsha Rao\n12 MG Road\n9876543210\nABCDE1234F\n"
+        "2\n1\n1\n500\n1234\n"   // open with Rs 500
+        "3\n100001\n250\n"         // deposit Rs 250
+        "4\n100001\n100\n"         // withdraw Rs 100
+        "6\n100001\n"               // staff mini-statement
+        "6\n424242\n"               // unknown account
+        "0\n"
+        "2\n100001\n1234\n"
+        "2\n0\n"                    // customer mini-statement, logout
+        "0\n";
+
+    const std::string out = runScript(script, "statement");
+
+    CHECK(contains(out, "Mini-statement for account 100001 (newest first, IST)"));
+    CHECK(contains(out, "WITHDRAW    -100.00  balance Rs 650.00"));
+    CHECK(contains(out, "DEPOSIT     +250.00  balance Rs 750.00"));
+    CHECK(contains(out, "OPEN        +500.00  balance Rs 500.00"));
+    CHECK(contains(out, "No account has that number."));
+    // Newest first: the withdrawal is listed before the opening.
+    CHECK(out.find("WITHDRAW    -100.00") < out.find("OPEN        +500.00"));
+    // Shown once for staff and once for the customer.
+    const std::string heading = "Mini-statement for account 100001";
+    const std::size_t first = out.find(heading);
+    REQUIRE(first != std::string::npos);
+    CHECK(out.find(heading, first + 1) != std::string::npos);
 }
 
 TEST_CASE("Full teller and customer flow through the menu") {
@@ -111,10 +150,10 @@ TEST_CASE("Tellers cannot add staff and input ending exits cleanly") {
     const std::string script =
         "admin\nPassword123\n"
         "1\nadmin\nPassword123\n"
-        "7\nteller1\n1\nTellerPass1\n"  // manager adds a teller
+        "8\nteller1\n1\nTellerPass1\n"  // manager adds a teller
         "0\n"
         "1\nteller1\nTellerPass1\n"
-        "7\n";                          // teller tries to add staff; input ends
+        "8\n";                          // teller tries to add staff; input ends
 
     const std::string out = runScript(script, "roles");
 
@@ -145,7 +184,7 @@ TEST_CASE("Opening an account journals it, and input ending at the PIN creates n
             "2\n1\n1\n500\n1234\n"
             "2\n1\n1\n700\n");
         std::ostringstream out;
-        bms::cli::Menu menu(in, out, accounts, auth, transactions, true);
+        bms::cli::Menu menu(in, out, accounts, auth, transactions, ledger, true);
         menu.run();
 
         std::vector<bms::AccountRecord> list;
