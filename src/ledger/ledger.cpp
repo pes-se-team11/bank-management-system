@@ -317,4 +317,21 @@ Error Ledger::readAudit(std::vector<AuditRecord>& out) const {
     return readRecords(audit_path_, out, parseAudit);
 }
 
+Error Ledger::miniStatement(AccountNo account, std::vector<JournalRecord>& out) const {
+    out.clear();
+    if (account == 0) {
+        return Error::InvalidInput;
+    }
+    std::vector<JournalRecord> journal;
+    if (const Error e = readJournal(journal); e != Error::Ok) {
+        return e;
+    }
+    for (auto it = journal.rbegin(); it != journal.rend() && out.size() < 10; ++it) {
+        if (it->account == account) {
+            out.push_back(std::move(*it));
+        }
+    }
+    return Error::Ok;
+}
+
 }  // namespace bms::ledger

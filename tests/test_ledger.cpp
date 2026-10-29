@@ -87,6 +87,86 @@ void checkRecord(const AuditRecord& actual, const AuditRecord& expected) {
 
 }  // namespace
 
+TEST_CASE("TC-BAL-02: mini-statement returns up to ten newest records for only that account") {
+    for (const unsigned int count : {3U, 10U, 12U}) {
+        CAPTURE(count);
+        TempFiles files;
+        Ledger ledger(files.journal, files.audit, fixedTime);
+        std::vector<JournalRecord> expected;
+        std::uint64_t seq = 0;
+        for (unsigned int i = 0; i < count; ++i) {
+            const TxnType type = i == 0 ? TxnType::Open : TxnType::Deposit;
+            const Paise amount = static_cast<Paise>(i) + 1;
+            const Paise balance = amount * (amount + 1) / 2;
+            REQUIRE(ledger.appendTransaction(type, 42, amount, balance, "teller", seq) ==
+                    Error::Ok);
+            expected.push_back({seq, fixedTime(), type, 42, amount, balance, "teller"});
+            // Interleave another account, including the most recent journal entry.
+            REQUIRE(ledger.appendTransaction(TxnType::Deposit, 43, 1, amount, "other", seq) ==
+                    Error::Ok);
+        }
+        const std::string original = bytes(files.journal);
+        const Ledger restarted(files.journal, files.audit, fixedTime);
+        std::vector<JournalRecord> out(20);
+        REQUIRE(restarted.miniStatement(42, out) == Error::Ok);
+        REQUIRE(out.size() == (count > 10 ? 10 : count));
+        for (std::size_t i = 0; i < out.size(); ++i) {
+            checkRecord(out[i], expected[expected.size() - 1 - i]);
+        }
+        CHECK(bytes(files.journal) == original);
+        CHECK_FALSE(std::filesystem::exists(files.audit));
+
+        REQUIRE(restarted.miniStatement(99, out) == Error::Ok);
+        CHECK(out.empty());
+    }
+}
+
+TEST_CASE("TC-BAL-02: mini-statement on an empty journal clears previous output") {
+    TempFiles files;
+    const Ledger ledger(files.journal, files.audit, fixedTime);
+    std::vector<JournalRecord> out(1);
+    REQUIRE(ledger.miniStatement(42, out) == Error::Ok);
+    CHECK(out.empty());
+    CHECK_FALSE(std::filesystem::exists(files.journal));
+
+    writeFixture(files.journal, "");
+    out.resize(1);
+    REQUIRE(ledger.miniStatement(42, out) == Error::Ok);
+    CHECK(out.empty());
+}
+
+TEST_CASE("TC-BAL-02: mini-statement rejects account zero and clears previous output") {
+    TempFiles files;
+    const Ledger ledger(files.journal, files.audit, fixedTime);
+    std::vector<JournalRecord> out(1);
+    CHECK(ledger.miniStatement(0, out) == Error::InvalidInput);
+    CHECK(out.empty());
+}
+
+TEST_CASE("TC-BAL-02: mini-statement propagates journal errors without partial results") {
+    TempFiles files;
+    const Ledger ledger(files.journal, files.audit, fixedTime);
+    // Corruption in another account must still be detected, even before ten valid matches.
+    std::string content = "J|1|1|0|UNKNOWN|43|1|1|op\n";
+    for (std::uint64_t seq = 2; seq <= 13; ++seq) {
+        std::string line;
+        REQUIRE(serialize(JournalRecord{seq, fixedTime(), TxnType::Deposit, 42, 1, 1, "op"},
+                          line) == Error::Ok);
+        content += line + '\n';
+    }
+    writeFixture(files.journal, content);
+    std::vector<JournalRecord> out(1);
+    CHECK(ledger.miniStatement(42, out) == Error::CorruptRecord);
+    CHECK(out.empty());
+    CHECK(bytes(files.journal) == content);
+
+    // A directory cannot be read as a journal file.
+    const Ledger unreadable(files.directory.string(), files.audit, fixedTime);
+    out.resize(1);
+    CHECK(unreadable.miniStatement(42, out) == Error::Io);
+    CHECK(out.empty());
+}
+
 TEST_CASE("TC-LED-01 TC-SEC-06: journal and audit appends preserve every earlier byte") {
     TempFiles files;
     Ledger ledger(files.journal, files.audit, fixedTime);

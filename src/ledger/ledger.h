@@ -66,6 +66,9 @@ public:
                       std::uint64_t& out_seq);
     Error readJournal(std::vector<JournalRecord>& out) const;
     Error readAudit(std::vector<AuditRecord>& out) const;
+    // BMS-F-041: up to ten matching records in descending journal sequence.
+    // No matches returns Ok with an empty result; errors also clear out.
+    Error miniStatement(AccountNo account, std::vector<JournalRecord>& out) const;
 
 private:
     std::string journal_path_;
