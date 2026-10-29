@@ -28,6 +28,7 @@ add_executable(bms_tests
     test_account.cpp
     test_auth.cpp
     test_ledger.cpp
+    test_cli.cpp
 )
 
 target_compile_definitions(
@@ -35,7 +36,7 @@ target_compile_definitions(
 )
 
 target_link_libraries(bms_tests PRIVATE
-    bms_core
+    bms_cli
     doctest::doctest
 )
 

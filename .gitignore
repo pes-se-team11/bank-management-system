@@ -23,3 +23,6 @@ Desktop.ini
 
 # Generated build artefacts (derivatives of diagrams/*.svg)
 build/
+
+# Runtime data written by the app
+data/
