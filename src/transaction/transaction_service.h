@@ -29,6 +29,10 @@ public:
         const std::string& operator_id
     );
 
+    // BMS-F-040: read the stored balance without writing a journal entry.
+    // Leaves out unchanged if the account lookup fails.
+    Error balance(AccountNo account, Paise& out) const;
+
 private:
     AccountStore& account_store_;
     ledger::Ledger& ledger_;

@@ -194,3 +194,80 @@ TEST_CASE("Current account withdrawal respects overdraft limit") {
     std::remove(journal.c_str());
     std::remove(audit.c_str());
 }
+
+TEST_CASE("TC-BAL-01: balance matches deposit and withdrawal to the paisa") {
+    bms::test::MemoryAccountStore store;
+
+    bms::AccountRecord account{};
+    account.acct_no = 300001;
+    account.cust_id = 1;
+    account.balance = 500037;
+    account.opening_balance = 500037;
+    REQUIRE(store.createAccount(account) == bms::Error::Ok);
+
+    const std::string journal = "test_balance_success_journal.tmp";
+    const std::string audit = "test_balance_success_audit.tmp";
+    std::remove(journal.c_str());
+    std::remove(audit.c_str());
+
+    {
+        bms::ledger::Ledger ledger(journal, audit);
+        bms::TransactionService service(store, ledger, 100000);
+        bms::Paise balance = 0;
+
+        REQUIRE(service.balance(300001, balance) == bms::Error::Ok);
+        CHECK(balance == 500037);
+        REQUIRE(service.deposit(300001, 12345, "test-operator") == bms::Error::Ok);
+        REQUIRE(service.balance(300001, balance) == bms::Error::Ok);
+        CHECK(balance == 512382);
+        REQUIRE(service.withdraw(300001, 6789, "test-operator") == bms::Error::Ok);
+
+        bms::AccountRecord before{};
+        REQUIRE(store.readAccount(300001, before) == bms::Error::Ok);
+        REQUIRE(service.balance(300001, balance) == bms::Error::Ok);
+        CHECK(balance == 505593);
+        CHECK(balance == before.balance);
+        REQUIRE(service.balance(300001, balance) == bms::Error::Ok);
+        CHECK(balance == 505593);
+
+        bms::AccountRecord after{};
+        REQUIRE(store.readAccount(300001, after) == bms::Error::Ok);
+        CHECK(after.balance == before.balance);
+        CHECK(after.last_seq == before.last_seq);
+
+        std::vector<bms::ledger::JournalRecord> entries;
+        REQUIRE(ledger.readJournal(entries) == bms::Error::Ok);
+        REQUIRE(entries.size() == 2);
+        CHECK(entries[0].type == bms::ledger::TxnType::Deposit);
+        CHECK(entries[1].type == bms::ledger::TxnType::Withdraw);
+        CHECK(entries[1].balance_after == balance);
+    }
+
+    std::remove(journal.c_str());
+    std::remove(audit.c_str());
+}
+
+TEST_CASE("Balance of an unknown account returns AccountNotFound without writes") {
+    bms::test::MemoryAccountStore store;
+    const std::string journal = "test_balance_missing_journal.tmp";
+    const std::string audit = "test_balance_missing_audit.tmp";
+    std::remove(journal.c_str());
+    std::remove(audit.c_str());
+
+    {
+        bms::ledger::Ledger ledger(journal, audit);
+        const bms::TransactionService service(store, ledger, 100000);
+        bms::Paise balance = 98765;
+
+        CHECK(service.balance(999999, balance) == bms::Error::AccountNotFound);
+        CHECK(balance == 98765);
+        CHECK(store.accounts.empty());
+
+        std::vector<bms::ledger::JournalRecord> entries;
+        REQUIRE(ledger.readJournal(entries) == bms::Error::Ok);
+        CHECK(entries.empty());
+    }
+
+    std::remove(journal.c_str());
+    std::remove(audit.c_str());
+}
