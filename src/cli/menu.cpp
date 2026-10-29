@@ -117,9 +117,8 @@ bool Menu::setupFirstManager() {
         if (!ask("Manager staff ID: ", id)) {
             return false;
         }
-        if (validation::validateText(id, validation::kMaxGovIdRef) != Error::Ok ||
-            id.find(' ') != std::string::npos) {
-            out_ << "Staff ID must be 1-20 characters with no spaces.\n";
+        if (validation::validateStaffId(id) != Error::Ok) {
+            out_ << "Staff ID must be 3-16 letters or digits.\n";
             continue;
         }
         std::string password;
@@ -202,7 +201,7 @@ void Menu::staffMenu(const Session& session) {
             createCustomer();
             break;
         case 2:
-            openAccount();
+            openAccount(session.operator_id);
             break;
         case 3:
             if (askAccountNo(account)) {
@@ -303,7 +302,7 @@ void Menu::createCustomer() {
     out_ << "Customer created. Customer ID: " << id << '\n';
 }
 
-void Menu::openAccount() {
+void Menu::openAccount(const std::string& operator_id) {
     std::string text;
     if (!ask("Customer ID: ", text)) {
         return;
@@ -327,34 +326,36 @@ void Menu::openAccount() {
     if (!askAmount("Opening deposit (Rs): ", opening)) {
         return;
     }
+    // The PIN is collected before the account exists, so input ending part
+    // way through never leaves an account nobody can log in to (BMS-F-010).
+    std::string pin;
+    for (;;) {
+        if (!askSecret("Set customer PIN (4-6 digits): ", pin)) {
+            return;
+        }
+        if (validation::validatePin(pin) == Error::Ok) {
+            break;
+        }
+        platform::secureWipe(pin.data(), pin.size());
+        out_ << "PIN must be 4-6 digits.\n";
+    }
+
     AccountNo account = 0;
-    const Error result = accounts_.openAccount(customer, type, opening, account);
+    const Error result = accounts_.openAccount(customer, type, opening, operator_id, account);
     if (result != Error::Ok) {
+        platform::secureWipe(pin.data(), pin.size());
         fail(result);
         return;
     }
     out_ << typeName(type) << " account opened. Account number: " << account << '\n';
 
-    // The customer needs a PIN before they can log in (BMS-F-010).
-    for (;;) {
-        std::string pin;
-        if (!askSecret("Set customer PIN (4-6 digits): ", pin)) {
-            return;
-        }
-        const Error enrolled = auth_.enrol(
-            Principal{PrincipalKind::Customer, std::to_string(account)},
-            Role::Customer, pin);
-        if (enrolled == Error::Ok) {
-            out_ << "PIN set.\n";
-            return;
-        }
-        if (enrolled == Error::InvalidInput) {
-            out_ << "PIN must be 4-6 digits.\n";
-        } else {
-            fail(enrolled);
-            return;
-        }
+    const Error enrolled = auth_.enrol(
+        Principal{PrincipalKind::Customer, std::to_string(account)}, Role::Customer, pin);
+    if (enrolled != Error::Ok) {
+        fail(enrolled);
+        return;
     }
+    out_ << "PIN set.\n";
 }
 
 void Menu::addStaff() {
@@ -362,9 +363,8 @@ void Menu::addStaff() {
     if (!ask("New staff ID: ", id)) {
         return;
     }
-    if (validation::validateText(id, validation::kMaxGovIdRef) != Error::Ok ||
-        id.find(' ') != std::string::npos) {
-        out_ << "Staff ID must be 1-20 characters with no spaces.\n";
+    if (validation::validateStaffId(id) != Error::Ok) {
+        out_ << "Staff ID must be 3-16 letters or digits.\n";
         return;
     }
     out_ << "Role: 1. Teller  2. Manager\n";
@@ -433,15 +433,13 @@ void Menu::withdraw(const std::string& operator_id, AccountNo account) {
 }
 
 void Menu::showBalance(AccountNo account) {
-    AccountRecord record;
-    const Error result = accounts_.findAccount(account, record);
+    Paise balance = 0;
+    const Error result = transactions_.balance(account, balance);
     if (result != Error::Ok) {
         fail(result);
         return;
     }
-    out_ << "Account " << record.acct_no << " (" << typeName(record.type) << ", "
-         << stateName(record.state) << ") balance: Rs " << formatPaise(record.balance)
-         << '\n';
+    out_ << "Account " << account << " balance: Rs " << formatPaise(balance) << '\n';
 }
 
 void Menu::listAccounts() {
@@ -488,10 +486,9 @@ bool Menu::askSecret(const std::string& prompt, std::string& out) {
     if (&in_ != &std::cin) {
         return ask(prompt, out);
     }
+    // readLineNoEcho prints the newline the hidden Enter key did not.
     out_ << prompt << std::flush;
-    const bool ok = platform::readLineNoEcho(out);
-    out_ << '\n';
-    return ok;
+    return platform::readLineNoEcho(out);
 }
 
 bool Menu::askChoice(const std::string& prompt, int& out) {

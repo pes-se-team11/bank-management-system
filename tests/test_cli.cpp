@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include "doctest/doctest.h"
 #include "account/account_service.h"
@@ -24,7 +25,7 @@ std::string runScript(const std::string& script, const std::string& tag) {
         bms::cli::InMemoryAccountStore account_store;
         bms::cli::InMemoryCredentialStore credential_store;
         bms::ledger::Ledger ledger(journal, audit);
-        bms::AccountService accounts(account_store);
+        bms::AccountService accounts(account_store, ledger);
         bms::AuthService auth(credential_store, 1000);
         bms::TransactionService transactions(account_store, ledger, 20000000);
 
@@ -120,6 +121,52 @@ TEST_CASE("Tellers cannot add staff and input ending exits cleanly") {
     CHECK(contains(out, "Staff login teller1 created."));
     CHECK(contains(out, "Welcome, teller1."));
     CHECK(contains(out, "Only a manager can add staff."));
+}
+
+TEST_CASE("Opening an account journals it, and input ending at the PIN creates nothing") {
+    const std::string journal = "test_cli_open_journal.tmp";
+    const std::string audit = "test_cli_open_audit.tmp";
+    std::remove(journal.c_str());
+    std::remove(audit.c_str());
+    {
+        bms::cli::InMemoryAccountStore account_store;
+        bms::cli::InMemoryCredentialStore credential_store;
+        bms::ledger::Ledger ledger(journal, audit);
+        bms::AccountService accounts(account_store, ledger);
+        bms::AuthService auth(credential_store, 1000);
+        bms::TransactionService transactions(account_store, ledger, 20000000);
+
+        // First session: one account opened with Rs 500, then a second
+        // opening abandoned at the PIN prompt.
+        std::istringstream in(
+            "admin\nPassword123\n"
+            "1\nadmin\nPassword123\n"
+            "1\nAsha Rao\n12 MG Road\n9876543210\nABCDE1234F\n"
+            "2\n1\n1\n500\n1234\n"
+            "2\n1\n1\n700\n");
+        std::ostringstream out;
+        bms::cli::Menu menu(in, out, accounts, auth, transactions, true);
+        menu.run();
+
+        std::vector<bms::AccountRecord> list;
+        REQUIRE(accounts.listAccounts(1, list) == bms::Error::Ok);
+        CHECK(list.size() == 1);  // the abandoned opening left no account
+
+        std::vector<bms::ledger::JournalRecord> entries;
+        REQUIRE(ledger.readJournal(entries) == bms::Error::Ok);
+        REQUIRE(entries.size() == 1);
+        CHECK(entries[0].type == bms::ledger::TxnType::Open);
+        CHECK(entries[0].amount == 50000);
+        CHECK(entries[0].operator_id == "admin");
+    }
+    std::remove(journal.c_str());
+    std::remove(audit.c_str());
+}
+
+TEST_CASE("Staff IDs must be 3-16 letters or digits") {
+    const std::string out = runScript("ab\nadmin 1\nadmin\nPassword123\n0\n", "staffid");
+    CHECK(contains(out, "Staff ID must be 3-16 letters or digits."));
+    CHECK(contains(out, "Manager admin created."));
 }
 
 }  // namespace

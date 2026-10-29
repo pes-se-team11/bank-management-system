@@ -25,8 +25,9 @@ Error AccountService::createCustomer(const Customer& details, CustomerId& out_id
 }
 
 Error AccountService::openAccount(CustomerId customer, AccountType type,
-                                  Paise opening_deposit, AccountNo& out_no) {
-    if (opening_deposit < 0) {
+                                  Paise opening_deposit, const std::string& operator_id,
+                                  AccountNo& out_no) {
+    if (opening_deposit < 0 || operator_id.empty()) {
         return Error::InvalidInput;
     }
     Customer holder;
@@ -44,9 +45,17 @@ Error AccountService::openAccount(CustomerId customer, AccountType type,
     account.opening_balance = opening_deposit;
     account.balance = opening_deposit;
 
-    // When the journal lands (story 7.2) this also appends an OPEN record
-    // holding the full account, so a damaged record can be rebuilt from the
-    // journal alone (agreed in the review of PR #3).
+    // Journal first: if the account write then fails, the journal still
+    // shows what was attempted, and the number is never handed out again.
+    std::uint64_t seq = 0;
+    if (const Error e = journal_.appendTransaction(ledger::TxnType::Open, account.acct_no,
+                                                   opening_deposit, opening_deposit,
+                                                   operator_id, seq);
+        e != Error::Ok) {
+        return e;
+    }
+    account.last_seq = seq;
+
     if (const Error e = store_.createAccount(account); e != Error::Ok) {
         return e;
     }
