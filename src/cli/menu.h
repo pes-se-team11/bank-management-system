@@ -11,6 +11,7 @@
 
 #include "account/account_service.h"
 #include "auth/auth.h"
+#include "ledger/ledger.h"
 #include "transaction/transaction_service.h"
 
 namespace bms::cli {
@@ -19,7 +20,7 @@ class Menu {
 public:
     Menu(std::istream& in, std::ostream& out, AccountService& accounts,
          AuthService& auth, TransactionService& transactions,
-         bool needs_first_manager);
+         const ledger::Ledger& journal, bool needs_first_manager);
 
     // Runs until the user chooses Exit or input ends.
     void run();
@@ -37,6 +38,7 @@ private:
     void deposit(const std::string& operator_id, AccountNo account);
     void withdraw(const std::string& operator_id, AccountNo account);
     void showBalance(AccountNo account);
+    void showMiniStatement(AccountNo account);
     void listAccounts();
 
     // Input helpers. Each returns false when input has ended.
@@ -53,11 +55,16 @@ private:
     AccountService& accounts_;
     AuthService& auth_;
     TransactionService& transactions_;
+    const ledger::Ledger& journal_;
     bool needs_first_manager_;
 };
 
 // "1250.50" style text for a paise amount; negative for an overdraft.
 std::string formatPaise(Paise amount);
+
+// "29-10-2026 18:40" for a journal timestamp, in Indian Standard Time
+// (UTC+05:30). Pure arithmetic, so no OS time functions are needed.
+std::string formatTimestamp(std::int64_t unix_ts);
 
 // One-line reason and remedy for an error (BMS-NF-005).
 std::string describe(Error error);

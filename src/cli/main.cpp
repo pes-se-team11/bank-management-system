@@ -48,7 +48,7 @@ int main() {
     bms::AuthService auth(credential_store);
     bms::TransactionService transactions(account_store, ledger, kDepositCeiling);
 
-    bms::cli::Menu menu(std::cin, std::cout, accounts, auth, transactions,
+    bms::cli::Menu menu(std::cin, std::cout, accounts, auth, transactions, ledger,
                         !credential_store.hasStaff());
     menu.run();
     return 0;

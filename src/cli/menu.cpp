@@ -44,6 +44,35 @@ std::string formatPaise(Paise amount) {
     return negative ? '-' + text : text;
 }
 
+std::string formatTimestamp(std::int64_t unix_ts) {
+    constexpr std::int64_t kIstOffset = 5 * 3600 + 30 * 60;
+    constexpr std::int64_t kSecondsPerDay = 86400;
+    const std::int64_t local = unix_ts + kIstOffset;
+    std::int64_t days = local / kSecondsPerDay;
+    std::int64_t seconds = local % kSecondsPerDay;
+    if (seconds < 0) {
+        seconds += kSecondsPerDay;
+        --days;
+    }
+
+    // Days since 1970-01-01 to a calendar date (H. Hinnant's civil_from_days).
+    const std::int64_t z = days + 719468;
+    const std::int64_t era = (z >= 0 ? z : z - 146096) / 146097;
+    const std::int64_t doe = z - era * 146097;
+    const std::int64_t yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
+    const std::int64_t doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    const std::int64_t mp = (5 * doy + 2) / 153;
+    const std::int64_t day = doy - (153 * mp + 2) / 5 + 1;
+    const std::int64_t month = mp < 10 ? mp + 3 : mp - 9;
+    const std::int64_t year = yoe + era * 400 + (month <= 2 ? 1 : 0);
+
+    const auto two = [](std::int64_t value) {
+        return (value < 10 ? "0" : "") + std::to_string(value);
+    };
+    return two(day) + '-' + two(month) + '-' + std::to_string(year) + ' ' +
+           two(seconds / 3600) + ':' + two(seconds % 3600 / 60);
+}
+
 std::string describe(Error error) {
     switch (error) {
     case Error::Ok:
@@ -69,12 +98,13 @@ std::string describe(Error error) {
 
 Menu::Menu(std::istream& in, std::ostream& out, AccountService& accounts,
            AuthService& auth, TransactionService& transactions,
-           bool needs_first_manager)
+           const ledger::Ledger& journal, bool needs_first_manager)
     : in_(in),
       out_(out),
       accounts_(accounts),
       auth_(auth),
       transactions_(transactions),
+      journal_(journal),
       needs_first_manager_(needs_first_manager) {}
 
 void Menu::run() {
@@ -186,9 +216,10 @@ void Menu::staffMenu(const Session& session) {
                 "  3. Deposit\n"
                 "  4. Withdraw\n"
                 "  5. Balance enquiry\n"
-                "  6. List a customer's accounts\n";
+                "  6. Mini-statement (last 10)\n"
+                "  7. List a customer's accounts\n";
         if (manager) {
-            out_ << "  7. Add staff login\n";
+            out_ << "  8. Add staff login\n";
         }
         out_ << "  0. Logout\n";
         int choice = 0;
@@ -219,9 +250,14 @@ void Menu::staffMenu(const Session& session) {
             }
             break;
         case 6:
-            listAccounts();
+            if (askAccountNo(account)) {
+                showMiniStatement(account);
+            }
             break;
         case 7:
+            listAccounts();
+            break;
+        case 8:
             if (manager) {
                 addStaff();
             } else {
@@ -251,8 +287,9 @@ void Menu::customerMenu(const Session& session) {
     for (;;) {
         out_ << "\nCustomer menu (account " << own << ")\n"
                 "  1. Balance enquiry\n"
-                "  2. Deposit\n"
-                "  3. Withdraw\n"
+                "  2. Mini-statement (last 10)\n"
+                "  3. Deposit\n"
+                "  4. Withdraw\n"
                 "  0. Logout\n";
         int choice = 0;
         if (!askChoice("Choice: ", choice)) {
@@ -263,16 +300,19 @@ void Menu::customerMenu(const Session& session) {
             showBalance(own);
             break;
         case 2:
-            deposit(session.operator_id, own);
+            showMiniStatement(own);
             break;
         case 3:
+            deposit(session.operator_id, own);
+            break;
+        case 4:
             withdraw(session.operator_id, own);
             break;
         case 0:
             out_ << "Logged out.\n";
             return;
         default:
-            out_ << "Please choose 1, 2, 3 or 0.\n";
+            out_ << "Please choose 1, 2, 3, 4 or 0.\n";
         }
         if (!in_) {
             return;
@@ -440,6 +480,35 @@ void Menu::showBalance(AccountNo account) {
         return;
     }
     out_ << "Account " << account << " balance: Rs " << formatPaise(balance) << '\n';
+}
+
+void Menu::showMiniStatement(AccountNo account) {
+    // The journal simply has no lines for an unknown number, so check the
+    // account first to say "not found" rather than "no transactions".
+    AccountRecord record;
+    if (const Error e = accounts_.findAccount(account, record); e != Error::Ok) {
+        fail(e);
+        return;
+    }
+    std::vector<ledger::JournalRecord> entries;
+    if (const Error e = journal_.miniStatement(account, entries); e != Error::Ok) {
+        fail(e);
+        return;
+    }
+    out_ << "Mini-statement for account " << account << " (newest first, IST)\n";
+    if (entries.empty()) {
+        out_ << "  No transactions yet.\n";
+        return;
+    }
+    for (const ledger::JournalRecord& entry : entries) {
+        const bool debit = entry.type == ledger::TxnType::Withdraw ||
+                           entry.type == ledger::TxnType::TransferOut;
+        std::string type(ledger::label(entry.type));
+        type.resize(12, ' ');
+        out_ << "  " << formatTimestamp(entry.unix_ts) << "  " << type
+             << (debit ? '-' : '+') << formatPaise(entry.amount)
+             << "  balance Rs " << formatPaise(entry.balance_after) << '\n';
+    }
 }
 
 void Menu::listAccounts() {
