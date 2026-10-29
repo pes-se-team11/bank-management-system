@@ -126,4 +126,15 @@ Error TransactionService::withdraw(
     return account_store_.updateAccount(record);
 }
 
+Error TransactionService::balance(AccountNo account, Paise& out) const {
+    AccountRecord record{};
+    const Error result = account_store_.readAccount(account, record);
+    if (result != Error::Ok) {
+        return result;
+    }
+
+    out = record.balance;
+    return Error::Ok;
+}
+
 }  // namespace bms
