@@ -18,6 +18,10 @@ namespace {
 // Low iteration count keeps the tests fast; production uses the default.
 constexpr std::uint32_t kTestIterations = 1000;
 
+// Sessions of the staff who set up logins in these tests (BMS-F-012).
+const Session kTeller{"teller1", Role::Teller};
+const Session kManager{"manager1", Role::Manager};
+
 Principal customer(const std::string& account_no) {
     return Principal{PrincipalKind::Customer, account_no};
 }
@@ -70,9 +74,9 @@ TEST_CASE("TC-AUT-01: correct credentials open a session with the stored role") 
     AuthService& auth = fx.auth;
 
     std::string pin = "4821";
-    REQUIRE(auth.enrol(customer("100001"), Role::Customer, pin) == Error::Ok);
+    REQUIRE(auth.enrol(kTeller, customer("100001"), Role::Customer, pin) == Error::Ok);
     std::string password = "teller-pass1";
-    REQUIRE(auth.enrol(staff("T007"), Role::Teller, password) == Error::Ok);
+    REQUIRE(auth.enrol(kManager, staff("T007"), Role::Teller, password) == Error::Ok);
 
     Session s;
     std::string attempt = "4821";
@@ -90,7 +94,7 @@ TEST_CASE("TC-AUT-01: a wrong PIN and an unknown ID give the same refusal") {
     AuthFixture fx("same");
     AuthService& auth = fx.auth;
     std::string pin = "4821";
-    REQUIRE(auth.enrol(customer("100001"), Role::Customer, pin) == Error::Ok);
+    REQUIRE(auth.enrol(kTeller, customer("100001"), Role::Customer, pin) == Error::Ok);
 
     Session s;
     std::string wrong_pin = "1111";
@@ -102,7 +106,7 @@ TEST_CASE("TC-AUT-01: a wrong PIN and an unknown ID give the same refusal") {
 
     // A staff ID is not a valid customer login, even with the right secret.
     std::string password = "teller-pass1";
-    REQUIRE(auth.enrol(staff("T007"), Role::Teller, password) == Error::Ok);
+    REQUIRE(auth.enrol(kManager, staff("T007"), Role::Teller, password) == Error::Ok);
     password = "teller-pass1";
     CHECK(auth.login(customer("T007"), password, s) == Error::BadCredentials);
 }
@@ -114,8 +118,8 @@ TEST_CASE("TC-SEC-01: only a salted hash is stored, never the PIN") {
 
     std::string pin_a = "4821";
     std::string pin_b = "4821";  // same PIN on two accounts
-    REQUIRE(auth.enrol(customer("100001"), Role::Customer, pin_a) == Error::Ok);
-    REQUIRE(auth.enrol(customer("100002"), Role::Customer, pin_b) == Error::Ok);
+    REQUIRE(auth.enrol(kTeller, customer("100001"), Role::Customer, pin_a) == Error::Ok);
+    REQUIRE(auth.enrol(kTeller, customer("100002"), Role::Customer, pin_b) == Error::Ok);
 
     Credential a;
     Credential b;
@@ -142,7 +146,7 @@ TEST_CASE("TC-SEC-02: the caller's copy of the secret is wiped after use") {
     AuthService& auth = fx.auth;
 
     std::string pin = "4821";
-    REQUIRE(auth.enrol(customer("100001"), Role::Customer, pin) == Error::Ok);
+    REQUIRE(auth.enrol(kTeller, customer("100001"), Role::Customer, pin) == Error::Ok);
     CHECK(pin.empty());
 
     Session s;
@@ -167,15 +171,17 @@ TEST_CASE("auth: enrol refuses weak secrets and mismatched roles") {
     AuthService& auth = fx.auth;
 
     std::string short_pin = "12";
-    CHECK(auth.enrol(customer("100001"), Role::Customer, short_pin) == Error::InvalidInput);
+    CHECK(auth.enrol(kTeller, customer("100001"), Role::Customer, short_pin) ==
+          Error::InvalidInput);
     std::string short_password = "abc";
-    CHECK(auth.enrol(staff("T007"), Role::Teller, short_password) == Error::InvalidInput);
+    CHECK(auth.enrol(kManager, staff("T007"), Role::Teller, short_password) ==
+          Error::InvalidInput);
 
     // A customer login cannot be given a staff role, and the reverse.
     std::string pin = "4821";
-    CHECK(auth.enrol(customer("100001"), Role::Manager, pin) == Error::InvalidInput);
+    CHECK(auth.enrol(kTeller, customer("100001"), Role::Manager, pin) == Error::InvalidInput);
     std::string password = "manager-pass1";
-    CHECK(auth.enrol(staff("M001"), Role::Customer, password) == Error::InvalidInput);
+    CHECK(auth.enrol(kManager, staff("M001"), Role::Customer, password) == Error::InvalidInput);
 
     CHECK(store.credentials.empty());
 }
@@ -197,7 +203,7 @@ TEST_CASE("TC-AUT-02: the third wrong PIN locks the account and records it") {
     account.cust_id = cust;
     REQUIRE(fx.accounts.createAccount(account) == Error::Ok);
     std::string pin = "4821";
-    REQUIRE(fx.auth.enrol(customer("100001"), Role::Customer, pin) == Error::Ok);
+    REQUIRE(fx.auth.enrol(kTeller, customer("100001"), Role::Customer, pin) == Error::Ok);
 
     CHECK(tryPin(fx.auth, "100001", "1111") == Error::BadCredentials);
     CHECK(tryPin(fx.auth, "100001", "2222") == Error::BadCredentials);
@@ -223,7 +229,7 @@ TEST_CASE("TC-AUT-02: the third wrong PIN locks the account and records it") {
 TEST_CASE("TC-AUT-02: a right PIN resets the count, so only failures in a row lock") {
     AuthFixture fx("reset");
     std::string pin = "4821";
-    REQUIRE(fx.auth.enrol(customer("100001"), Role::Customer, pin) == Error::Ok);
+    REQUIRE(fx.auth.enrol(kTeller, customer("100001"), Role::Customer, pin) == Error::Ok);
 
     CHECK(tryPin(fx.auth, "100001", "1111") == Error::BadCredentials);
     CHECK(tryPin(fx.auth, "100001", "2222") == Error::BadCredentials);
@@ -246,8 +252,8 @@ TEST_CASE("TC-AUT-02: lockout touches only the account that was guessed at") {
     AuthFixture fx("isolated");
     std::string pin_a = "4821";
     std::string pin_b = "5932";
-    REQUIRE(fx.auth.enrol(customer("100001"), Role::Customer, pin_a) == Error::Ok);
-    REQUIRE(fx.auth.enrol(customer("100002"), Role::Customer, pin_b) == Error::Ok);
+    REQUIRE(fx.auth.enrol(kTeller, customer("100001"), Role::Customer, pin_a) == Error::Ok);
+    REQUIRE(fx.auth.enrol(kTeller, customer("100002"), Role::Customer, pin_b) == Error::Ok);
 
     for (const char* wrong : {"1111", "2222", "3333"}) {
         tryPin(fx.auth, "100001", wrong);
@@ -264,7 +270,7 @@ TEST_CASE("TC-AUT-02: lockout touches only the account that was guessed at") {
 TEST_CASE("TC-AUT-02: staff passwords are never locked") {
     AuthFixture fx("staff");
     std::string password = "manager-pass1";
-    REQUIRE(fx.auth.enrol(staff("M001"), Role::Manager, password) == Error::Ok);
+    REQUIRE(fx.auth.enrol(kManager, staff("M001"), Role::Manager, password) == Error::Ok);
 
     Session s;
     for (int i = 0; i < 5; ++i) {

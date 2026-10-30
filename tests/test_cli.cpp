@@ -42,6 +42,15 @@ std::string runScript(const std::string& script, const std::string& tag) {
     return output;
 }
 
+// First run creates manager "admin", who adds teller "teller1" and logs
+// out; teller1 then logs in, ready at the teller menu (BMS-F-012).
+const std::string kTellerOnDuty =
+    "admin\nPassword123\n"
+    "1\nadmin\nPassword123\n"
+    "1\nteller1\n1\nTellerPass1\n"
+    "0\n"
+    "1\nteller1\nTellerPass1\n";
+
 bool contains(const std::string& text, const std::string& part) {
     return text.find(part) != std::string::npos;
 }
@@ -63,8 +72,7 @@ TEST_CASE("formatTimestamp shows Indian Standard Time") {
 
 TEST_CASE("Mini-statement lists the newest transactions for staff and customers") {
     const std::string script =
-        "admin\nPassword123\n"
-        "1\nadmin\nPassword123\n"
+        kTellerOnDuty +
         "1\nAsha Rao\n12 MG Road\n9876543210\nABCDE1234F\n"
         "2\n1\n1\n500\n1234\n"   // open with Rs 500
         "3\n100001\n250\n"         // deposit Rs 250
@@ -94,9 +102,7 @@ TEST_CASE("Mini-statement lists the newest transactions for staff and customers"
 
 TEST_CASE("Full teller and customer flow through the menu") {
     const std::string script =
-        "admin\n"            // first-run manager ID
-        "Password123\n"      // manager password
-        "1\nadmin\nPassword123\n"  // staff login
+        kTellerOnDuty +      // manager admin adds teller1, who logs in
         "1\nAsha Rao\n12 MG Road, Bengaluru\n9876543210\nABCDE1234F\n"
         "2\n1\n1\n500\n"     // open savings account for customer 1 with Rs 500
         "1234\n"             // customer PIN
@@ -113,6 +119,8 @@ TEST_CASE("Full teller and customer flow through the menu") {
 
     CHECK(contains(out, "Manager admin created."));
     CHECK(contains(out, "Welcome, admin."));
+    CHECK(contains(out, "Staff login teller1 created."));
+    CHECK(contains(out, "Welcome, teller1."));
     CHECK(contains(out, "Customer created. Customer ID: 1"));
     CHECK(contains(out, "Savings account opened. Account number: 100001"));
     CHECK(contains(out, "PIN set."));
@@ -126,15 +134,15 @@ TEST_CASE("Full teller and customer flow through the menu") {
 
 TEST_CASE("Menu explains refusals and recovers from bad input") {
     const std::string script =
-        "admin\nPassword123\n"
-        "9\n"                      // not a menu option
-        "1\nadmin\nPassword123\n"
+        kTellerOnDuty +
         "1\nAsha Rao\n12 MG Road\n9876543210\nABCDE1234F\n"
         "2\n1\n1\n100\n12\n1234\n" // PIN too short, then a valid one
         "4\n100001\n500\n"         // more than the balance
         "3\n100001\n12,000\n"      // badly formatted amount
         "5\n424242\n"              // unknown account
-        "0\n0\n";
+        "0\n"
+        "9\n"                      // not a main-menu option
+        "0\n";
 
     const std::string out = runScript(script, "refusals");
 
@@ -146,20 +154,31 @@ TEST_CASE("Menu explains refusals and recovers from bad input") {
     CHECK(contains(out, "Goodbye."));
 }
 
-TEST_CASE("Tellers cannot add staff and input ending exits cleanly") {
+TEST_CASE("TC-AUT-03: each role gets its own menu and input ending exits cleanly") {
     const std::string script =
         "admin\nPassword123\n"
         "1\nadmin\nPassword123\n"
-        "8\nteller1\n1\nTellerPass1\n"  // manager adds a teller
+        "5\n"                            // managers have no option 5
+        "1\nteller1\n1\nTellerPass1\n"  // manager adds a teller
         "0\n"
         "1\nteller1\nTellerPass1\n"
-        "8\n";                          // teller tries to add staff; input ends
+        "8\n";                           // tellers have no option 8; input ends
 
     const std::string out = runScript(script, "roles");
 
+    CHECK(contains(out, "Manager menu (admin)"));
     CHECK(contains(out, "Staff login teller1 created."));
-    CHECK(contains(out, "Welcome, teller1."));
-    CHECK(contains(out, "Only a manager can add staff."));
+    CHECK(contains(out, "Teller menu (teller1)"));
+    // Account work is not offered to a manager, nor staff admin to a teller.
+    const std::string manager_menu = out.substr(0, out.find("Teller menu"));
+    CHECK_FALSE(contains(manager_menu, "Create customer"));
+    CHECK_FALSE(contains(manager_menu, "Open account"));
+    const std::string teller_menu = out.substr(out.find("Teller menu"));
+    CHECK_FALSE(contains(teller_menu, "Add staff login"));
+    const std::string listed = "Please choose one of the listed options.";
+    const std::size_t first = out.find(listed);
+    REQUIRE(first != std::string::npos);
+    CHECK(out.find(listed, first + 1) != std::string::npos);  // once for each
 }
 
 TEST_CASE("Opening an account journals it, and input ending at the PIN creates nothing") {
@@ -178,8 +197,7 @@ TEST_CASE("Opening an account journals it, and input ending at the PIN creates n
         // First session: one account opened with Rs 500, then a second
         // opening abandoned at the PIN prompt.
         std::istringstream in(
-            "admin\nPassword123\n"
-            "1\nadmin\nPassword123\n"
+            kTellerOnDuty +
             "1\nAsha Rao\n12 MG Road\n9876543210\nABCDE1234F\n"
             "2\n1\n1\n500\n1234\n"
             "2\n1\n1\n700\n");
@@ -196,7 +214,7 @@ TEST_CASE("Opening an account journals it, and input ending at the PIN creates n
         REQUIRE(entries.size() == 1);
         CHECK(entries[0].type == bms::ledger::TxnType::Open);
         CHECK(entries[0].amount == 50000);
-        CHECK(entries[0].operator_id == "admin");
+        CHECK(entries[0].operator_id == "teller1");
     }
     std::remove(journal.c_str());
     std::remove(audit.c_str());
@@ -204,8 +222,7 @@ TEST_CASE("Opening an account journals it, and input ending at the PIN creates n
 
 TEST_CASE("TC-AUT-02: three wrong PINs lock the account in the menu") {
     const std::string script =
-        "admin\nPassword123\n"
-        "1\nadmin\nPassword123\n"
+        kTellerOnDuty +
         "1\nAsha Rao\n12 MG Road\n9876543210\nABCDE1234F\n"
         "2\n1\n1\n500\n1234\n"
         "0\n"
@@ -213,8 +230,8 @@ TEST_CASE("TC-AUT-02: three wrong PINs lock the account in the menu") {
         "2\n100001\n2222\n"   // wrong
         "2\n100001\n3333\n"   // wrong: locks the account
         "2\n100001\n1234\n"   // right PIN, still refused
-        "1\nadmin\nPassword123\n"
-        "7\n1\n"               // staff list shows the account as Locked
+        "1\nteller1\nTellerPass1\n"
+        "7\n1\n"               // the teller's list shows the account as Locked
         "0\n0\n";
 
     const std::string out = runScript(script, "lockout");

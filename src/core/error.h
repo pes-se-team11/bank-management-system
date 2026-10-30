@@ -15,5 +15,6 @@ enum class Error {
     Io,                  // a store or file operation failed
     CorruptRecord,       // a journal or audit line failed to parse (BMS-SR-005)
     AccountLocked,       // three wrong PINs in a row; a manager must unlock it (BMS-F-011)
+    NotAuthorised,       // the session's role may not do this (BMS-F-012)
 };
 }  // namespace bms

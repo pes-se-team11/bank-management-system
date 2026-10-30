@@ -97,6 +97,10 @@ public:
         }
         return false;
     }
+    Error anyStaff(bool& out) override {
+        out = hasStaff();
+        return Error::Ok;
+    }
 
 private:
     static std::string key(const Principal& who) {

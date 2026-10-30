@@ -1,6 +1,6 @@
 #pragma once
-// AuthModule (Person 1): stories 2.1 (sign-in), 2.2 (lockout) and 7.3
-// (credential hashing).
+// AuthModule (Person 1): stories 2.1 (sign-in), 2.2 (lockout), 2.3 (roles)
+// and 7.3 (credential hashing).
 #include <array>
 #include <cstdint>
 #include <string>
@@ -48,6 +48,9 @@ public:
     virtual ~CredentialStore() = default;
     virtual Error readCredential(const Principal& who, Credential& out) = 0;  // CredentialNotFound
     virtual Error writeCredential(const Credential& credential) = 0;
+    // True once any staff login exists, so the first manager can only be
+    // created on a fresh install.
+    virtual Error anyStaff(bool& out) = 0;
 };
 
 class AuthService {
@@ -66,7 +69,14 @@ public:
     // Sets or replaces the secret for a login ID: a 4-6 digit PIN for a
     // customer, an 8-64 character password for staff. A fresh random salt
     // is used every time. The caller's copy of the secret is wiped.
-    Error enrol(const Principal& who, Role role, std::string& secret);
+    // BMS-F-012: a customer PIN is set by a Teller as part of opening the
+    // account; a staff login is created by a Manager. Anyone else gets
+    // NotAuthorised.
+    Error enrol(const Session& by, const Principal& who, Role role, std::string& secret);
+
+    // The very first login on a fresh install, when there is nobody to
+    // authorise it yet. Refused with NotAuthorised once any staff exists.
+    Error enrolFirstManager(const std::string& staff_id, std::string& password);
 
     // BMS-F-010. Ok fills in the session. An unknown ID and a wrong secret
     // both return BadCredentials, after the same amount of work, so the
@@ -81,6 +91,7 @@ public:
     Error login(const Principal& who, std::string& secret, Session& out);
 
 private:
+    Error writeSecret(const Principal& who, Role role, std::string& secret);
     Error lockAccount(const std::string& account_id);
 
     CredentialStore& store_;

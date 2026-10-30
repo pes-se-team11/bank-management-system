@@ -1,5 +1,6 @@
 #include "auth/auth.h"
 
+#include "auth/authorization.h"
 #include "auth/crypto.h"
 #include "platform/platform.h"
 #include "validation/validation.h"
@@ -25,7 +26,31 @@ bool roleMatchesKind(PrincipalKind kind, Role role) {
 
 }  // namespace
 
-Error AuthService::enrol(const Principal& who, Role role, std::string& secret) {
+Error AuthService::enrol(const Session& by, const Principal& who, Role role,
+                         std::string& secret) {
+    const Operation operation =
+        who.kind == PrincipalKind::Customer ? Operation::OpenAccount : Operation::AddStaff;
+    if (const Error e = authorize(by, operation); e != Error::Ok) {
+        wipe(secret);
+        return e;
+    }
+    return writeSecret(who, role, secret);
+}
+
+Error AuthService::enrolFirstManager(const std::string& staff_id, std::string& password) {
+    bool staff_exists = false;
+    if (const Error e = store_.anyStaff(staff_exists); e != Error::Ok) {
+        wipe(password);
+        return e;
+    }
+    if (staff_exists) {
+        wipe(password);
+        return Error::NotAuthorised;
+    }
+    return writeSecret(Principal{PrincipalKind::Staff, staff_id}, Role::Manager, password);
+}
+
+Error AuthService::writeSecret(const Principal& who, Role role, std::string& secret) {
     const Error secret_ok = who.kind == PrincipalKind::Customer
                                 ? validation::validatePin(secret)
                                 : validation::validatePassword(secret);
