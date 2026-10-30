@@ -14,5 +14,6 @@ enum class Error {
     BadCredentials,      // wrong ID *or* wrong secret - never says which (BMS-F-010)
     Io,                  // a store or file operation failed
     CorruptRecord,       // a journal or audit line failed to parse (BMS-SR-005)
+    AccountLocked,       // three wrong PINs in a row; a manager must unlock it (BMS-F-011)
 };
 }  // namespace bms

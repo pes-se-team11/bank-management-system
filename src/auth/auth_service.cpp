@@ -65,13 +65,66 @@ Error AuthService::login(const Principal& who, std::string& secret, Session& out
                          attempt.data(), attempt.size());
     wipe(secret);
 
-    if (!known || !crypto::constantTimeEqual(attempt.data(), stored.hash.data(),
-                                             attempt.size())) {
+    if (!known) {
         return Error::BadCredentials;
     }
-    out.operator_id = who.id;
-    out.role = stored.role;
-    return Error::Ok;
+    // A locked account refuses even the right PIN until a manager unlocks it.
+    const bool customer = who.kind == PrincipalKind::Customer;
+    if (customer && stored.failed_attempts >= kMaxFailedAttempts) {
+        return Error::AccountLocked;
+    }
+
+    if (crypto::constantTimeEqual(attempt.data(), stored.hash.data(), attempt.size())) {
+        // Only consecutive failures count, so a right PIN starts again at zero.
+        if (stored.failed_attempts != 0) {
+            stored.failed_attempts = 0;
+            if (const Error e = store_.writeCredential(stored); e != Error::Ok) {
+                return e;
+            }
+        }
+        out.operator_id = who.id;
+        out.role = stored.role;
+        return Error::Ok;
+    }
+
+    if (!customer) {
+        return Error::BadCredentials;
+    }
+    // The count is saved before anything else, so it is never lost even if
+    // locking the account record or writing the audit entry fails.
+    ++stored.failed_attempts;
+    if (const Error e = store_.writeCredential(stored); e != Error::Ok) {
+        return e;
+    }
+    if (stored.failed_attempts < kMaxFailedAttempts) {
+        return Error::BadCredentials;
+    }
+    return lockAccount(who.id);
+}
+
+Error AuthService::lockAccount(const std::string& account_id) {
+    // Mark the account LOCKED too, so staff see it and no transaction can
+    // run on it while it is locked.
+    std::uint32_t number = 0;
+    if (validation::parseId(account_id, number) == Error::Ok) {
+        AccountRecord record;
+        const Error found = accounts_.readAccount(number, record);
+        if (found == Error::Ok) {
+            record.state = AccountState::Locked;
+            if (const Error e = accounts_.updateAccount(record); e != Error::Ok) {
+                return e;
+            }
+        } else if (found != Error::AccountNotFound) {
+            return found;
+        }
+    }
+
+    // The audit entry names the account, and the ledger adds the time.
+    std::uint64_t seq = 0;
+    const Error logged =
+        audit_.appendAudit("system", ledger::AuditAction::AccountLock, account_id,
+                           std::to_string(kMaxFailedAttempts) + " wrong PINs in a row", seq);
+    return logged != Error::Ok ? logged : Error::AccountLocked;
 }
 
 }  // namespace bms

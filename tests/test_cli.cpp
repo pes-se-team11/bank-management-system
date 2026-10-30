@@ -26,7 +26,7 @@ std::string runScript(const std::string& script, const std::string& tag) {
         bms::cli::InMemoryCredentialStore credential_store;
         bms::ledger::Ledger ledger(journal, audit);
         bms::AccountService accounts(account_store, ledger);
-        bms::AuthService auth(credential_store, 1000);
+        bms::AuthService auth(credential_store, account_store, ledger, 1000);
         bms::TransactionService transactions(account_store, ledger, 20000000);
 
         std::istringstream in(script);
@@ -172,7 +172,7 @@ TEST_CASE("Opening an account journals it, and input ending at the PIN creates n
         bms::cli::InMemoryCredentialStore credential_store;
         bms::ledger::Ledger ledger(journal, audit);
         bms::AccountService accounts(account_store, ledger);
-        bms::AuthService auth(credential_store, 1000);
+        bms::AuthService auth(credential_store, account_store, ledger, 1000);
         bms::TransactionService transactions(account_store, ledger, 20000000);
 
         // First session: one account opened with Rs 500, then a second
@@ -200,6 +200,28 @@ TEST_CASE("Opening an account journals it, and input ending at the PIN creates n
     }
     std::remove(journal.c_str());
     std::remove(audit.c_str());
+}
+
+TEST_CASE("TC-AUT-02: three wrong PINs lock the account in the menu") {
+    const std::string script =
+        "admin\nPassword123\n"
+        "1\nadmin\nPassword123\n"
+        "1\nAsha Rao\n12 MG Road\n9876543210\nABCDE1234F\n"
+        "2\n1\n1\n500\n1234\n"
+        "0\n"
+        "2\n100001\n1111\n"   // wrong
+        "2\n100001\n2222\n"   // wrong
+        "2\n100001\n3333\n"   // wrong: locks the account
+        "2\n100001\n1234\n"   // right PIN, still refused
+        "1\nadmin\nPassword123\n"
+        "7\n1\n"               // staff list shows the account as Locked
+        "0\n0\n";
+
+    const std::string out = runScript(script, "lockout");
+
+    CHECK(contains(out, "This account is locked after three wrong PINs."));
+    CHECK_FALSE(contains(out, "Logged in to account 100001."));
+    CHECK(contains(out, "100001  Savings  Locked"));
 }
 
 TEST_CASE("Staff IDs must be 3-16 letters or digits") {

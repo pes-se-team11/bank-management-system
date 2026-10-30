@@ -92,6 +92,9 @@ std::string describe(Error error) {
                "folder permissions, then try again.";
     case Error::CorruptRecord:
         return "A stored record is damaged. Report this to a manager.";
+    case Error::AccountLocked:
+        return "This account is locked after three wrong PINs. Ask a manager "
+               "to unlock it.";
     }
     return "Unexpected error. Report this to a manager.";
 }
