@@ -1,10 +1,15 @@
 #include "account/account_service.h"
 
+#include "auth/authorization.h"
 #include "validation/validation.h"
 
 namespace bms {
 
-Error AccountService::createCustomer(const Customer& details, CustomerId& out_id) {
+Error AccountService::createCustomer(const Session& by, const Customer& details,
+                                     CustomerId& out_id) {
+    if (const Error e = authorize(by, Operation::CreateCustomer); e != Error::Ok) {
+        return e;
+    }
     using namespace validation;
     if (validateText(details.name, kMaxName) != Error::Ok ||
         validateText(details.address, kMaxAddress) != Error::Ok ||
@@ -24,10 +29,13 @@ Error AccountService::createCustomer(const Customer& details, CustomerId& out_id
     return Error::Ok;
 }
 
-Error AccountService::openAccount(CustomerId customer, AccountType type,
-                                  Paise opening_deposit, const std::string& operator_id,
+Error AccountService::openAccount(const Session& by, CustomerId customer,
+                                  AccountType type, Paise opening_deposit,
                                   AccountNo& out_no) {
-    if (opening_deposit < 0 || operator_id.empty()) {
+    if (const Error e = authorize(by, Operation::OpenAccount); e != Error::Ok) {
+        return e;
+    }
+    if (opening_deposit < 0) {
         return Error::InvalidInput;
     }
     Customer holder;
@@ -50,7 +58,7 @@ Error AccountService::openAccount(CustomerId customer, AccountType type,
     std::uint64_t seq = 0;
     if (const Error e = journal_.appendTransaction(ledger::TxnType::Open, account.acct_no,
                                                    opening_deposit, opening_deposit,
-                                                   operator_id, seq);
+                                                   by.operator_id, seq);
         e != Error::Ok) {
         return e;
     }

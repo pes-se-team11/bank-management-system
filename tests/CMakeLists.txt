@@ -27,6 +27,7 @@ add_executable(bms_tests
     test_crypto.cpp
     test_account.cpp
     test_auth.cpp
+    test_authorization.cpp
     test_ledger.cpp
     test_cli.cpp
 )
