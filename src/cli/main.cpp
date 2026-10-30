@@ -45,7 +45,7 @@ int main() {
     bms::ledger::Ledger ledger(run_dir + "/journal.log", run_dir + "/audit.log");
 
     bms::AccountService accounts(account_store, ledger);
-    bms::AuthService auth(credential_store);
+    bms::AuthService auth(credential_store, account_store, ledger);
     bms::TransactionService transactions(account_store, ledger, kDepositCeiling);
 
     bms::cli::Menu menu(std::cin, std::cout, accounts, auth, transactions, ledger,
