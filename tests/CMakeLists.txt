@@ -29,6 +29,7 @@ add_executable(bms_tests
     test_auth.cpp
     test_ledger.cpp
     test_cli.cpp
+    test_persistence.cpp
 )
 
 target_compile_definitions(
