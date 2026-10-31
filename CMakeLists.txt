@@ -27,6 +27,8 @@ add_library(bms_core STATIC
     src/ledger/ledger.cpp
     src/transaction/transaction_service.cpp
     src/persistence/append_file.cpp
+    src/persistence/file_account_store.cpp
+    src/persistence/file_credential_store.cpp
 )
 
 target_include_directories(
