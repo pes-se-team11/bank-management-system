@@ -85,6 +85,13 @@ public:
         credentials[key(credential.principal)] = credential;
         return Error::Ok;
     }
+    Error anyStaff(bool& out) override {
+        out = false;
+        for (const auto& entry : credentials) {
+            out = out || entry.second.principal.kind == PrincipalKind::Staff;
+        }
+        return Error::Ok;
+    }
 
     static std::string key(const Principal& who) {
         return (who.kind == PrincipalKind::Customer ? "C:" : "S:") + who.id;

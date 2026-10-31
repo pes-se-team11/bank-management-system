@@ -29,12 +29,13 @@ private:
     bool setupFirstManager();
     void staffLogin();
     void customerLogin();
-    void staffMenu(const Session& session);
+    void tellerMenu(const Session& session);
+    void managerMenu(const Session& session);
     void customerMenu(const Session& session);
 
-    void createCustomer();
-    void openAccount(const std::string& operator_id);
-    void addStaff();
+    void createCustomer(const Session& session);
+    void openAccount(const Session& session);
+    void addStaff(const Session& session);
     void deposit(const std::string& operator_id, AccountNo account);
     void withdraw(const std::string& operator_id, AccountNo account);
     void showBalance(AccountNo account);

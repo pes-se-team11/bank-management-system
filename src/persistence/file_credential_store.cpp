@@ -332,4 +332,13 @@ bool FileCredentialStore::hasStaff() const {
     return false;
 }
 
+Error FileCredentialStore::anyStaff(bool& out) {
+    out = false;
+    if (init_status_ != Error::Ok) {
+        return init_status_;
+    }
+    out = hasStaff();
+    return Error::Ok;
+}
+
 }  // namespace bms::persistence

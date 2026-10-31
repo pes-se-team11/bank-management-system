@@ -23,6 +23,7 @@ public:
 
     // True once any staff login exists (used for initial setup in main).
     bool hasStaff() const;
+    Error anyStaff(bool& out) override;
 
 private:
     static std::string makeKey(const Principal& who);

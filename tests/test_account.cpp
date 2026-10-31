@@ -12,6 +12,8 @@ using namespace bms;
 
 namespace {
 
+const Session kTeller{"teller1", Role::Teller};
+
 Customer asha() {
     Customer c;
     c.name = "Asha Rao";
@@ -55,8 +57,8 @@ TEST_CASE("TC-ACC-01: a new customer gets an ID never used before") {
 
     CustomerId first = 0;
     CustomerId second = 0;
-    REQUIRE(bank.accounts.createCustomer(asha(), first) == Error::Ok);
-    REQUIRE(bank.accounts.createCustomer(asha(), second) == Error::Ok);
+    REQUIRE(bank.accounts.createCustomer(kTeller, asha(), first) == Error::Ok);
+    REQUIRE(bank.accounts.createCustomer(kTeller, asha(), second) == Error::Ok);
     CHECK(first != second);
     CHECK(second > first);  // IDs only ever grow, so none is reused
 
@@ -72,25 +74,25 @@ TEST_CASE("TC-ACC-01: invalid details are refused and use up no ID") {
     Customer bad = asha();
     bad.contact = "123";
     CustomerId id = 0;
-    CHECK(bank.accounts.createCustomer(bad, id) == Error::InvalidInput);
+    CHECK(bank.accounts.createCustomer(kTeller, bad, id) == Error::InvalidInput);
     CHECK(bank.store.customers.empty());
 
     CustomerId good = 0;
-    REQUIRE(bank.accounts.createCustomer(asha(), good) == Error::Ok);
+    REQUIRE(bank.accounts.createCustomer(kTeller, asha(), good) == Error::Ok);
     CHECK(good == 1U);  // the failed attempt did not consume ID 1
 }
 
 TEST_CASE("TC-ACC-02: an account opens ACTIVE with the deposit as its balance") {
     Bank bank("open");
     CustomerId cust = 0;
-    REQUIRE(bank.accounts.createCustomer(asha(), cust) == Error::Ok);
+    REQUIRE(bank.accounts.createCustomer(kTeller, asha(), cust) == Error::Ok);
 
     AccountNo savings = 0;
     AccountNo current = 0;
-    REQUIRE(bank.accounts.openAccount(cust, AccountType::Savings, 500000, "teller1",
+    REQUIRE(bank.accounts.openAccount(kTeller, cust, AccountType::Savings, 500000,
                                       savings) == Error::Ok);
-    REQUIRE(bank.accounts.openAccount(cust, AccountType::Current, 0, "teller1",
-                                      current) == Error::Ok);
+    REQUIRE(bank.accounts.openAccount(kTeller, cust, AccountType::Current, 0, current) ==
+            Error::Ok);
     CHECK(savings != current);
 
     AccountRecord rec;
@@ -105,10 +107,10 @@ TEST_CASE("TC-ACC-02: an account opens ACTIVE with the deposit as its balance") 
 TEST_CASE("TC-ACC-02: opening writes an OPEN journal record with the opening balance") {
     Bank bank("journal");
     CustomerId cust = 0;
-    REQUIRE(bank.accounts.createCustomer(asha(), cust) == Error::Ok);
+    REQUIRE(bank.accounts.createCustomer(kTeller, asha(), cust) == Error::Ok);
 
     AccountNo no = 0;
-    REQUIRE(bank.accounts.openAccount(cust, AccountType::Savings, 50000, "teller1", no) ==
+    REQUIRE(bank.accounts.openAccount(kTeller, cust, AccountType::Savings, 50000, no) ==
             Error::Ok);
 
     std::vector<ledger::JournalRecord> entries;
@@ -128,15 +130,15 @@ TEST_CASE("TC-ACC-02: opening writes an OPEN journal record with the opening bal
 TEST_CASE("TC-ACC-02: opening is refused for an unknown customer or a negative deposit") {
     Bank bank("refused");
     AccountNo no = 0;
-    CHECK(bank.accounts.openAccount(42, AccountType::Savings, 1000, "teller1", no) ==
+    CHECK(bank.accounts.openAccount(kTeller, 42, AccountType::Savings, 1000, no) ==
           Error::CustomerNotFound);
 
     CustomerId cust = 0;
-    REQUIRE(bank.accounts.createCustomer(asha(), cust) == Error::Ok);
-    CHECK(bank.accounts.openAccount(cust, AccountType::Savings, -1, "teller1", no) ==
+    REQUIRE(bank.accounts.createCustomer(kTeller, asha(), cust) == Error::Ok);
+    CHECK(bank.accounts.openAccount(kTeller, cust, AccountType::Savings, -1, no) ==
           Error::InvalidInput);
-    CHECK(bank.accounts.openAccount(cust, AccountType::Savings, 1000, "", no) ==
-          Error::InvalidInput);
+    CHECK(bank.accounts.openAccount(Session{"", Role::Teller}, cust, AccountType::Savings,
+                                    1000, no) == Error::NotAuthorised);
     CHECK(bank.store.accounts.empty());
 
     // Refused openings leave nothing in the journal.
@@ -149,16 +151,16 @@ TEST_CASE("TC-ACC-05: look up by account number and list by customer") {
     Bank bank("lookup");
     CustomerId a = 0;
     CustomerId b = 0;
-    REQUIRE(bank.accounts.createCustomer(asha(), a) == Error::Ok);
-    REQUIRE(bank.accounts.createCustomer(asha(), b) == Error::Ok);
+    REQUIRE(bank.accounts.createCustomer(kTeller, asha(), a) == Error::Ok);
+    REQUIRE(bank.accounts.createCustomer(kTeller, asha(), b) == Error::Ok);
     AccountNo a1 = 0;
     AccountNo a2 = 0;
     AccountNo b1 = 0;
-    REQUIRE(bank.accounts.openAccount(a, AccountType::Savings, 100, "teller1", a1) ==
+    REQUIRE(bank.accounts.openAccount(kTeller, a, AccountType::Savings, 100, a1) ==
             Error::Ok);
-    REQUIRE(bank.accounts.openAccount(a, AccountType::Current, 200, "teller1", a2) ==
+    REQUIRE(bank.accounts.openAccount(kTeller, a, AccountType::Current, 200, a2) ==
             Error::Ok);
-    REQUIRE(bank.accounts.openAccount(b, AccountType::Savings, 300, "teller1", b1) ==
+    REQUIRE(bank.accounts.openAccount(kTeller, b, AccountType::Savings, 300, b1) ==
             Error::Ok);
 
     std::vector<AccountRecord> list;

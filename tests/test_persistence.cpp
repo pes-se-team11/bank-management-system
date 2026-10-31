@@ -562,12 +562,13 @@ TEST_CASE("End-to-End Persistence: Account creation, restart, and plaintext secu
     {
         FileAccountStore account_store(dir.path);
         FileCredentialStore credential_store(dir.path);
-        AuthService auth(credential_store, 1000);
+        bms::ledger::Ledger ledger(dir.path + "/journal.log", dir.path + "/audit.log");
+        AuthService auth(credential_store, account_store, ledger, 1000);
 
         Principal mgr_principal{PrincipalKind::Staff, "manager1"};
         std::string pass_copy = staff_pass;
-        REQUIRE(auth.enrol(
-            mgr_principal, Role::Manager, pass_copy
+        REQUIRE(auth.enrolFirstManager(
+            mgr_principal.id, pass_copy
         ) == Error::Ok);
 
         CustomerId cust_id = 0;
@@ -604,8 +605,9 @@ TEST_CASE("End-to-End Persistence: Account creation, restart, and plaintext secu
         };
 
         std::string pin_copy = secret_pin;
+        Session teller_session{"teller1", Role::Teller};
         REQUIRE(auth.enrol(
-            cust_principal, Role::Customer, pin_copy
+            teller_session, cust_principal, Role::Customer, pin_copy
         ) == Error::Ok);
     }
 
@@ -642,9 +644,12 @@ TEST_CASE("End-to-End Persistence: Account creation, restart, and plaintext secu
     {
         FileAccountStore account_store(dir.path);
         FileCredentialStore credential_store(dir.path);
-        AuthService auth(credential_store, 1000);
+        bms::ledger::Ledger ledger(dir.path + "/journal.log", dir.path + "/audit.log");
+        AuthService auth(credential_store, account_store, ledger, 1000);
 
-        CHECK(credential_store.hasStaff());
+        bool staff_exists = false;
+        REQUIRE(credential_store.anyStaff(staff_exists) == Error::Ok);
+        CHECK(staff_exists);
 
         Session mgr_session;
         std::string pass_attempt = staff_pass;

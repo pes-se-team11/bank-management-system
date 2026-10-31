@@ -92,6 +92,12 @@ std::string describe(Error error) {
                "folder permissions, then try again.";
     case Error::CorruptRecord:
         return "A stored record is damaged. Report this to a manager.";
+    case Error::AccountLocked:
+        return "This account is locked after three wrong PINs. Ask a manager "
+               "to unlock it.";
+    case Error::NotAuthorised:
+        return "Your role is not allowed to do this. Ask a staff member who "
+               "holds that role.";
     }
     return "Unexpected error. Report this to a manager.";
 }
@@ -155,8 +161,7 @@ bool Menu::setupFirstManager() {
         if (!askSecret("Password (8-64 characters, no spaces): ", password)) {
             return false;
         }
-        const Error result =
-            auth_.enrol(Principal{PrincipalKind::Staff, id}, Role::Manager, password);
+        const Error result = auth_.enrolFirstManager(id, password);
         if (result == Error::Ok) {
             out_ << "Manager " << id << " created. Please log in.\n";
             needs_first_manager_ = false;
@@ -184,7 +189,11 @@ void Menu::staffLogin() {
         return;
     }
     out_ << "Welcome, " << session.operator_id << ".\n";
-    staffMenu(session);
+    if (session.role == Role::Manager) {
+        managerMenu(session);
+    } else {
+        tellerMenu(session);
+    }
 }
 
 void Menu::customerLogin() {
@@ -207,21 +216,19 @@ void Menu::customerLogin() {
     customerMenu(session);
 }
 
-void Menu::staffMenu(const Session& session) {
-    const bool manager = session.role == Role::Manager;
+// Each role sees only its own operations (BMS-F-012). This is for clarity;
+// the services check the role again themselves (BMS-SR-007).
+void Menu::tellerMenu(const Session& session) {
     for (;;) {
-        out_ << "\nStaff menu (" << session.operator_id << ")\n"
+        out_ << "\nTeller menu (" << session.operator_id << ")\n"
                 "  1. Create customer\n"
                 "  2. Open account\n"
                 "  3. Deposit\n"
                 "  4. Withdraw\n"
                 "  5. Balance enquiry\n"
                 "  6. Mini-statement (last 10)\n"
-                "  7. List a customer's accounts\n";
-        if (manager) {
-            out_ << "  8. Add staff login\n";
-        }
-        out_ << "  0. Logout\n";
+                "  7. List a customer's accounts\n"
+                "  0. Logout\n";
         int choice = 0;
         if (!askChoice("Choice: ", choice)) {
             return;
@@ -229,10 +236,10 @@ void Menu::staffMenu(const Session& session) {
         AccountNo account = 0;
         switch (choice) {
         case 1:
-            createCustomer();
+            createCustomer(session);
             break;
         case 2:
-            openAccount(session.operator_id);
+            openAccount(session);
             break;
         case 3:
             if (askAccountNo(account)) {
@@ -257,12 +264,47 @@ void Menu::staffMenu(const Session& session) {
         case 7:
             listAccounts();
             break;
-        case 8:
-            if (manager) {
-                addStaff();
-            } else {
-                out_ << "Only a manager can add staff.\n";
+        case 0:
+            out_ << "Logged out.\n";
+            return;
+        default:
+            out_ << "Please choose one of the listed options.\n";
+        }
+        if (!in_) {
+            return;
+        }
+    }
+}
+
+void Menu::managerMenu(const Session& session) {
+    for (;;) {
+        out_ << "\nManager menu (" << session.operator_id << ")\n"
+                "  1. Add staff login\n"
+                "  2. Balance enquiry\n"
+                "  3. Mini-statement (last 10)\n"
+                "  4. List a customer's accounts\n"
+                "  0. Logout\n";
+        int choice = 0;
+        if (!askChoice("Choice: ", choice)) {
+            return;
+        }
+        AccountNo account = 0;
+        switch (choice) {
+        case 1:
+            addStaff(session);
+            break;
+        case 2:
+            if (askAccountNo(account)) {
+                showBalance(account);
             }
+            break;
+        case 3:
+            if (askAccountNo(account)) {
+                showMiniStatement(account);
+            }
+            break;
+        case 4:
+            listAccounts();
             break;
         case 0:
             out_ << "Logged out.\n";
@@ -320,7 +362,7 @@ void Menu::customerMenu(const Session& session) {
     }
 }
 
-void Menu::createCustomer() {
+void Menu::createCustomer(const Session& session) {
     Customer customer;
     if (!ask("Full name: ", customer.name) || !ask("Address: ", customer.address) ||
         !ask("Contact number: ", customer.contact) ||
@@ -328,7 +370,7 @@ void Menu::createCustomer() {
         return;
     }
     CustomerId id = 0;
-    const Error result = accounts_.createCustomer(customer, id);
+    const Error result = accounts_.createCustomer(session, customer, id);
     if (result == Error::InvalidInput) {
         out_ << "Customer not created. Name up to 60 characters, address up to "
                 "120, contact 7-15 digits, ID reference 4-20 letters/digits; "
@@ -342,7 +384,7 @@ void Menu::createCustomer() {
     out_ << "Customer created. Customer ID: " << id << '\n';
 }
 
-void Menu::openAccount(const std::string& operator_id) {
+void Menu::openAccount(const Session& session) {
     std::string text;
     if (!ask("Customer ID: ", text)) {
         return;
@@ -381,7 +423,7 @@ void Menu::openAccount(const std::string& operator_id) {
     }
 
     AccountNo account = 0;
-    const Error result = accounts_.openAccount(customer, type, opening, operator_id, account);
+    const Error result = accounts_.openAccount(session, customer, type, opening, account);
     if (result != Error::Ok) {
         platform::secureWipe(pin.data(), pin.size());
         fail(result);
@@ -389,8 +431,9 @@ void Menu::openAccount(const std::string& operator_id) {
     }
     out_ << typeName(type) << " account opened. Account number: " << account << '\n';
 
-    const Error enrolled = auth_.enrol(
-        Principal{PrincipalKind::Customer, std::to_string(account)}, Role::Customer, pin);
+    const Error enrolled =
+        auth_.enrol(session, Principal{PrincipalKind::Customer, std::to_string(account)},
+                    Role::Customer, pin);
     if (enrolled != Error::Ok) {
         fail(enrolled);
         return;
@@ -398,7 +441,7 @@ void Menu::openAccount(const std::string& operator_id) {
     out_ << "PIN set.\n";
 }
 
-void Menu::addStaff() {
+void Menu::addStaff(const Session& session) {
     std::string id;
     if (!ask("New staff ID: ", id)) {
         return;
@@ -421,7 +464,8 @@ void Menu::addStaff() {
         return;
     }
     const Role role = role_choice == 1 ? Role::Teller : Role::Manager;
-    const Error result = auth_.enrol(Principal{PrincipalKind::Staff, id}, role, password);
+    const Error result =
+        auth_.enrol(session, Principal{PrincipalKind::Staff, id}, role, password);
     if (result == Error::InvalidInput) {
         out_ << "Password must be 8-64 characters with no spaces or '|'.\n";
         return;

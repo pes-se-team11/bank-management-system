@@ -47,7 +47,7 @@ int main() {
     );
 
     bms::AccountService accounts(account_store, ledger);
-    bms::AuthService auth(credential_store);
+    bms::AuthService auth(credential_store, account_store, ledger);
 
     bms::TransactionService transactions(
         account_store,
