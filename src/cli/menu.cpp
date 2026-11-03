@@ -98,6 +98,8 @@ std::string describe(Error error) {
     case Error::NotAuthorised:
         return "Your role is not allowed to do this. Ask a staff member who "
                "holds that role.";
+    case Error::AccountNotLocked:
+        return "That account is not locked, so there is nothing to unlock.";
     }
     return "Unexpected error. Report this to a manager.";
 }
@@ -283,6 +285,7 @@ void Menu::managerMenu(const Session& session) {
                 "  2. Balance enquiry\n"
                 "  3. Mini-statement (last 10)\n"
                 "  4. List a customer's accounts\n"
+                "  5. Unlock an account\n"
                 "  0. Logout\n";
         int choice = 0;
         if (!askChoice("Choice: ", choice)) {
@@ -292,6 +295,9 @@ void Menu::managerMenu(const Session& session) {
         switch (choice) {
         case 1:
             addStaff(session);
+            break;
+        case 5:
+            unlockAccount(session);
             break;
         case 2:
             if (askAccountNo(account)) {
@@ -475,6 +481,31 @@ void Menu::addStaff(const Session& session) {
         return;
     }
     out_ << "Staff login " << id << " created.\n";
+}
+
+void Menu::unlockAccount(const Session& session) {
+    AccountNo account = 0;
+    if (!askAccountNo(account)) {
+        return;
+    }
+    // The manager checks the holder's identity at the counter before
+    // unlocking (BMS-F-013); the system records who did it.
+    out_ << "Check the holder's ID before unlocking.\n";
+    int confirm = 0;
+    if (!askChoice("Holder's identity verified? 1. Yes  2. No: ", confirm)) {
+        return;
+    }
+    if (confirm != 1) {
+        out_ << "Not unlocked. Verify the holder first.\n";
+        return;
+    }
+    const Error result = auth_.unlockAccount(session, account);
+    if (result != Error::Ok) {
+        fail(result);
+        return;
+    }
+    out_ << "Account " << account
+         << " unlocked. The customer can log in with their PIN.\n";
 }
 
 void Menu::deposit(const std::string& operator_id, AccountNo account) {

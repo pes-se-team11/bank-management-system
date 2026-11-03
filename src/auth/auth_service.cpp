@@ -127,6 +127,49 @@ Error AuthService::login(const Principal& who, std::string& secret, Session& out
     return lockAccount(who.id);
 }
 
+Error AuthService::unlockAccount(const Session& by, AccountNo account) {
+    if (const Error e = authorize(by, Operation::UnlockAccount); e != Error::Ok) {
+        return e;
+    }
+    AccountRecord record;
+    if (const Error e = accounts_.readAccount(account, record); e != Error::Ok) {
+        return e;
+    }
+    const Principal holder{PrincipalKind::Customer, std::to_string(account)};
+    Credential credential;
+    const Error found = store_.readCredential(holder, credential);
+    if (found != Error::Ok && found != Error::CredentialNotFound) {
+        return found;
+    }
+    const bool has_credential = found == Error::Ok;
+    const bool locked = record.state == AccountState::Locked ||
+                        (has_credential && credential.failed_attempts >= kMaxFailedAttempts);
+    if (!locked) {
+        return Error::AccountNotLocked;
+    }
+
+    // Audit first, so an unlock can never happen without its record.
+    std::uint64_t seq = 0;
+    if (const Error e = audit_.appendAudit(by.operator_id, ledger::AuditAction::AccountUnlock,
+                                           holder.id, "holder verified by manager", seq);
+        e != Error::Ok) {
+        return e;
+    }
+    if (has_credential && credential.failed_attempts != 0) {
+        credential.failed_attempts = 0;
+        if (const Error e = store_.writeCredential(credential); e != Error::Ok) {
+            return e;
+        }
+    }
+    if (record.state == AccountState::Locked) {
+        record.state = AccountState::Active;
+        if (const Error e = accounts_.updateAccount(record); e != Error::Ok) {
+            return e;
+        }
+    }
+    return Error::Ok;
+}
+
 Error AuthService::lockAccount(const std::string& account_id) {
     // Mark the account LOCKED too, so staff see it and no transaction can
     // run on it while it is locked.

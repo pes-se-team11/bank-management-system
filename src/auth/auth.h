@@ -1,6 +1,6 @@
 #pragma once
-// AuthModule (Person 1): stories 2.1 (sign-in), 2.2 (lockout), 2.3 (roles)
-// and 7.3 (credential hashing).
+// AuthModule (Person 1): stories 2.1 (sign-in), 2.2 (lockout), 2.3 (roles),
+// 2.4 (unlock) and 7.3 (credential hashing).
 #include <array>
 #include <cstdint>
 #include <string>
@@ -89,6 +89,15 @@ public:
     // no way to unlock a staff login, and locking the only manager would lock
     // everyone out of the bank.
     Error login(const Principal& who, std::string& secret, Session& out);
+
+    // BMS-F-013: a Manager, having checked the holder's identity at the
+    // counter, unlocks a locked account. The ACCOUNT_UNLOCK audit entry is
+    // written first, naming the manager; then the failed-attempt count is
+    // reset to zero and the account goes back to ACTIVE, so the right PIN
+    // works again. Returns NotAuthorised for any other role,
+    // AccountNotFound for an unknown number and AccountNotLocked when there
+    // is nothing to unlock (no audit entry is written for those).
+    Error unlockAccount(const Session& by, AccountNo account);
 
 private:
     Error writeSecret(const Principal& who, Role role, std::string& secret);
