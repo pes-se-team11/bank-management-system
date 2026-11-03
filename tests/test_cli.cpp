@@ -162,7 +162,7 @@ TEST_CASE("TC-AUT-03: each role gets its own menu and input ending exits cleanly
         "1\nteller1\n1\nTellerPass1\n"  // manager adds a teller
         "0\n"
         "1\nteller1\nTellerPass1\n"
-        "8\n";                           // tellers have no option 8; input ends
+        "9\n";                           // tellers have no option 9; input ends
 
     const std::string out = runScript(script, "roles");
 
@@ -265,6 +265,26 @@ TEST_CASE("TC-AUT-04: a manager unlocks a locked account from the menu") {
     CHECK(contains(out, "Account 100001 unlocked."));
     CHECK(contains(out, "That account is not locked, so there is nothing to unlock."));
     CHECK(contains(out, "Logged in to account 100001."));
+}
+
+TEST_CASE("TC-ACC-03: a teller modifies customer details from the menu") {
+    const std::string script =
+        kTellerOnDuty +
+        "1\nAsha Rao\n12 MG Road\n9876543210\nABCDE1234F\n"
+        "8\n1\n\n9123456780\n"   // keep the address, change the contact
+        "8\n1\n\n\n"             // keep both: nothing to do
+        "8\n1\n\n123\n"          // invalid contact
+        "8\n42\n"                // unknown customer
+        "7\n1\n"
+        "0\n0\n";
+
+    const std::string out = runScript(script, "modify");
+
+    CHECK(contains(out, "Current contact: 9876543210"));
+    CHECK(contains(out, "Customer 1 updated."));
+    CHECK(contains(out, "No changes made."));
+    CHECK(contains(out, "Not changed. Address up to 120 characters"));
+    CHECK(contains(out, "No customer has that ID."));
 }
 
 TEST_CASE("Staff IDs must be 3-16 letters or digits") {

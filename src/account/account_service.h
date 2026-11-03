@@ -1,6 +1,6 @@
 #pragma once
-// AccountModule service (Person 1): stories 1.1 and 1.2. Both writes are
-// Teller operations, checked here rather than in the menu (BMS-F-012,
+// AccountModule service (Person 1): stories 1.1, 1.2 and 1.3. The writes
+// are Teller operations, checked here rather than in the menu (BMS-F-012,
 // BMS-SR-007).
 #include <string>
 #include <vector>
@@ -30,7 +30,16 @@ public:
     Error openAccount(const Session& by, CustomerId customer, AccountType type,
                       Paise opening_deposit, AccountNo& out_no);
 
+    // BMS-F-003. Changes a customer's address and contact number; the name
+    // and ID reference are never editable. One CUSTOMER_MODIFY audit entry
+    // holding the old and the new value of each changed field is written
+    // before the record is updated (BMS-F-063). Values equal to the current
+    // ones change nothing and write no audit entry. Tellers only.
+    Error modifyCustomer(const Session& by, CustomerId id, const std::string& address,
+                         const std::string& contact);
+
     // BMS-F-005. Unknown keys return a not-found error, never a crash.
+    Error findCustomer(CustomerId id, Customer& out);
     Error findAccount(AccountNo no, AccountRecord& out);
     Error listAccounts(CustomerId customer, std::vector<AccountRecord>& out);
 

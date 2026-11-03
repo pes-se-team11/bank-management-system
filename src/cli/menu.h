@@ -34,6 +34,7 @@ private:
     void customerMenu(const Session& session);
 
     void createCustomer(const Session& session);
+    void modifyCustomer(const Session& session);
     void openAccount(const Session& session);
     void addStaff(const Session& session);
     void unlockAccount(const Session& session);
