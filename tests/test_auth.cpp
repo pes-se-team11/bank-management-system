@@ -281,3 +281,77 @@ TEST_CASE("TC-AUT-02: staff passwords are never locked") {
     CHECK(fx.auth.login(staff("M001"), right, s) == Error::Ok);
     CHECK(s.role == Role::Manager);
 }
+
+namespace {
+
+// An account 100001 with PIN 4821, locked by three wrong PINs.
+void openAndLock(AuthFixture& fx) {
+    AccountRecord account;
+    account.acct_no = 100001;
+    account.cust_id = 1;
+    REQUIRE(fx.accounts.createAccount(account) == Error::Ok);
+    std::string pin = "4821";
+    REQUIRE(fx.auth.enrol(kTeller, customer("100001"), Role::Customer, pin) == Error::Ok);
+    for (const char* wrong : {"1111", "2222", "3333"}) {
+        tryPin(fx.auth, "100001", wrong);
+    }
+    REQUIRE(tryPin(fx.auth, "100001", "4821") == Error::AccountLocked);
+}
+
+}  // namespace
+
+TEST_CASE("TC-AUT-04: after a manager unlocks, the right PIN works and the count is zero") {
+    AuthFixture fx("unlock");
+    openAndLock(fx);
+
+    REQUIRE(fx.auth.unlockAccount(kManager, 100001) == Error::Ok);
+
+    Credential stored;
+    REQUIRE(fx.store.readCredential(customer("100001"), stored) == Error::Ok);
+    CHECK(stored.failed_attempts == 0);
+    AccountRecord record;
+    REQUIRE(fx.accounts.readAccount(100001, record) == Error::Ok);
+    CHECK(record.state == AccountState::Active);
+
+    CHECK(tryPin(fx.auth, "100001", "4821") == Error::Ok);
+
+    // The audit log holds the lock and then the unlock, naming the manager.
+    std::vector<ledger::AuditRecord> audit;
+    REQUIRE(fx.ledger.readAudit(audit) == Error::Ok);
+    REQUIRE(audit.size() == 2);
+    CHECK(audit[0].action == ledger::AuditAction::AccountLock);
+    CHECK(audit[1].action == ledger::AuditAction::AccountUnlock);
+    CHECK(audit[1].operator_id == "manager1");
+    CHECK(audit[1].target == "100001");
+}
+
+TEST_CASE("TC-AUT-04: an unlocked account locks again after three more wrong PINs") {
+    AuthFixture fx("relock");
+    openAndLock(fx);
+    REQUIRE(fx.auth.unlockAccount(kManager, 100001) == Error::Ok);
+
+    CHECK(tryPin(fx.auth, "100001", "1111") == Error::BadCredentials);
+    CHECK(tryPin(fx.auth, "100001", "2222") == Error::BadCredentials);
+    CHECK(tryPin(fx.auth, "100001", "3333") == Error::AccountLocked);
+}
+
+TEST_CASE("TC-AUT-04: only a manager can unlock, and only a locked account") {
+    AuthFixture fx("unlock_refused");
+    openAndLock(fx);
+
+    // BMS-F-012: Tellers and customers are refused and nothing changes.
+    CHECK(fx.auth.unlockAccount(kTeller, 100001) == Error::NotAuthorised);
+    CHECK(fx.auth.unlockAccount(Session{"100001", Role::Customer}, 100001) ==
+          Error::NotAuthorised);
+    CHECK(tryPin(fx.auth, "100001", "4821") == Error::AccountLocked);
+
+    CHECK(fx.auth.unlockAccount(kManager, 999999) == Error::AccountNotFound);
+
+    REQUIRE(fx.auth.unlockAccount(kManager, 100001) == Error::Ok);
+    CHECK(fx.auth.unlockAccount(kManager, 100001) == Error::AccountNotLocked);
+
+    // Refusals write no audit entry: only the lock and the one unlock.
+    std::vector<ledger::AuditRecord> audit;
+    REQUIRE(fx.ledger.readAudit(audit) == Error::Ok);
+    CHECK(audit.size() == 2);
+}

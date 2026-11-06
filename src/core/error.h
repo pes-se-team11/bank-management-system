@@ -16,5 +16,6 @@ enum class Error {
     CorruptRecord,       // a journal or audit line failed to parse (BMS-SR-005)
     AccountLocked,       // three wrong PINs in a row; a manager must unlock it (BMS-F-011)
     NotAuthorised,       // the session's role may not do this (BMS-F-012)
+    AccountNotLocked,    // unlock asked for an account that is not locked (BMS-F-013)
 };
 }  // namespace bms

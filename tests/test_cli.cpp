@@ -158,7 +158,7 @@ TEST_CASE("TC-AUT-03: each role gets its own menu and input ending exits cleanly
     const std::string script =
         "admin\nPassword123\n"
         "1\nadmin\nPassword123\n"
-        "5\n"                            // managers have no option 5
+        "7\n"                            // managers have no option 7
         "1\nteller1\n1\nTellerPass1\n"  // manager adds a teller
         "0\n"
         "1\nteller1\nTellerPass1\n"
@@ -239,6 +239,32 @@ TEST_CASE("TC-AUT-02: three wrong PINs lock the account in the menu") {
     CHECK(contains(out, "This account is locked after three wrong PINs."));
     CHECK_FALSE(contains(out, "Logged in to account 100001."));
     CHECK(contains(out, "100001  Savings  Locked"));
+}
+
+TEST_CASE("TC-AUT-04: a manager unlocks a locked account from the menu") {
+    const std::string script =
+        kTellerOnDuty +
+        "1\nAsha Rao\n12 MG Road\n9876543210\nABCDE1234F\n"
+        "2\n1\n1\n500\n1234\n"
+        "0\n"
+        "2\n100001\n1111\n"
+        "2\n100001\n2222\n"
+        "2\n100001\n3333\n"   // locked
+        "1\nadmin\nPassword123\n"
+        "5\n100001\n2\n"      // not verified: nothing happens
+        "5\n100001\n1\n"      // verified: unlocked
+        "5\n100001\n1\n"      // already unlocked
+        "0\n"
+        "2\n100001\n1234\n"   // the right PIN works again
+        "0\n0\n";
+
+    const std::string out = runScript(script, "unlock");
+
+    CHECK(contains(out, "This account is locked after three wrong PINs."));
+    CHECK(contains(out, "Not unlocked. Verify the holder first."));
+    CHECK(contains(out, "Account 100001 unlocked."));
+    CHECK(contains(out, "That account is not locked, so there is nothing to unlock."));
+    CHECK(contains(out, "Logged in to account 100001."));
 }
 
 TEST_CASE("Staff IDs must be 3-16 letters or digits") {
