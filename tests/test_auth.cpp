@@ -355,3 +355,16 @@ TEST_CASE("TC-AUT-04: only a manager can unlock, and only a locked account") {
     REQUIRE(fx.ledger.readAudit(audit) == Error::Ok);
     CHECK(audit.size() == 2);
 }
+
+TEST_CASE("TC-ACC-04: the right PIN for a closed account is refused") {
+    AuthFixture fx("closed_login");
+    AccountRecord account;
+    account.acct_no = 100001;
+    account.state = AccountState::Closed;
+    REQUIRE(fx.accounts.createAccount(account) == Error::Ok);
+    std::string pin = "4821";
+    REQUIRE(fx.auth.enrol(kTeller, customer("100001"), Role::Customer, pin) == Error::Ok);
+
+    CHECK(tryPin(fx.auth, "100001", "4821") == Error::AccountClosed);
+    CHECK(tryPin(fx.auth, "100001", "1111") == Error::BadCredentials);
+}

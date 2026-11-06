@@ -88,6 +88,7 @@ public:
     // before then resets the count. Staff passwords are not locked: there is
     // no way to unlock a staff login, and locking the only manager would lock
     // everyone out of the bank.
+    // BMS-F-004: the right PIN for a CLOSED account returns AccountClosed.
     Error login(const Principal& who, std::string& secret, Session& out);
 
     // BMS-F-013: a Manager, having checked the holder's identity at the
@@ -102,6 +103,7 @@ public:
 private:
     Error writeSecret(const Principal& who, Role role, std::string& secret);
     Error lockAccount(const std::string& account_id);
+    Error refuseIfClosed(const std::string& account_id);
 
     CredentialStore& store_;
     AccountStore& accounts_;

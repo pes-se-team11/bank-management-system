@@ -107,6 +107,11 @@ Error AuthService::login(const Principal& who, std::string& secret, Session& out
                 return e;
             }
         }
+        if (customer) {
+            if (const Error e = refuseIfClosed(who.id); e != Error::Ok) {
+                return e;
+            }
+        }
         out.operator_id = who.id;
         out.role = stored.role;
         return Error::Ok;
@@ -125,6 +130,22 @@ Error AuthService::login(const Principal& who, std::string& secret, Session& out
         return Error::BadCredentials;
     }
     return lockAccount(who.id);
+}
+
+Error AuthService::refuseIfClosed(const std::string& account_id) {
+    std::uint32_t number = 0;
+    if (validation::parseId(account_id, number) != Error::Ok) {
+        return Error::Ok;
+    }
+    AccountRecord record;
+    const Error found = accounts_.readAccount(number, record);
+    if (found == Error::AccountNotFound) {
+        return Error::Ok;
+    }
+    if (found != Error::Ok) {
+        return found;
+    }
+    return record.state == AccountState::Closed ? Error::AccountClosed : Error::Ok;
 }
 
 Error AuthService::unlockAccount(const Session& by, AccountNo account) {

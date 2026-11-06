@@ -100,6 +100,11 @@ std::string describe(Error error) {
                "holds that role.";
     case Error::AccountNotLocked:
         return "That account is not locked, so there is nothing to unlock.";
+    case Error::AccountClosed:
+        return "That account is closed. It cannot be used or closed again.";
+    case Error::BalanceNotZero:
+        return "Only an account with a zero balance can be closed. Withdraw or "
+               "move the remaining balance first.";
     }
     return "Unexpected error. Report this to a manager.";
 }
@@ -290,6 +295,7 @@ void Menu::managerMenu(const Session& session) {
                 "  3. Mini-statement (last 10)\n"
                 "  4. List a customer's accounts\n"
                 "  5. Unlock an account\n"
+                "  6. Close an account\n"
                 "  0. Logout\n";
         int choice = 0;
         if (!askChoice("Choice: ", choice)) {
@@ -302,6 +308,9 @@ void Menu::managerMenu(const Session& session) {
             break;
         case 5:
             unlockAccount(session);
+            break;
+        case 6:
+            closeAccount(session);
             break;
         case 2:
             if (askAccountNo(account)) {
@@ -557,6 +566,27 @@ void Menu::unlockAccount(const Session& session) {
     }
     out_ << "Account " << account
          << " unlocked. The customer can log in with their PIN.\n";
+}
+
+void Menu::closeAccount(const Session& session) {
+    AccountNo account = 0;
+    if (!askAccountNo(account)) {
+        return;
+    }
+    int confirm = 0;
+    if (!askChoice("Closing cannot be undone. Close it? 1. Yes  2. No: ", confirm)) {
+        return;
+    }
+    if (confirm != 1) {
+        out_ << "Not closed.\n";
+        return;
+    }
+    const Error result = accounts_.closeAccount(session, account);
+    if (result != Error::Ok) {
+        fail(result);
+        return;
+    }
+    out_ << "Account " << account << " closed. Its record and history are kept.\n";
 }
 
 void Menu::deposit(const std::string& operator_id, AccountNo account) {
