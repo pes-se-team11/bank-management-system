@@ -175,3 +175,71 @@ TEST_CASE("TC-ACC-05: look up by account number and list by customer") {
     CHECK(bank.accounts.findAccount(999999, rec) == Error::AccountNotFound);
     CHECK(bank.accounts.listAccounts(77, list) == Error::CustomerNotFound);
 }
+
+TEST_CASE("TC-ACC-03: a teller changes address and contact, and the audit keeps old and new") {
+    Bank bank("modify");
+    CustomerId id = 0;
+    REQUIRE(bank.accounts.createCustomer(kTeller, asha(), id) == Error::Ok);
+
+    REQUIRE(bank.accounts.modifyCustomer(kTeller, id, "7 Park Street, Mysuru",
+                                         "9123456780") == Error::Ok);
+
+    Customer stored;
+    REQUIRE(bank.accounts.findCustomer(id, stored) == Error::Ok);
+    CHECK(stored.address == "7 Park Street, Mysuru");
+    CHECK(stored.contact == "9123456780");
+    CHECK(stored.name == "Asha Rao");          // never editable
+    CHECK(stored.gov_id_ref == "ABCDE1234F");  // never editable
+
+    std::vector<ledger::AuditRecord> audit;
+    REQUIRE(bank.ledger.readAudit(audit) == Error::Ok);
+    REQUIRE(audit.size() == 1);
+    CHECK(audit[0].action == ledger::AuditAction::CustomerModify);
+    CHECK(audit[0].operator_id == "teller1");
+    CHECK(audit[0].target == std::to_string(id));
+    CHECK(audit[0].details ==
+          "address: 12 MG Road, Bengaluru -> 7 Park Street, Mysuru; "
+          "contact: 9876543210 -> 9123456780");
+}
+
+TEST_CASE("TC-ACC-03: only changed fields are recorded, and no change writes nothing") {
+    Bank bank("modify_partial");
+    CustomerId id = 0;
+    REQUIRE(bank.accounts.createCustomer(kTeller, asha(), id) == Error::Ok);
+
+    REQUIRE(bank.accounts.modifyCustomer(kTeller, id, "12 MG Road, Bengaluru",
+                                         "9123456780") == Error::Ok);
+    REQUIRE(bank.accounts.modifyCustomer(kTeller, id, "12 MG Road, Bengaluru",
+                                         "9123456780") == Error::Ok);  // same again
+
+    std::vector<ledger::AuditRecord> audit;
+    REQUIRE(bank.ledger.readAudit(audit) == Error::Ok);
+    REQUIRE(audit.size() == 1);
+    CHECK(audit[0].details == "contact: 9876543210 -> 9123456780");
+}
+
+TEST_CASE("TC-ACC-03: modification is refused for bad input, unknown IDs and non-tellers") {
+    Bank bank("modify_refused");
+    CustomerId id = 0;
+    REQUIRE(bank.accounts.createCustomer(kTeller, asha(), id) == Error::Ok);
+
+    CHECK(bank.accounts.modifyCustomer(kTeller, id, "12 MG Road", "123") ==
+          Error::InvalidInput);
+    CHECK(bank.accounts.modifyCustomer(kTeller, id, "", "9123456780") == Error::InvalidInput);
+    CHECK(bank.accounts.modifyCustomer(kTeller, id, "a|b", "9123456780") ==
+          Error::InvalidInput);
+    CHECK(bank.accounts.modifyCustomer(kTeller, 999, "7 Park Street", "9123456780") ==
+          Error::CustomerNotFound);
+    CHECK(bank.accounts.modifyCustomer(Session{"manager1", Role::Manager}, id,
+                                       "7 Park Street", "9123456780") ==
+          Error::NotAuthorised);
+
+    // Nothing changed and nothing was audited.
+    Customer stored;
+    REQUIRE(bank.accounts.findCustomer(id, stored) == Error::Ok);
+    CHECK(stored.address == "12 MG Road, Bengaluru");
+    CHECK(stored.contact == "9876543210");
+    std::vector<ledger::AuditRecord> audit;
+    REQUIRE(bank.ledger.readAudit(audit) == Error::Ok);
+    CHECK(audit.empty());
+}

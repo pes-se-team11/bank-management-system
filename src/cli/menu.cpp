@@ -230,6 +230,7 @@ void Menu::tellerMenu(const Session& session) {
                 "  5. Balance enquiry\n"
                 "  6. Mini-statement (last 10)\n"
                 "  7. List a customer's accounts\n"
+                "  8. Modify customer details\n"
                 "  0. Logout\n";
         int choice = 0;
         if (!askChoice("Choice: ", choice)) {
@@ -239,6 +240,9 @@ void Menu::tellerMenu(const Session& session) {
         switch (choice) {
         case 1:
             createCustomer(session);
+            break;
+        case 8:
+            modifyCustomer(session);
             break;
         case 2:
             openAccount(session);
@@ -388,6 +392,53 @@ void Menu::createCustomer(const Session& session) {
         return;
     }
     out_ << "Customer created. Customer ID: " << id << '\n';
+}
+
+void Menu::modifyCustomer(const Session& session) {
+    std::string text;
+    if (!ask("Customer ID: ", text)) {
+        return;
+    }
+    std::uint32_t id = 0;
+    if (validation::parseId(text, id) != Error::Ok) {
+        out_ << "Customer ID must be a positive whole number.\n";
+        return;
+    }
+    Customer current;
+    if (const Error e = accounts_.findCustomer(id, current); e != Error::Ok) {
+        fail(e);
+        return;
+    }
+    out_ << "Name: " << current.name << " (name and ID reference cannot be changed)\n"
+         << "Current address: " << current.address << '\n'
+         << "Current contact: " << current.contact << '\n';
+    std::string address;
+    std::string contact;
+    if (!ask("New address (Enter to keep): ", address) ||
+        !ask("New contact number (Enter to keep): ", contact)) {
+        return;
+    }
+    if (address.empty()) {
+        address = current.address;
+    }
+    if (contact.empty()) {
+        contact = current.contact;
+    }
+    if (address == current.address && contact == current.contact) {
+        out_ << "No changes made.\n";
+        return;
+    }
+    const Error result = accounts_.modifyCustomer(session, id, address, contact);
+    if (result == Error::InvalidInput) {
+        out_ << "Not changed. Address up to 120 characters, contact 7-15 digits; "
+                "'|' is not allowed.\n";
+        return;
+    }
+    if (result != Error::Ok) {
+        fail(result);
+        return;
+    }
+    out_ << "Customer " << id << " updated. The old values are kept in the audit log.\n";
 }
 
 void Menu::openAccount(const Session& session) {

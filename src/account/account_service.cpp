@@ -71,6 +71,53 @@ Error AccountService::openAccount(const Session& by, CustomerId customer,
     return Error::Ok;
 }
 
+Error AccountService::modifyCustomer(const Session& by, CustomerId id,
+                                     const std::string& address,
+                                     const std::string& contact) {
+    if (const Error e = authorize(by, Operation::ModifyCustomer); e != Error::Ok) {
+        return e;
+    }
+    if (validation::validateText(address, validation::kMaxAddress) != Error::Ok ||
+        validation::validateContact(contact) != Error::Ok) {
+        return Error::InvalidInput;
+    }
+    Customer customer;
+    if (const Error e = store_.readCustomer(id, customer); e != Error::Ok) {
+        return e;
+    }
+
+    // "field: old -> new" for each field that actually changes.
+    std::string details;
+    const auto note = [&details](const char* field, const std::string& before,
+                                 const std::string& after) {
+        if (before != after) {
+            details += (details.empty() ? "" : "; ") + std::string(field) + ": " + before +
+                       " -> " + after;
+        }
+    };
+    note("address", customer.address, address);
+    note("contact", customer.contact, contact);
+    if (details.empty()) {
+        return Error::Ok;  // nothing to change, so nothing to record
+    }
+
+    // Audit first, so a change can never be stored without its record.
+    std::uint64_t seq = 0;
+    if (const Error e = journal_.appendAudit(by.operator_id,
+                                             ledger::AuditAction::CustomerModify,
+                                             std::to_string(id), details, seq);
+        e != Error::Ok) {
+        return e;
+    }
+    customer.address = address;
+    customer.contact = contact;
+    return store_.writeCustomer(customer);
+}
+
+Error AccountService::findCustomer(CustomerId id, Customer& out) {
+    return store_.readCustomer(id, out);
+}
+
 Error AccountService::findAccount(AccountNo no, AccountRecord& out) {
     return store_.readAccount(no, out);
 }
