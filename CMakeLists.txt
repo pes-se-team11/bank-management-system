@@ -29,6 +29,7 @@ add_library(bms_core STATIC
     src/persistence/append_file.cpp
     src/persistence/file_account_store.cpp
     src/persistence/file_credential_store.cpp
+    src/report/report_service.cpp
 )
 
 target_include_directories(

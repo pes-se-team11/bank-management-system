@@ -9,6 +9,7 @@
 #include "cli/in_memory_stores.h"
 #include "cli/menu.h"
 #include "ledger/ledger.h"
+#include "report/report_service.h"
 #include "transaction/transaction_service.h"
 
 namespace {
@@ -28,10 +29,11 @@ std::string runScript(const std::string& script, const std::string& tag) {
         bms::AccountService accounts(account_store, ledger);
         bms::AuthService auth(credential_store, account_store, ledger, 1000);
         bms::TransactionService transactions(account_store, ledger, 20000000);
+        bms::ReportService reports(ledger);
 
         std::istringstream in(script);
         std::ostringstream out;
-        bms::cli::Menu menu(in, out, accounts, auth, transactions, ledger,
+        bms::cli::Menu menu(in, out, accounts, auth, transactions, ledger, reports,
                             !credential_store.hasStaff());
         menu.run();
         output = out.str();
@@ -195,7 +197,7 @@ TEST_CASE("TC-AUT-03: each role gets its own menu and input ending exits cleanly
     const std::string script =
         "admin\nPassword123\n"
         "1\nadmin\nPassword123\n"
-        "7\n"                            // managers have no option 7
+        "8\n"                            // managers have no option 8
         "1\nteller1\n1\nTellerPass1\n"  // manager adds a teller
         "0\n"
         "1\nteller1\nTellerPass1\n"
@@ -239,7 +241,8 @@ TEST_CASE("Opening an account journals it, and input ending at the PIN creates n
             "2\n1\n1\n500\n1234\n"
             "2\n1\n1\n700\n");
         std::ostringstream out;
-        bms::cli::Menu menu(in, out, accounts, auth, transactions, ledger, true);
+        bms::ReportService reports(ledger);
+        bms::cli::Menu menu(in, out, accounts, auth, transactions, ledger, reports, true);
         menu.run();
 
         std::vector<bms::AccountRecord> list;
@@ -302,6 +305,29 @@ TEST_CASE("TC-AUT-04: a manager unlocks a locked account from the menu") {
     CHECK(contains(out, "Account 100001 unlocked."));
     CHECK(contains(out, "That account is not locked, so there is nothing to unlock."));
     CHECK(contains(out, "Logged in to account 100001."));
+}
+
+TEST_CASE("TC-LED-03: a manager runs the end-of-day report from the menu") {
+    const std::string script =
+        kTellerOnDuty +
+        "1\nAsha Rao\n12 MG Road\n9876543210\nABCDE1234F\n"
+        "2\n1\n1\n500\n1234\n"
+        "3\n100001\n250\n"    // deposit Rs 250
+        "4\n100001\n100\n"    // withdraw Rs 100
+        "0\n"
+        "1\nadmin\nPassword123\n"
+        "7\n"                 // the manager's end-of-day report
+        "0\n0\n";
+
+    const std::string out = runScript(script, "eod");
+
+    CHECK(contains(out, "End-of-day report"));
+    CHECK(contains(out, "  Deposits:     Rs 250.00"));
+    CHECK(contains(out, "  Withdrawals:  Rs 100.00"));
+    CHECK(contains(out, "  Transfer out: Rs 0.00"));
+    CHECK(contains(out, "  Transfer in:  Rs 0.00"));
+    CHECK(contains(out, "  100001  Rs 650.00"));
+    CHECK(contains(out, "Report recorded in the audit log."));
 }
 
 TEST_CASE("TC-ACC-03: a teller modifies customer details from the menu") {
