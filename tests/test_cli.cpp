@@ -140,7 +140,7 @@ TEST_CASE("Menu explains refusals and recovers from bad input") {
         "1\nAsha Rao\n12 MG Road\n9876543210\nABCDE1234F\n"
         "2\n1\n1\n100\n12\n1234\n" // PIN too short, then a valid one
         "4\n100001\n500\n"         // more than the balance
-        "3\n100001\n12,000\n"      // badly formatted amount
+        "3\n100001\n12,000\n250\n" // badly formatted amount, re-prompted
         "5\n424242\n"              // unknown account
         "0\n"
         "9\n"                      // not a main-menu option
@@ -152,7 +152,44 @@ TEST_CASE("Menu explains refusals and recovers from bad input") {
     CHECK(contains(out, "PIN must be 4-6 digits."));
     CHECK(contains(out, "Withdrawal refused"));
     CHECK(contains(out, "Enter an amount like 500"));
+    CHECK(contains(out, "Deposited Rs 250.00."));
     CHECK(contains(out, "No account has that number."));
+    CHECK(contains(out, "Goodbye."));
+}
+
+TEST_CASE("TC-SEC-05: invalid numbers and choices re-prompt and change nothing") {
+    const std::string script =
+        kTellerOnDuty +
+        "1\nAsha Rao\n12 MG Road\n9876543210\nABCDE1234F\n"
+        "2\nabc\n1\n3\n1\n500\n1234\n"  // bad customer ID and type, re-prompted
+        "3\nxyz\n100001\nfive\n-5\n1e3\n" // bad account, then 3 bad amounts
+        "5\n100001\n"
+        "42\n"                          // menu choice out of range
+        "0\n0\n";
+
+    const std::string out = runScript(script, "reprompt");
+
+    CHECK(contains(out, "Customer ID must be a positive whole number."));
+    CHECK(contains(out, "Please choose a number from 1 to 2."));
+    CHECK(contains(out, "Savings account opened. Account number: 100001"));
+    CHECK(contains(out, "Account number must be a positive whole number."));
+    CHECK(contains(out, "Too many invalid entries. Nothing was changed"));
+    CHECK_FALSE(contains(out, "Deposited"));
+    CHECK(contains(out, "balance: Rs 500.00"));  // unchanged after the bad entries
+    CHECK(contains(out, "Please choose one of the listed options."));
+}
+
+TEST_CASE("TC-SEC-04: an over-long name is refused safely and the menu carries on") {
+    const std::string huge(10000, 'A');
+    const std::string script = kTellerOnDuty + "1\n" + huge +
+                               "\n12 MG Road\n9876543210\nABCDE1234F\n"
+                               "1\nAsha Rao\n12 MG Road\n9876543210\nABCDE1234F\n"
+                               "0\n0\n";
+
+    const std::string out = runScript(script, "longname");
+
+    CHECK(contains(out, "Customer not created. Name up to 60 characters"));
+    CHECK(contains(out, "Customer created. Customer ID: 1"));  // no ID was used up
     CHECK(contains(out, "Goodbye."));
 }
 

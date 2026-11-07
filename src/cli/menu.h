@@ -47,12 +47,18 @@ private:
     void showMiniStatement(AccountNo account);
     void listAccounts();
 
-    // Input helpers. Each returns false when input has ended.
+    // Input helpers. Each returns false when input has ended. The typed
+    // helpers re-prompt on a malformed or out-of-range value and give up
+    // after kMaxAttempts, so an invalid entry is never used (BMS-SR-004).
+    static constexpr int kMaxAttempts = 3;
     bool ask(const std::string& prompt, std::string& out);
     bool askSecret(const std::string& prompt, std::string& out);
     bool askChoice(const std::string& prompt, int& out);
+    bool askOption(const std::string& prompt, int max, int& out);  // 1..max
     bool askAccountNo(AccountNo& out);
+    bool askCustomerId(CustomerId& out);
     bool askAmount(const std::string& prompt, Paise& out);
+    bool tooManyAttempts();
 
     void fail(Error error);
 
