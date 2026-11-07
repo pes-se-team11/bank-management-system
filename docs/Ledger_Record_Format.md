@@ -46,6 +46,23 @@ The caller appends these two legs in order. Story 6.1 does not provide an atomic
 batch, account updates, or transfer validation; TransactionModule and Story
 7.2's write-ahead protocol supply those guarantees (BMS-NF-002, BMS-F-050).
 
+## Reconciliation
+
+Story 6.2 (`bms::ledger::reconcile`, BMS-F-061) verifies that every account
+balance equals its opening balance plus the sum of its signed journal
+entries: an account's first record must be `OPEN`, whose amount sets the
+running balance; `DEPOSIT` and `TRANSFER_IN` credit and `WITHDRAW` and
+`TRANSFER_OUT` debit it, and every record's `balance_after` must equal the
+running balance it produces. A second `OPEN`, a diverged `balance_after`,
+an unrepresentable running balance, or a stored balance that is missing or
+unexplained names the account in a result row - tampering with the data
+files is reported, never absorbed.
+
+On clean data the replay produces the balance the account store holds and
+the check passes. Reconciliation has no update or delete rights over either
+file; the caller supplies stored balances through a read-only lookup, and
+the journal is never rewritten in response.
+
 ## Audit
 
 `A|1|<seq>|<unix_ts>|<operator>|<action>|<target>|<details>`

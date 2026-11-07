@@ -1,5 +1,6 @@
 #pragma once
 // Story 6.1: append-only journal and audit capture (BMS-F-060, BMS-F-063).
+// Story 6.2: reconciliation of balances against the journal (BMS-F-061).
 #include <cstdint>
 #include <functional>
 #include <string>
@@ -79,5 +80,42 @@ private:
     Error journal_status_ = Error::Ok;
     Error audit_status_ = Error::Ok;
 };
+
+// BMS-F-061: one row per account that fails reconciliation.
+struct ReconciliationRow {
+    AccountNo account = 0;
+    Paise expected = 0;  // opening balance plus its signed journal entries
+    Paise stored = 0;    // the balance supplied through StoredBalance
+};
+
+// Supplies the stored balance of an account named in the journal; a
+// non-Ok result marks that account as failing. The store implementation
+// does the reading, so reconciliation stays free of persistence details
+// (BMS-NF-006).
+using StoredBalance = std::function<Error(AccountNo, Paise&)>;
+
+// BMS-F-061 / TC-LED-02: verify that every account balance equals its
+// opening balance plus the sum of its journal entries, so tampering with
+// the data files is named rather than absorbed. `journal` is normally
+// readJournal's result.
+//
+// An OPEN record starts an account's history; DEPOSIT and TRANSFER_IN
+// credit and WITHDRAW and TRANSFER_OUT debit the running balance, which
+// must equal every record's balance_after, ending at the stored balance.
+// An account fails - with exactly one row - when it has no OPEN start, an
+// OPEN record repeats, the replayed chain diverges from a balance_after,
+// the running balance is not representable, or the stored balance is
+// missing or different. Unhealthy accounts stop replaying at the break;
+// `expected` is the running balance when replay stopped and `stored` is
+// zero when no stored balance was reported.
+//
+// Rows are ordered by account number. The check always reports what does
+// not reconcile instead of assuming it, so it returns Ok with an empty
+// `out` on clean data and Ok naming the offending accounts otherwise.
+// Structural journal errors remain readJournal's business; the records here
+// must have come from it.
+Error reconcile(const std::vector<JournalRecord>& journal,
+                const StoredBalance& stored_balance,
+                std::vector<ReconciliationRow>& out);
 
 }  // namespace bms::ledger

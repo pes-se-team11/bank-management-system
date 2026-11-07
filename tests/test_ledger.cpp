@@ -6,6 +6,7 @@
 #include <fstream>
 #include <iterator>
 #include <limits>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -165,6 +166,168 @@ TEST_CASE("TC-BAL-02: mini-statement propagates journal errors without partial r
     out.resize(1);
     CHECK(unreadable.miniStatement(42, out) == Error::Io);
     CHECK(out.empty());
+}
+
+// Stored balance source backed by a std::map (no persistence involved).
+struct TestBalances {
+    TestBalances() = default;
+    TestBalances(std::initializer_list<std::pair<const AccountNo, Paise>> init)
+        : entries(init) {}
+
+    std::map<AccountNo, Paise> entries;
+
+    Error operator()(AccountNo account, Paise& out) const {
+        const auto it = entries.find(account);
+        if (it == entries.end()) {
+            return Error::AccountNotFound;
+        }
+        out = it->second;
+        return Error::Ok;
+    }
+};
+
+// Account 42: open at 10,000, deposit 2,500, withdraw 1,000, transfer 500
+// out. Account 43: open at 200, the transfer arrives. Final: 11,000 / 700.
+void buildCleanHistory(Ledger& ledger) {
+    std::uint64_t seq = 0;
+    REQUIRE(ledger.appendTransaction(TxnType::Open, 42, 10000, 10000, "teller", seq) == Error::Ok);
+    REQUIRE(ledger.appendTransaction(TxnType::Deposit, 42, 2500, 12500, "teller", seq) ==
+            Error::Ok);
+    REQUIRE(ledger.appendTransaction(TxnType::Withdraw, 42, 1000, 11500, "teller", seq) ==
+            Error::Ok);
+    REQUIRE(ledger.appendTransaction(TxnType::Open, 43, 200, 200, "teller", seq) == Error::Ok);
+    REQUIRE(ledger.appendTransaction(TxnType::TransferOut, 42, 500, 11000, "teller", seq) ==
+            Error::Ok);
+    REQUIRE(ledger.appendTransaction(TxnType::TransferIn, 43, 500, 700, "teller", seq) ==
+            Error::Ok);
+}
+
+TEST_CASE("TC-LED-02: reconciliation passes on clean data") {
+    TempFiles files;
+    Ledger ledger(files.journal, files.audit, fixedTime);
+    buildCleanHistory(ledger);
+    std::vector<JournalRecord> journal;
+    REQUIRE(ledger.readJournal(journal) == Error::Ok);
+    std::vector<ReconciliationRow> rows(1);
+    CHECK(reconcile(journal, TestBalances{{42, 11000}, {43, 700}}, rows) == Error::Ok);
+    CHECK(rows.empty());
+}
+
+TEST_CASE("TC-LED-02: reconciliation passes with no journal and no accounts") {
+    TempFiles files;
+    Ledger ledger(files.journal, files.audit, fixedTime);
+    std::vector<JournalRecord> journal;
+    REQUIRE(ledger.readJournal(journal) == Error::Ok);
+    std::vector<ReconciliationRow> rows(1);
+    CHECK(reconcile(journal, TestBalances{}, rows) == Error::Ok);
+    CHECK(rows.empty());
+}
+
+TEST_CASE("TC-LED-02: reconciliation names every tampered stored balance") {
+    TempFiles files;
+    Ledger ledger(files.journal, files.audit, fixedTime);
+    buildCleanHistory(ledger);
+    std::vector<JournalRecord> journal;
+    REQUIRE(ledger.readJournal(journal) == Error::Ok);
+
+    // 42 reads Rs 1 paise high, 43 is missing from the store altogether.
+    std::vector<ReconciliationRow> rows;
+    CHECK(reconcile(journal, TestBalances{{42, 11001}}, rows) == Error::Ok);
+    REQUIRE(rows.size() == 2);
+    CHECK(rows[0].account == 42);
+    CHECK(rows[0].expected == 11000);
+    CHECK(rows[0].stored == 11001);
+    CHECK(rows[1].account == 43);
+    CHECK(rows[1].expected == 700);
+    CHECK(rows[1].stored == 0);
+}
+
+TEST_CASE("TC-LED-02: reconciliation detects an edited journal amount") {
+    TempFiles files;
+    Ledger ledger(files.journal, files.audit, fixedTime);
+    buildCleanHistory(ledger);
+    std::vector<JournalRecord> journal;
+    REQUIRE(ledger.readJournal(journal) == Error::Ok);
+    REQUIRE(journal[1].type == TxnType::Deposit);
+
+    // A tampered amount diverges the chain at its own record; replay stops
+    // there and the offending account is named, not the stored balance.
+    journal[1].amount += 100;
+    std::vector<ReconciliationRow> rows;
+    CHECK(reconcile(journal, TestBalances{{42, 11000}, {43, 700}}, rows) == Error::Ok);
+    REQUIRE(rows.size() == 1);
+    CHECK(rows[0].account == 42);
+    CHECK(rows[0].expected == 10000);
+    CHECK(rows[0].stored == 0);
+}
+
+TEST_CASE("TC-LED-02: reconciliation detects a consistently edited final record") {
+    TempFiles files;
+    Ledger ledger(files.journal, files.audit, fixedTime);
+    buildCleanHistory(ledger);
+    std::vector<JournalRecord> journal;
+    REQUIRE(ledger.readJournal(journal) == Error::Ok);
+    const std::size_t last = journal.size() - 1;
+    REQUIRE(journal[last].type == TxnType::TransferIn);
+
+    // Amount and balance_after move together, so the chain still holds and
+    // only the comparison against the untouched stored balance catches it.
+    journal[last].amount += 100;
+    journal[last].balance_after += 100;
+    std::vector<ReconciliationRow> rows;
+    CHECK(reconcile(journal, TestBalances{{42, 11000}, {43, 700}}, rows) == Error::Ok);
+    REQUIRE(rows.size() == 1);
+    CHECK(rows[0].account == 43);
+    CHECK(rows[0].expected == 800);
+    CHECK(rows[0].stored == 700);
+}
+
+TEST_CASE("TC-LED-02: a journal history without an OPEN start cannot reconcile") {
+    const std::vector<JournalRecord> journal = {
+        {1, fixedTime(), TxnType::Deposit, 42, 100, 100, "teller"}};
+    std::vector<ReconciliationRow> rows;
+    CHECK(reconcile(journal, TestBalances{{42, 100}}, rows) == Error::Ok);
+    REQUIRE(rows.size() == 1);
+    CHECK(rows[0].account == 42);
+    CHECK(rows[0].expected == 0);
+    CHECK(rows[0].stored == 0);
+}
+
+TEST_CASE("TC-LED-02: a repeated OPEN record cannot reconcile") {
+    const std::vector<JournalRecord> journal = {
+        {1, fixedTime(), TxnType::Open, 42, 100, 100, "teller"},
+        {2, fixedTime(), TxnType::Open, 42, 100, 100, "teller"}};
+    std::vector<ReconciliationRow> rows;
+    CHECK(reconcile(journal, TestBalances{{42, 100}}, rows) == Error::Ok);
+    REQUIRE(rows.size() == 1);
+    CHECK(rows[0].account == 42);
+    CHECK(rows[0].expected == 100);
+    CHECK(rows[0].stored == 0);
+}
+
+TEST_CASE("TC-SEC-03: reconciliation covers integer limits without wraparound") {
+    // A legitimate value at the edge of the range rewards nothing.
+    const JournalRecord deep_overdraft{2, fixedTime(), TxnType::Withdraw, 42,
+                                       std::numeric_limits<Paise>::max(),
+                                       std::numeric_limits<Paise>::min() + 1, "ops"};
+    const std::vector<JournalRecord> journal = {
+        {1, fixedTime(), TxnType::Open, 42, 0, 0, "teller"}, deep_overdraft};
+    std::vector<ReconciliationRow> rows;
+    CHECK(reconcile(journal, TestBalances{{42, std::numeric_limits<Paise>::min() + 1}},
+                    rows) == Error::Ok);
+    CHECK(rows.empty());
+
+    // One paise beyond what a balance can hold is a failure, not a wrap.
+    const std::vector<JournalRecord> overflowing = {
+        {1, fixedTime(), TxnType::Open, 42, std::numeric_limits<Paise>::max(),
+         std::numeric_limits<Paise>::max(), "teller"},
+        {2, fixedTime(), TxnType::Deposit, 42, 1, std::numeric_limits<Paise>::max(), "teller"}};
+    rows.resize(1);
+    CHECK(reconcile(overflowing, TestBalances{}, rows) == Error::Ok);
+    REQUIRE(rows.size() == 1);
+    CHECK(rows[0].account == 42);
+    CHECK(rows[0].expected == std::numeric_limits<Paise>::max());
+    CHECK(rows[0].stored == 0);
 }
 
 TEST_CASE("TC-LED-01 TC-SEC-06: journal and audit appends preserve every earlier byte") {
