@@ -6,6 +6,7 @@
 
 #include "account/account_service.h"
 #include "fake_stores.h"
+#include "transaction/transaction_service.h"
 #include "ledger/ledger.h"
 
 using namespace bms;
@@ -242,4 +243,63 @@ TEST_CASE("TC-ACC-03: modification is refused for bad input, unknown IDs and non
     std::vector<ledger::AuditRecord> audit;
     REQUIRE(bank.ledger.readAudit(audit) == Error::Ok);
     CHECK(audit.empty());
+}
+
+TEST_CASE("TC-ACC-04: a zero-balance account closes and refuses every later transaction") {
+    Bank bank("close");
+    CustomerId cust = 0;
+    REQUIRE(bank.accounts.createCustomer(kTeller, asha(), cust) == Error::Ok);
+    AccountNo no = 0;
+    REQUIRE(bank.accounts.openAccount(kTeller, cust, AccountType::Savings, 0, no) ==
+            Error::Ok);
+
+    const Session manager{"manager1", Role::Manager};
+    REQUIRE(bank.accounts.closeAccount(manager, no) == Error::Ok);
+
+    AccountRecord rec;
+    REQUIRE(bank.accounts.findAccount(no, rec) == Error::Ok);  // kept, not deleted
+    CHECK(rec.state == AccountState::Closed);
+
+    // AC-BMS-F-004: a later deposit is refused and the balance stays zero.
+    TransactionService transactions(bank.store, bank.ledger, 20000000);
+    CHECK(transactions.deposit(no, 5000, "teller1") != Error::Ok);
+    CHECK(transactions.withdraw(no, 100, "teller1") != Error::Ok);
+    REQUIRE(bank.accounts.findAccount(no, rec) == Error::Ok);
+    CHECK(rec.balance == 0);
+
+    std::vector<ledger::AuditRecord> audit;
+    REQUIRE(bank.ledger.readAudit(audit) == Error::Ok);
+    REQUIRE(audit.size() == 1);
+    CHECK(audit[0].action == ledger::AuditAction::AccountClose);
+    CHECK(audit[0].operator_id == "manager1");
+    CHECK(audit[0].target == std::to_string(no));
+}
+
+TEST_CASE("TC-ACC-04: closure is refused with money left, twice, unknown, or by a teller") {
+    Bank bank("close_refused");
+    CustomerId cust = 0;
+    REQUIRE(bank.accounts.createCustomer(kTeller, asha(), cust) == Error::Ok);
+    AccountNo funded = 0;
+    AccountNo empty = 0;
+    REQUIRE(bank.accounts.openAccount(kTeller, cust, AccountType::Savings, 50000, funded) ==
+            Error::Ok);
+    REQUIRE(bank.accounts.openAccount(kTeller, cust, AccountType::Current, 0, empty) ==
+            Error::Ok);
+
+    const Session manager{"manager1", Role::Manager};
+    CHECK(bank.accounts.closeAccount(manager, funded) == Error::BalanceNotZero);
+    CHECK(bank.accounts.closeAccount(kTeller, empty) == Error::NotAuthorised);
+    CHECK(bank.accounts.closeAccount(manager, 999999) == Error::AccountNotFound);
+    REQUIRE(bank.accounts.closeAccount(manager, empty) == Error::Ok);
+    CHECK(bank.accounts.closeAccount(manager, empty) == Error::AccountClosed);
+
+    AccountRecord rec;
+    REQUIRE(bank.accounts.findAccount(funded, rec) == Error::Ok);
+    CHECK(rec.state == AccountState::Active);
+    CHECK(rec.balance == 50000);
+
+    // Only the one successful closure is audited.
+    std::vector<ledger::AuditRecord> audit;
+    REQUIRE(bank.ledger.readAudit(audit) == Error::Ok);
+    CHECK(audit.size() == 1);
 }

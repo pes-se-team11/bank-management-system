@@ -287,6 +287,72 @@ TEST_CASE("TC-ACC-03: a teller modifies customer details from the menu") {
     CHECK(contains(out, "No customer has that ID."));
 }
 
+TEST_CASE("TC-ACC-04: a manager closes an emptied account from the menu") {
+    const std::string script =
+        kTellerOnDuty +
+        "1\nAsha Rao\n12 MG Road\n9876543210\nABCDE1234F\n"
+        "2\n1\n1\n500\n1234\n"
+        "0\n"
+        "1\nadmin\nPassword123\n"
+        "6\n100001\n1\n"          // money left: refused
+        "0\n"
+        "1\nteller1\nTellerPass1\n"
+        "4\n100001\n500\n"        // empty it
+        "0\n"
+        "1\nadmin\nPassword123\n"
+        "6\n100001\n2\n"          // changed mind
+        "6\n100001\n1\n"          // closed
+        "0\n"
+        "1\nteller1\nTellerPass1\n"
+        "3\n100001\n100\n"        // deposit refused
+        "7\n1\n"
+        "0\n"
+        "2\n100001\n1234\n"       // customer login refused
+        "0\n";
+
+    const std::string out = runScript(script, "close");
+
+    CHECK(contains(out, "Only an account with a zero balance can be closed."));
+    CHECK(contains(out, "Not closed."));
+    CHECK(contains(out, "Account 100001 closed."));
+    CHECK(contains(out, "100001  Savings  Closed"));
+    CHECK(contains(out, "That account is closed."));
+    CHECK_FALSE(contains(out, "Deposited Rs 100.00."));
+    CHECK_FALSE(contains(out, "Logged in to account 100001."));
+}
+
+TEST_CASE("TC-ACC-04: a closed account cannot be reopened through lockout and unlock") {
+    const std::string script =
+        kTellerOnDuty +
+        "1\nAsha Rao\n12 MG Road\n9876543210\nABCDE1234F\n"
+        "2\n1\n1\n0\n1234\n"   // opened with Rs 0
+        "0\n"
+        "1\nadmin\nPassword123\n"
+        "6\n100001\n1\n"         // closed
+        "0\n"
+        "2\n100001\n1111\n"
+        "2\n100001\n2222\n"
+        "2\n100001\n3333\n"      // three wrong PINs
+        "1\nadmin\nPassword123\n"
+        "5\n100001\n1\n"         // unlock refused
+        "0\n"
+        "1\nteller1\nTellerPass1\n"
+        "3\n100001\n100\n"       // deposit refused
+        "7\n1\n"
+        "0\n"
+        "2\n100001\n1234\n"      // login refused
+        "0\n";
+
+    const std::string out = runScript(script, "close_reopen");
+
+    CHECK(contains(out, "Account 100001 closed."));
+    CHECK_FALSE(contains(out, "locked after three wrong PINs"));
+    CHECK_FALSE(contains(out, "Account 100001 unlocked."));
+    CHECK_FALSE(contains(out, "Deposited Rs 100.00."));
+    CHECK_FALSE(contains(out, "Logged in to account 100001."));
+    CHECK(contains(out, "100001  Savings  Closed"));
+}
+
 TEST_CASE("Staff IDs must be 3-16 letters or digits") {
     const std::string out = runScript("ab\nadmin 1\nadmin\nPassword123\n0\n", "staffid");
     CHECK(contains(out, "Staff ID must be 3-16 letters or digits."));
