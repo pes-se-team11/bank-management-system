@@ -404,13 +404,8 @@ void Menu::createCustomer(const Session& session) {
 }
 
 void Menu::modifyCustomer(const Session& session) {
-    std::string text;
-    if (!ask("Customer ID: ", text)) {
-        return;
-    }
-    std::uint32_t id = 0;
-    if (validation::parseId(text, id) != Error::Ok) {
-        out_ << "Customer ID must be a positive whole number.\n";
+    CustomerId id = 0;
+    if (!askCustomerId(id)) {
         return;
     }
     Customer current;
@@ -451,22 +446,13 @@ void Menu::modifyCustomer(const Session& session) {
 }
 
 void Menu::openAccount(const Session& session) {
-    std::string text;
-    if (!ask("Customer ID: ", text)) {
-        return;
-    }
-    std::uint32_t customer = 0;
-    if (validation::parseId(text, customer) != Error::Ok) {
-        out_ << "Customer ID must be a positive whole number.\n";
+    CustomerId customer = 0;
+    if (!askCustomerId(customer)) {
         return;
     }
     out_ << "Account type: 1. Savings  2. Current\n";
     int type_choice = 0;
-    if (!askChoice("Type: ", type_choice)) {
-        return;
-    }
-    if (type_choice != 1 && type_choice != 2) {
-        out_ << "Please choose 1 or 2.\n";
+    if (!askOption("Type: ", 2, type_choice)) {
         return;
     }
     const AccountType type = type_choice == 1 ? AccountType::Savings : AccountType::Current;
@@ -518,11 +504,7 @@ void Menu::addStaff(const Session& session) {
     }
     out_ << "Role: 1. Teller  2. Manager\n";
     int role_choice = 0;
-    if (!askChoice("Role: ", role_choice)) {
-        return;
-    }
-    if (role_choice != 1 && role_choice != 2) {
-        out_ << "Please choose 1 or 2.\n";
+    if (!askOption("Role: ", 2, role_choice)) {
         return;
     }
     std::string password;
@@ -668,13 +650,8 @@ void Menu::showMiniStatement(AccountNo account) {
 }
 
 void Menu::listAccounts() {
-    std::string text;
-    if (!ask("Customer ID: ", text)) {
-        return;
-    }
-    std::uint32_t customer = 0;
-    if (validation::parseId(text, customer) != Error::Ok) {
-        out_ << "Customer ID must be a positive whole number.\n";
+    CustomerId customer = 0;
+    if (!askCustomerId(customer)) {
         return;
     }
     std::vector<AccountRecord> list;
@@ -728,28 +705,64 @@ bool Menu::askChoice(const std::string& prompt, int& out) {
     return true;
 }
 
+bool Menu::askOption(const std::string& prompt, int max, int& out) {
+    for (int attempt = 0; attempt < kMaxAttempts; ++attempt) {
+        if (!askChoice(prompt, out)) {
+            return false;
+        }
+        if (out >= 1 && out <= max) {
+            return true;
+        }
+        out_ << "Please choose a number from 1 to " << max << ".\n";
+    }
+    return tooManyAttempts();
+}
+
 bool Menu::askAccountNo(AccountNo& out) {
-    std::string text;
-    if (!ask("Account number: ", text)) {
-        return false;
-    }
-    if (validation::parseId(text, out) != Error::Ok) {
+    for (int attempt = 0; attempt < kMaxAttempts; ++attempt) {
+        std::string text;
+        if (!ask("Account number: ", text)) {
+            return false;
+        }
+        if (validation::parseId(text, out) == Error::Ok) {
+            return true;
+        }
         out_ << "Account number must be a positive whole number.\n";
-        return false;
     }
-    return true;
+    return tooManyAttempts();
+}
+
+bool Menu::askCustomerId(CustomerId& out) {
+    for (int attempt = 0; attempt < kMaxAttempts; ++attempt) {
+        std::string text;
+        if (!ask("Customer ID: ", text)) {
+            return false;
+        }
+        if (validation::parseId(text, out) == Error::Ok) {
+            return true;
+        }
+        out_ << "Customer ID must be a positive whole number.\n";
+    }
+    return tooManyAttempts();
 }
 
 bool Menu::askAmount(const std::string& prompt, Paise& out) {
-    std::string text;
-    if (!ask(prompt, text)) {
-        return false;
-    }
-    if (validation::parseAmount(text, out) != Error::Ok) {
+    for (int attempt = 0; attempt < kMaxAttempts; ++attempt) {
+        std::string text;
+        if (!ask(prompt, text)) {
+            return false;
+        }
+        if (validation::parseAmount(text, out) == Error::Ok) {
+            return true;
+        }
         out_ << "Enter an amount like 500 or 500.50 (no commas or signs).\n";
-        return false;
     }
-    return true;
+    return tooManyAttempts();
+}
+
+bool Menu::tooManyAttempts() {
+    out_ << "Too many invalid entries. Nothing was changed; back to the menu.\n";
+    return false;
 }
 
 void Menu::fail(Error error) {
