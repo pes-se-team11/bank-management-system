@@ -9,6 +9,7 @@
 #include "ledger/ledger.h"
 #include "persistence/file_account_store.h"
 #include "persistence/file_credential_store.h"
+#include "report/report_service.h"
 #include "transaction/transaction_service.h"
 
 namespace {
@@ -55,6 +56,8 @@ int main() {
         kDepositCeiling
     );
 
+    bms::ReportService reports(ledger);
+
     bms::cli::Menu menu(
         std::cin,
         std::cout,
@@ -62,6 +65,7 @@ int main() {
         auth,
         transactions,
         ledger,
+        reports,
         !credential_store.hasStaff()
     );
 

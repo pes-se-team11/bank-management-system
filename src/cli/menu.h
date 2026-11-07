@@ -12,6 +12,7 @@
 #include "account/account_service.h"
 #include "auth/auth.h"
 #include "ledger/ledger.h"
+#include "report/report_service.h"
 #include "transaction/transaction_service.h"
 
 namespace bms::cli {
@@ -20,7 +21,7 @@ class Menu {
 public:
     Menu(std::istream& in, std::ostream& out, AccountService& accounts,
          AuthService& auth, TransactionService& transactions,
-         const ledger::Ledger& journal, bool needs_first_manager);
+         ledger::Ledger& journal, ReportService& reports, bool needs_first_manager);
 
     // Runs until the user chooses Exit or input ends.
     void run();
@@ -38,6 +39,7 @@ private:
     void openAccount(const Session& session);
     void addStaff(const Session& session);
     void unlockAccount(const Session& session);
+    void showEndOfDayReport(const Session& session);
     void deposit(const std::string& operator_id, AccountNo account);
     void withdraw(const std::string& operator_id, AccountNo account);
     void showBalance(AccountNo account);
@@ -58,7 +60,8 @@ private:
     AccountService& accounts_;
     AuthService& auth_;
     TransactionService& transactions_;
-    const ledger::Ledger& journal_;
+    ledger::Ledger& journal_;
+    ReportService& reports_;
     bool needs_first_manager_;
 };
 

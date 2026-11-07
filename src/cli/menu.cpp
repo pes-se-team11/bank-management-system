@@ -106,13 +106,14 @@ std::string describe(Error error) {
 
 Menu::Menu(std::istream& in, std::ostream& out, AccountService& accounts,
            AuthService& auth, TransactionService& transactions,
-           const ledger::Ledger& journal, bool needs_first_manager)
+           ledger::Ledger& journal, ReportService& reports, bool needs_first_manager)
     : in_(in),
       out_(out),
       accounts_(accounts),
       auth_(auth),
       transactions_(transactions),
       journal_(journal),
+      reports_(reports),
       needs_first_manager_(needs_first_manager) {}
 
 void Menu::run() {
@@ -290,6 +291,7 @@ void Menu::managerMenu(const Session& session) {
                 "  3. Mini-statement (last 10)\n"
                 "  4. List a customer's accounts\n"
                 "  5. Unlock an account\n"
+                "  6. End-of-day report\n"
                 "  0. Logout\n";
         int choice = 0;
         if (!askChoice("Choice: ", choice)) {
@@ -302,6 +304,9 @@ void Menu::managerMenu(const Session& session) {
             break;
         case 5:
             unlockAccount(session);
+            break;
+        case 6:
+            showEndOfDayReport(session);
             break;
         case 2:
             if (askAccountNo(account)) {
@@ -557,6 +562,30 @@ void Menu::unlockAccount(const Session& session) {
     }
     out_ << "Account " << account
          << " unlocked. The customer can log in with their PIN.\n";
+}
+
+void Menu::showEndOfDayReport(const Session& session) {
+    EodReport report;
+    const Error result = reports_.endOfDay(session, report);
+    if (result != Error::Ok) {
+        fail(result);
+        return;
+    }
+    out_ << "\nEnd-of-day report " << report.day_label << " (IST)\n"
+         << "Totals equal the day's journal entries (BMS-F-062).\n"
+         << "  Deposits:     Rs " << formatPaise(report.totals.deposits) << '\n'
+         << "  Withdrawals:  Rs " << formatPaise(report.totals.withdrawals) << '\n'
+         << "  Transfer out: Rs " << formatPaise(report.totals.transfer_out) << '\n'
+         << "  Transfer in:  Rs " << formatPaise(report.totals.transfer_in) << '\n';
+    if (report.balances.empty()) {
+        out_ << "No accounts on the journal.\n";
+        return;
+    }
+    out_ << "Closing balances:\n";
+    for (const ClosingBalance& line : report.balances) {
+        out_ << "  " << line.account << "  Rs " << formatPaise(line.balance) << '\n';
+    }
+    out_ << "Report recorded in the audit log.\n";
 }
 
 void Menu::deposit(const std::string& operator_id, AccountNo account) {
