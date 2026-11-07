@@ -366,5 +366,33 @@ TEST_CASE("TC-ACC-04: the right PIN for a closed account is refused") {
     REQUIRE(fx.auth.enrol(kTeller, customer("100001"), Role::Customer, pin) == Error::Ok);
 
     CHECK(tryPin(fx.auth, "100001", "4821") == Error::AccountClosed);
-    CHECK(tryPin(fx.auth, "100001", "1111") == Error::BadCredentials);
+    CHECK(tryPin(fx.auth, "100001", "1111") == Error::AccountClosed);
+}
+
+TEST_CASE("TC-ACC-04: wrong PINs and an unlock cannot reopen a closed account") {
+    AuthFixture fx("closed_stays_closed");
+    AccountRecord account;
+    account.acct_no = 100001;
+    account.state = AccountState::Closed;
+    REQUIRE(fx.accounts.createAccount(account) == Error::Ok);
+    std::string pin = "4821";
+    REQUIRE(fx.auth.enrol(kTeller, customer("100001"), Role::Customer, pin) == Error::Ok);
+
+    // PR #19 review: three wrong PINs used to lock it, and unlocking then
+    // made it ACTIVE again. Now none of that is counted or allowed.
+    for (const char* wrong : {"1111", "2222", "3333", "4444"}) {
+        CHECK(tryPin(fx.auth, "100001", wrong) == Error::AccountClosed);
+    }
+    Credential stored;
+    REQUIRE(fx.store.readCredential(customer("100001"), stored) == Error::Ok);
+    CHECK(stored.failed_attempts == 0);
+
+    CHECK(fx.auth.unlockAccount(kManager, 100001) == Error::AccountClosed);
+
+    AccountRecord record;
+    REQUIRE(fx.accounts.readAccount(100001, record) == Error::Ok);
+    CHECK(record.state == AccountState::Closed);
+    std::vector<ledger::AuditRecord> audit;
+    REQUIRE(fx.ledger.readAudit(audit) == Error::Ok);
+    CHECK(audit.empty());  // no lock and no unlock were recorded
 }

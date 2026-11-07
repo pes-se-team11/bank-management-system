@@ -88,7 +88,8 @@ public:
     // before then resets the count. Staff passwords are not locked: there is
     // no way to unlock a staff login, and locking the only manager would lock
     // everyone out of the bank.
-    // BMS-F-004: the right PIN for a CLOSED account returns AccountClosed.
+    // BMS-F-004: any login to a CLOSED account returns AccountClosed, and
+    // wrong PINs on it are not counted, so it can never become LOCKED.
     Error login(const Principal& who, std::string& secret, Session& out);
 
     // BMS-F-013: a Manager, having checked the holder's identity at the
@@ -96,8 +97,9 @@ public:
     // written first, naming the manager; then the failed-attempt count is
     // reset to zero and the account goes back to ACTIVE, so the right PIN
     // works again. Returns NotAuthorised for any other role,
-    // AccountNotFound for an unknown number and AccountNotLocked when there
-    // is nothing to unlock (no audit entry is written for those).
+    // AccountNotFound for an unknown number, AccountClosed for a closed
+    // account and AccountNotLocked when there is nothing to unlock (no audit
+    // entry is written for those).
     Error unlockAccount(const Session& by, AccountNo account);
 
 private:
