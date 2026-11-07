@@ -1,6 +1,7 @@
 #include <doctest/doctest.h>
 
 #include <cstdio>
+#include <fstream>
 #include <string>
 #include <vector>
 
@@ -199,10 +200,11 @@ TEST_CASE("TC-LED-03: a corrupt journal is reported and the report is refused") 
     Bank bank("corrupt");
     // The fixture overwrites the file directly; production writes append.
     {
-        std::FILE* file = std::fopen(bank.files.journal.c_str(), "w");
-        REQUIRE(file != nullptr);
-        std::fputs("bad\n", file);
-        std::fclose(file);
+        std::ofstream file(bank.files.journal, std::ios::binary | std::ios::trunc);
+        REQUIRE(file.is_open());
+        file << "bad\n";
+        file.close();
+        REQUIRE_FALSE(file.fail());
     }
     EodReport report;
     CHECK(bank.reports.endOfDay(kManager, report) == Error::CorruptRecord);
