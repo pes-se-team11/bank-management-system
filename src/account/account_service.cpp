@@ -114,6 +114,33 @@ Error AccountService::modifyCustomer(const Session& by, CustomerId id,
     return store_.writeCustomer(customer);
 }
 
+Error AccountService::closeAccount(const Session& by, AccountNo no) {
+    if (const Error e = authorize(by, Operation::CloseAccount); e != Error::Ok) {
+        return e;
+    }
+    AccountRecord account;
+    if (const Error e = store_.readAccount(no, account); e != Error::Ok) {
+        return e;
+    }
+    if (account.state == AccountState::Closed) {
+        return Error::AccountClosed;
+    }
+    if (account.balance != 0) {
+        return Error::BalanceNotZero;
+    }
+
+    // Audit first, so an account can never be closed without its record.
+    std::uint64_t seq = 0;
+    if (const Error e = journal_.appendAudit(by.operator_id,
+                                             ledger::AuditAction::AccountClose,
+                                             std::to_string(no), "closed at zero balance", seq);
+        e != Error::Ok) {
+        return e;
+    }
+    account.state = AccountState::Closed;
+    return store_.updateAccount(account);
+}
+
 Error AccountService::findCustomer(CustomerId id, Customer& out) {
     return store_.readCustomer(id, out);
 }

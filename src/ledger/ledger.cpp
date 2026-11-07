@@ -4,6 +4,7 @@
 #include <charconv>
 #include <ctime>
 #include <limits>
+#include <map>
 #include <utility>
 
 #include "persistence/append_file.h"
@@ -130,6 +131,28 @@ Error readRecords(const std::string& path, std::vector<Record>& out, Parser pars
 // Zero is an exhausted sequence, never a stored sequence (BMS-SR-005).
 std::uint64_t successor(std::uint64_t seq) {
     return seq == std::numeric_limits<std::uint64_t>::max() ? 0 : seq + 1;
+}
+
+// BMS-SR-003: as strict as Money's arithmetic - out of range is a failure,
+// never silent wraparound (BMS-NF-003).
+bool addMoney(Paise running, Paise delta, Paise& out) {
+    if ((delta > 0 && running > std::numeric_limits<Paise>::max() - delta) ||
+        (delta < 0 && running < std::numeric_limits<Paise>::min() - delta)) {
+        return false;
+    }
+    out = running + delta;
+    return true;
+}
+
+// Reconciliation replay state for one account (BMS-F-061).
+struct Replay {
+    Paise running = 0;   // balance built from the OPEN record onward
+    bool started = false;
+    bool healthy = true;  // false once the chain has diverged
+};
+
+bool debits(const JournalRecord& record) {
+    return record.type == TxnType::Withdraw || record.type == TxnType::TransferOut;
 }
 
 }  // namespace
@@ -330,6 +353,55 @@ Error Ledger::miniStatement(AccountNo account, std::vector<JournalRecord>& out) 
         if (it->account == account) {
             out.push_back(std::move(*it));
         }
+    }
+    return Error::Ok;
+}
+
+Error reconcile(const std::vector<JournalRecord>& journal,
+                const StoredBalance& stored_balance,
+                std::vector<ReconciliationRow>& out) {
+    out.clear();
+
+    // Replay every account from its OPEN record; the journal order of
+    // records is the order the append-only file was written in.
+    std::map<AccountNo, Replay> replay;
+    for (const JournalRecord& record : journal) {
+        Replay& state = replay[record.account];
+        if (record.type == TxnType::Open) {
+            if (state.started) {
+                // A balance is opened once; a second OPEN is tampering.
+                state.healthy = false;
+                continue;
+            }
+            state.started = true;
+            state.running = record.amount;
+            continue;
+        }
+        if (!state.started || !state.healthy) {
+            continue;
+        }
+        Paise next = 0;
+        if (!addMoney(state.running, debits(record) ? -record.amount : record.amount, next) ||
+            next != record.balance_after) {
+            state.healthy = false;
+            continue;
+        }
+        state.running = next;
+    }
+
+    for (const auto& entry : replay) {
+        const Replay& state = entry.second;
+        if (state.started && state.healthy) {
+            Paise stored = 0;
+            if (!stored_balance || stored_balance(entry.first, stored) != Error::Ok ||
+                stored != state.running) {
+                out.push_back({entry.first, state.running, stored});
+            }
+            continue;
+        }
+        // No OPEN start, a repeated OPEN or a diverged chain: name the
+        // account and let the caller investigate the records.
+        out.push_back({entry.first, state.running, 0});
     }
     return Error::Ok;
 }

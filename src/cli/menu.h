@@ -40,6 +40,7 @@ private:
     void addStaff(const Session& session);
     void unlockAccount(const Session& session);
     void showEndOfDayReport(const Session& session);
+    void closeAccount(const Session& session);
     void deposit(const std::string& operator_id, AccountNo account);
     void withdraw(const std::string& operator_id, AccountNo account);
     void showBalance(AccountNo account);

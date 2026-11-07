@@ -17,5 +17,7 @@ enum class Error {
     AccountLocked,       // three wrong PINs in a row; a manager must unlock it (BMS-F-011)
     NotAuthorised,       // the session's role may not do this (BMS-F-012)
     AccountNotLocked,    // unlock asked for an account that is not locked (BMS-F-013)
+    AccountClosed,       // the account is CLOSED and accepts nothing more (BMS-F-004)
+    BalanceNotZero,      // only a zero-balance account can be closed (BMS-F-004)
 };
 }  // namespace bms

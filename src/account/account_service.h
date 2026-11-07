@@ -1,7 +1,7 @@
 #pragma once
-// AccountModule service (Person 1): stories 1.1, 1.2 and 1.3. The writes
-// are Teller operations, checked here rather than in the menu (BMS-F-012,
-// BMS-SR-007).
+// AccountModule service (Person 1): stories 1.1-1.4. Roles are checked here
+// rather than in the menu (BMS-F-012, BMS-SR-007): customer and account
+// creation and changes are Teller operations, closure is a Manager one.
 #include <string>
 #include <vector>
 
@@ -37,6 +37,14 @@ public:
     // ones change nothing and write no audit entry. Tellers only.
     Error modifyCustomer(const Session& by, CustomerId id, const std::string& address,
                          const std::string& contact);
+
+    // BMS-F-004. Closes an account whose balance is exactly zero: one
+    // ACCOUNT_CLOSE audit entry naming the manager is written first, then the
+    // state becomes CLOSED. The record is kept, never deleted, and every
+    // later transaction or login on it is refused. Managers only. A non-zero
+    // balance gives BalanceNotZero (moving the residual is story 1.5) and an
+    // already closed account gives AccountClosed; neither writes anything.
+    Error closeAccount(const Session& by, AccountNo no);
 
     // BMS-F-005. Unknown keys return a not-found error, never a crash.
     Error findCustomer(CustomerId id, Customer& out);

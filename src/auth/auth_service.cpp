@@ -93,8 +93,15 @@ Error AuthService::login(const Principal& who, std::string& secret, Session& out
     if (!known) {
         return Error::BadCredentials;
     }
-    // A locked account refuses even the right PIN until a manager unlocks it.
     const bool customer = who.kind == PrincipalKind::Customer;
+    // A closed account is refused first, before the lock check and before any
+    // wrong PIN is counted, so guessing can never move it out of CLOSED.
+    if (customer) {
+        if (const Error e = refuseIfClosed(who.id); e != Error::Ok) {
+            return e;
+        }
+    }
+    // A locked account refuses even the right PIN until a manager unlocks it.
     if (customer && stored.failed_attempts >= kMaxFailedAttempts) {
         return Error::AccountLocked;
     }
@@ -127,6 +134,22 @@ Error AuthService::login(const Principal& who, std::string& secret, Session& out
     return lockAccount(who.id);
 }
 
+Error AuthService::refuseIfClosed(const std::string& account_id) {
+    std::uint32_t number = 0;
+    if (validation::parseId(account_id, number) != Error::Ok) {
+        return Error::Ok;
+    }
+    AccountRecord record;
+    const Error found = accounts_.readAccount(number, record);
+    if (found == Error::AccountNotFound) {
+        return Error::Ok;
+    }
+    if (found != Error::Ok) {
+        return found;
+    }
+    return record.state == AccountState::Closed ? Error::AccountClosed : Error::Ok;
+}
+
 Error AuthService::unlockAccount(const Session& by, AccountNo account) {
     if (const Error e = authorize(by, Operation::UnlockAccount); e != Error::Ok) {
         return e;
@@ -142,6 +165,9 @@ Error AuthService::unlockAccount(const Session& by, AccountNo account) {
         return found;
     }
     const bool has_credential = found == Error::Ok;
+    if (record.state == AccountState::Closed) {
+        return Error::AccountClosed;  // closure is final; nothing is written
+    }
     const bool locked = record.state == AccountState::Locked ||
                         (has_credential && credential.failed_attempts >= kMaxFailedAttempts);
     if (!locked) {
@@ -177,7 +203,7 @@ Error AuthService::lockAccount(const std::string& account_id) {
     if (validation::parseId(account_id, number) == Error::Ok) {
         AccountRecord record;
         const Error found = accounts_.readAccount(number, record);
-        if (found == Error::Ok) {
+        if (found == Error::Ok && record.state != AccountState::Closed) {
             record.state = AccountState::Locked;
             if (const Error e = accounts_.updateAccount(record); e != Error::Ok) {
                 return e;
