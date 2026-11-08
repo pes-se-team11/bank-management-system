@@ -47,4 +47,49 @@ void secureWipe(void* data, std::size_t len) {
     }
 }
 
+bool secureDataDirectory(const std::string& dir, std::string& reason) {
+    // Windows has no group/other write bits to inspect. New folders under the
+    // user's profile inherit an owner-only ACL, so creation is all we do.
+    const DWORD attrs = GetFileAttributesA(dir.c_str());
+    if (attrs == INVALID_FILE_ATTRIBUTES) {
+        if (!CreateDirectoryA(dir.c_str(), nullptr) &&
+            GetLastError() != ERROR_ALREADY_EXISTS) {
+            reason = "Could not create the data folder '" + dir + "'.";
+            return false;
+        }
+        return true;
+    }
+    if ((attrs & FILE_ATTRIBUTE_DIRECTORY) == 0) {
+        reason = "'" + dir + "' exists but is not a folder.";
+        return false;
+    }
+    return true;
+}
+
+InstanceLock::~InstanceLock() {
+    if (handle_ != -1) {
+        CloseHandle(reinterpret_cast<HANDLE>(handle_));
+    }
+}
+
+bool InstanceLock::acquire(const std::string& path) {
+    if (handle_ != -1) {
+        return true;
+    }
+    // Share mode 0: a second open of the same file fails while we hold it.
+    const HANDLE h = CreateFileA(path.c_str(), GENERIC_READ | GENERIC_WRITE, 0,
+                                 nullptr, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL,
+                                 nullptr);
+    if (h == INVALID_HANDLE_VALUE) {
+        return false;
+    }
+    handle_ = reinterpret_cast<std::intptr_t>(h);
+    return true;
+}
+
+bool replaceFileDurably(const std::string& tmp, const std::string& dest) {
+    return MoveFileExA(tmp.c_str(), dest.c_str(),
+                       MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH) != 0;
+}
+
 }  // namespace bms::platform

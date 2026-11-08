@@ -43,6 +43,7 @@ private:
     void closeAccount(const Session& session);
     void deposit(const std::string& operator_id, AccountNo account);
     void withdraw(const std::string& operator_id, AccountNo account);
+    void transfer(const std::string& operator_id, AccountNo from);
     void showBalance(AccountNo account);
     void showMiniStatement(AccountNo account);
     void listAccounts();

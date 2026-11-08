@@ -8,6 +8,7 @@
 #include <utility>
 
 #include "persistence/record_types.h"
+#include "platform/platform.h"
 #include "validation/validation.h"
 
 namespace bms::persistence {
@@ -161,8 +162,12 @@ Error FileAccountStore::loadCounters() {
         return Error::Io;
     }
 
+    // A counters file of the wrong size is a torn write from a crash. The
+    // data files are the source of truth and scanExistingFiles() has already
+    // derived the next IDs from them, so rebuild the file instead of
+    // refusing to start (BMS-NF-002).
     if (size != kCountersRecordSize) {
-        return Error::CorruptRecord;
+        return saveCounters();
     }
 
     std::ifstream file(counters_path_, std::ios::in | std::ios::binary);
@@ -187,6 +192,9 @@ Error FileAccountStore::loadCounters() {
 
     const Error err = deserializeCounters(buf, stored_cust, stored_acct);
 
+    if (err == Error::CorruptRecord) {
+        return saveCounters();  // bad CRC: same recovery as a torn write
+    }
     if (err != Error::Ok) {
         return err;
     }
@@ -198,26 +206,39 @@ Error FileAccountStore::loadCounters() {
 }
 
 Error FileAccountStore::saveCounters() {
-    std::ofstream file(
-        counters_path_,
-        std::ios::out | std::ios::binary | std::ios::trunc
-    );
+    // Write a complete new file beside the old one, then swap it in. The
+    // old code truncated counters.dat in place, so a crash mid-write left a
+    // short file and the next start refused to open the store.
+    const std::string tmp_path = counters_path_ + ".tmp";
 
-    if (!file) {
-        return Error::Io;
+    {
+        std::ofstream file(
+            tmp_path,
+            std::ios::out | std::ios::binary | std::ios::trunc
+        );
+
+        if (!file) {
+            return Error::Io;
+        }
+
+        std::array<std::uint8_t, kCountersRecordSize> buf{};
+        serializeCounters(next_customer_, next_account_, buf);
+
+        file.write(
+            reinterpret_cast<const char*>(buf.data()),
+            static_cast<std::streamsize>(buf.size())
+        );
+
+        file.flush();
+
+        if (!file) {
+            return Error::Io;
+        }
     }
 
-    std::array<std::uint8_t, kCountersRecordSize> buf{};
-    serializeCounters(next_customer_, next_account_, buf);
-
-    file.write(
-        reinterpret_cast<const char*>(buf.data()),
-        static_cast<std::streamsize>(buf.size())
-    );
-
-    file.flush();
-
-    return file ? Error::Ok : Error::Io;
+    return platform::replaceFileDurably(tmp_path, counters_path_)
+               ? Error::Ok
+               : Error::Io;
 }
 
 Error FileAccountStore::nextCustomerId(CustomerId& out) {

@@ -105,6 +105,24 @@ std::string describe(Error error) {
     case Error::BalanceNotZero:
         return "Only an account with a zero balance can be closed. Withdraw or "
                "move the remaining balance first.";
+    case Error::BelowMinimumBalance:
+        return "This would take a Savings account below its minimum balance. "
+               "Choose a smaller amount.";
+    case Error::DailyLimitExceeded:
+        return "This would pass today's limit for the account. Try a smaller "
+               "amount, or try again tomorrow.";
+    case Error::TransferCeilingExceeded:
+        return "That is more than one transfer may carry. Split it into "
+               "smaller transfers.";
+    case Error::SameAccount:
+        return "The two accounts are the same. Choose a different account to "
+               "send to.";
+    case Error::InstanceLocked:
+        return "The bank system is already running. Close the other copy "
+               "first.";
+    case Error::InsecureDataDirectory:
+        return "The data folder can be changed by other users. Restrict it to "
+               "its owner and start again.";
     }
     return "Unexpected error. Report this to a manager.";
 }
@@ -237,6 +255,7 @@ void Menu::tellerMenu(const Session& session) {
                 "  6. Mini-statement (last 10)\n"
                 "  7. List a customer's accounts\n"
                 "  8. Modify customer details\n"
+                "  9. Transfer funds\n"
                 "  0. Logout\n";
         int choice = 0;
         if (!askChoice("Choice: ", choice)) {
@@ -249,6 +268,11 @@ void Menu::tellerMenu(const Session& session) {
             break;
         case 8:
             modifyCustomer(session);
+            break;
+        case 9:
+            if (askAccountNo(account)) {
+                transfer(session.operator_id, account);
+            }
             break;
         case 2:
             openAccount(session);
@@ -356,6 +380,7 @@ void Menu::customerMenu(const Session& session) {
                 "  2. Mini-statement (last 10)\n"
                 "  3. Deposit\n"
                 "  4. Withdraw\n"
+                "  5. Transfer to another account\n"
                 "  0. Logout\n";
         int choice = 0;
         if (!askChoice("Choice: ", choice)) {
@@ -374,11 +399,14 @@ void Menu::customerMenu(const Session& session) {
         case 4:
             withdraw(session.operator_id, own);
             break;
+        case 5:
+            transfer(session.operator_id, own);
+            break;
         case 0:
             out_ << "Logged out.\n";
             return;
         default:
-            out_ << "Please choose 1, 2, 3, 4 or 0.\n";
+            out_ << "Please choose 1, 2, 3, 4, 5 or 0.\n";
         }
         if (!in_) {
             return;
@@ -625,6 +653,11 @@ void Menu::withdraw(const std::string& operator_id, AccountNo account) {
         return;
     }
     const Error result = transactions_.withdraw(account, amount, operator_id);
+    if (result == Error::BelowMinimumBalance ||
+        result == Error::DailyLimitExceeded) {
+        out_ << "Withdrawal refused. " << describe(result) << '\n';
+        return;
+    }
     if (result == Error::InvalidInput) {
         out_ << "Withdrawal refused: the amount must be more than zero and not "
                 "more than the available balance, and the account must be "
@@ -637,6 +670,28 @@ void Menu::withdraw(const std::string& operator_id, AccountNo account) {
     }
     out_ << "Withdrew Rs " << formatPaise(amount) << ".\n";
     showBalance(account);
+}
+
+// BMS-F-050..052: `from` is the account the money leaves.
+void Menu::transfer(const std::string& operator_id, AccountNo from) {
+    out_ << "Send to account.\n";
+    AccountNo to = 0;
+    if (!askAccountNo(to)) {
+        return;
+    }
+    Paise amount = 0;
+    if (!askAmount("Transfer amount (Rs): ", amount)) {
+        return;
+    }
+    const Error result = transactions_.transfer(from, to, amount, operator_id);
+    if (result != Error::Ok) {
+        out_ << "Transfer refused. " << describe(result)
+             << " No money was moved.\n";
+        return;
+    }
+    out_ << "Transferred Rs " << formatPaise(amount) << " from account "
+         << from << " to account " << to << ".\n";
+    showBalance(from);
 }
 
 void Menu::showBalance(AccountNo account) {
