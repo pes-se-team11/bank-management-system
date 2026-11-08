@@ -150,5 +150,6 @@ Remaining gaps and what would close them:
 | 2 | Ledger that fails on its Nth append (test double) | Last transfer branch |
 | 3 | `Money` underflow test (`Money(min) - Money(1)`) | +2 branches in Money |
 | 4 | Pseudo-terminal test for `readLineNoEcho` (Linux only) | Platform terminal branch |
+
 The full list of lines with untaken branches per file is in
 `branch_coverage.txt`.
