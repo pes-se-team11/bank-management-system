@@ -73,13 +73,82 @@ branches are the "store returned an error" side of each storage call - the
 same paths explained in the Code Coverage Report - since the in-memory test
 stores never fail.
 
+
 ## Analysis - other modules
 
-_To be added by each module owner:_
+_Ledger, Report - P3 Adarsha, and MenuLayer (CLI) / `main.cpp` - shared: to be added by their owners._
 
-- _Transaction, Money, Persistence, Platform - P2 Vidit_
-- _Ledger, Report - P3 Adarsha_
-- _MenuLayer (CLI) and `main.cpp` - shared_
+### TransactionModule, Money type, PersistenceModule, Platform layer (P2 Vidit)
 
+The tables above are for `main` at `297bf67`. PR #24 (`feat/part3-transaction-rules`)
+adds Sprint 3 stories 3.3, 5.1, 5.2, 7.5 and a storage fix, so each module is
+analysed for `main` and then for the PR.
+
+**TransactionModule - 82.4 % (42 / 51).** Both outcomes of the business
+decisions that existed were tested: amount valid / invalid, account active /
+not, balance enough / not, Current overdraft inside / beyond (TC-WDR-03). The
+9 untaken branches are each the rare side of a guard:
+
+- *Store or journal returns an error* (lines 29, 54, 75, 119): the in-memory
+  test store never fails.
+- *Deposit ceiling misconfigured* (22): the `deposit_ceiling_ <= 0` operand.
+- *Overflow guards* (38, 100): balance near the largest representable value.
+- *Bad stored data* (86, 92): a negative overdraft limit, or a balance already
+  below its floor.
+
+There was no branch for a daily limit, a Savings minimum or a transfer
+because the features did not exist on `main`.
+
+**Money type - 88.9 % (16 / 18).** The two untaken branches are the underflow
+operands of `operator+` (line 27) and `operator-` (line 38), the
+`paise_ < min - other` direction. The overflow direction is tested.
+
+**PersistenceModule - 74.6 % (418 / 560).** `file_account_store.cpp` 71.9 %,
+`file_credential_store.cpp` 77.2 %, `append_file.cpp` 87.2 %, `record_types.h`
+70.0 %, `crc32.h` 100 %. The untaken side of most branches is "the stream
+failed" (`if (!file) return Error::Io;`), which needs fault injection that does
+not exist yet. Branches that decide whether *data is valid* (CRC mismatch,
+wrong record size, duplicate key, zero ID) are taken both ways. In
+`record_types.h` the compound check on account type and state (lines 112-117)
+can only fail for an invalid enum value, and the Locked state was never written
+to disk by any test, so those operands were untaken. The counters-file defect
+described in the Code Coverage Report was in this module.
+
+**Platform layer - 30.4 % (7 / 23).** The lowest figure in the project, for a
+simple reason: `readLineNoEcho` never ran (the menu tests use a string
+stream and CI has no terminal), and the error sides of `secureRandom`'s
+`open` / `read` calls need `/dev/urandom` to fail.
+
+
+#### What PR #24 changes (measured on `6792701`, g++ 13, gcovr 8.8)
+
+| Module | Branches before | Branches after |
+|---|---|---|
+| TransactionModule | 42 / 51 (82.4 %) | 133 / 142 (**93.7 %**) |
+| Money type | 16 / 18 (88.9 %) | 16 / 18 (88.9 %) |
+| PersistenceModule | 418 / 560 (74.6 %) | 442 / 569 (**77.7 %**) |
+| Platform layer | 7 / 23 (30.4 %) | 54 / 76 (**71.1 %**) |
+
+"Before" is re-measured on the same toolchain as "after". In the new
+TransactionModule code every decision has both outcomes tested: Savings
+minimum (below / exactly at / above), daily limit (inside / exactly at / over /
+next bank day), per-transfer and daily transfer ceilings, same account,
+closed, locked and unknown account, overflow, insufficient funds, and failure
+between the two transfer legs (both legs tried). The 9 untaken branches left
+are halves of compound conditions: the `used <= limit` half of the limit check
+(false only if the limit is lowered below what an account already used today),
+the journal-append failure at transfer line 281, the `deposit_ceiling_ <= 0`
+guard, and sub-conditions of the date calculation. Which side of the date
+branches runs depends on the day the tests run (January-February, years before
+1970), so the figure can move by a branch or two without any code change.
+
+Remaining gaps and what would close them:
+
+| Priority | Action | Effect |
+|---|---|---|
+| 1 | Fault-injection seam for file open / write | Most of Persistence's ~127 untaken branches |
+| 2 | Ledger that fails on its Nth append (test double) | Last transfer branch |
+| 3 | `Money` underflow test (`Money(min) - Money(1)`) | +2 branches in Money |
+| 4 | Pseudo-terminal test for `readLineNoEcho` (Linux only) | Platform terminal branch |
 The full list of lines with untaken branches per file is in
 `branch_coverage.txt`.
