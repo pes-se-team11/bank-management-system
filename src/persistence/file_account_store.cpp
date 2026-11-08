@@ -187,6 +187,10 @@ Error FileAccountStore::loadCounters() {
         return Error::Io;
     }
 
+    // Windows cannot rename over a file that is still open, and the
+    // recovery below may do exactly that, so let go of it first.
+    file.close();
+
     CustomerId stored_cust = 0;
     AccountNo stored_acct = 0;
 
