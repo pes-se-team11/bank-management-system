@@ -1,10 +1,10 @@
 # Code Coverage Report
 
 **Project:** Team 11 - Bank Management System (C/C++)
-**Commit measured:** `297bf67` on `main` (after PRs #17-#22)
-**Date:** 07-11-2026
+**Commit measured:** `448ecb9` on `main` (after PRs #17-#24)
+**Date:** 11-11-2026
 **Tools:** g++ (GCC) 14.4.0, gcovr 7.2, cmake version 3.31.6 (Linux, `gcc:14` container)
-**Test run:** 125/125 test cases passed, 1705/1705 assertions passed, 0 failed
+**Test run:** 163/163 test cases passed, 1966/1966 assertions passed, 0 failed
 
 How it was measured: the whole project was built in Debug with `--coverage -O0`,
 the full doctest suite (`bms_tests`) was run once, and `gcovr` collected the
@@ -16,21 +16,21 @@ in [`coverage-html/index.html`](coverage-html/index.html).
 
 | Metric | Covered | Total | Coverage |
 |---|---|---|---|
-| Lines (statements) | 1968 | 2277 | **86.4%** |
-| Functions | 186 | 189 | **98.4%** |
+| Lines (statements) | 2192 | 2491 | **88.0%** |
+| Functions | 201 | 202 | **99.5%** |
 
 ## By module
 
 | Module | Path | Owner | Lines | Executed | Coverage |
 |---|---|---|---|---|---|
-| AccountModule | `src/account/` | P1 Dhanush | 98 | 91 | 92.9% |
+| AccountModule | `src/account/` | P1 Dhanush | 100 | 93 | 93.0% |
 | AuthModule | `src/auth/` | P1 Dhanush | 261 | 244 | 93.5% |
 | ValidationModule | `src/validation/` | P1 Dhanush | 79 | 78 | 98.7% |
-| MenuLayer (CLI) | `src/cli/` | Shared | 655 | 521 | 79.5% |
-| TransactionModule | `src/transaction/` | P2 Vidit | 63 | 56 | 88.9% |
+| MenuLayer (CLI) | `src/cli/` | Shared | 702 | 560 | 79.8% |
+| TransactionModule | `src/transaction/` | P2 Vidit | 169 | 167 | 98.8% |
 | Money type | `src/core/` | P2 Vidit | 21 | 21 | 100.0% |
-| PersistenceModule | `src/persistence/` | P2 Vidit | 749 | 632 | 84.4% |
-| Platform layer | `src/platform/` | P2 Vidit | 32 | 16 | 50.0% |
+| PersistenceModule | `src/persistence/` | P2 Vidit | 758 | 652 | 86.0% |
+| Platform layer | `src/platform/` | P2 Vidit | 82 | 68 | 82.9% |
 | LedgerModule | `src/ledger/` | P3 Adarsha | 263 | 257 | 97.7% |
 | ReportModule | `src/report/` | P3 Adarsha | 56 | 52 | 92.9% |
 
@@ -38,7 +38,7 @@ in [`coverage-html/index.html`](coverage-html/index.html).
 
 | File | Lines | Executed | Coverage |
 |---|---|---|---|
-| `src/account/account_service.cpp` | 95 | 88 | 92.6% |
+| `src/account/account_service.cpp` | 97 | 90 | 92.8% |
 | `src/account/account_service.h` | 2 | 2 | 100.0% |
 | `src/account/account_store.h` | 1 | 1 | 100.0% |
 | `src/auth/auth.h` | 3 | 3 | 100.0% |
@@ -46,20 +46,20 @@ in [`coverage-html/index.html`](coverage-html/index.html).
 | `src/auth/authorization.cpp` | 11 | 10 | 90.9% |
 | `src/auth/crypto.cpp` | 112 | 112 | 100.0% |
 | `src/cli/in_memory_stores.h` | 55 | 51 | 92.7% |
-| `src/cli/main.cpp` | 27 | 0 | 0.0% |
-| `src/cli/menu.cpp` | 573 | 470 | 82.0% |
+| `src/cli/main.cpp` | 30 | 0 | 0.0% |
+| `src/cli/menu.cpp` | 617 | 509 | 82.5% |
 | `src/core/money.h` | 21 | 21 | 100.0% |
 | `src/ledger/ledger.cpp` | 263 | 257 | 97.7% |
 | `src/persistence/append_file.cpp` | 33 | 30 | 90.9% |
 | `src/persistence/crc32.h` | 9 | 9 | 100.0% |
-| `src/persistence/file_account_store.cpp` | 329 | 253 | 76.9% |
-| `src/persistence/file_account_store.h` | 1 | 0 | 0.0% |
-| `src/persistence/file_credential_store.cpp` | 178 | 149 | 83.7% |
+| `src/persistence/file_account_store.cpp` | 337 | 264 | 78.3% |
+| `src/persistence/file_account_store.h` | 1 | 1 | 100.0% |
+| `src/persistence/file_credential_store.cpp` | 179 | 150 | 83.8% |
 | `src/persistence/file_credential_store.h` | 1 | 1 | 100.0% |
-| `src/persistence/record_types.h` | 198 | 190 | 96.0% |
-| `src/platform/platform_posix.cpp` | 32 | 16 | 50.0% |
+| `src/persistence/record_types.h` | 198 | 197 | 99.5% |
+| `src/platform/platform_posix.cpp` | 82 | 68 | 82.9% |
 | `src/report/report_service.cpp` | 56 | 52 | 92.9% |
-| `src/transaction/transaction_service.cpp` | 63 | 56 | 88.9% |
+| `src/transaction/transaction_service.cpp` | 169 | 167 | 98.8% |
 | `src/validation/validation.cpp` | 79 | 78 | 98.7% |
 
 ## Analysis - Account, Auth and Validation modules (P1 Dhanush)
@@ -67,8 +67,8 @@ in [`coverage-html/index.html`](coverage-html/index.html).
 All three modules are above 92% line coverage. Every uncovered line falls into
 one of three groups:
 
-- **Storage-failure returns** (`account_service.cpp` lines 23, 26, 48, 63, 68,
-  110, 138 and most of the listed `auth_service.cpp` lines): the
+- **Storage-failure returns** (`account_service.cpp` lines 24, 27, 56, 71, 76,
+  118, 146 and most of the listed `auth_service.cpp` lines): the
   `return e;` taken when the account, credential or audit store itself fails
   (disk full, unreadable file). The unit tests use in-memory stores that never
   fail, so these paths are not reached. Each one only passes the store's error

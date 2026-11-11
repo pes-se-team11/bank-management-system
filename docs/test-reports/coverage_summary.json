@@ -1,19 +1,19 @@
 {
-    "branch_covered": 1778,
-    "branch_percent": 79.5,
-    "branch_total": 2236,
+    "branch_covered": 1991,
+    "branch_percent": 81.4,
+    "branch_total": 2447,
     "files": [
         {
-            "branch_covered": 86,
-            "branch_percent": 90.5,
-            "branch_total": 95,
+            "branch_covered": 90,
+            "branch_percent": 90.9,
+            "branch_total": 99,
             "filename": "src/account/account_service.cpp",
             "function_covered": 8,
             "function_percent": 100.0,
             "function_total": 8,
-            "line_covered": 88,
-            "line_percent": 92.6,
-            "line_total": 95
+            "line_covered": 90,
+            "line_percent": 92.8,
+            "line_total": 97
         },
         {
             "branch_covered": 0,
@@ -102,26 +102,26 @@
         {
             "branch_covered": 0,
             "branch_percent": 0.0,
-            "branch_total": 34,
+            "branch_total": 36,
             "filename": "src/cli/main.cpp",
             "function_covered": 0,
             "function_percent": 0.0,
             "function_total": 1,
             "line_covered": 0,
             "line_percent": 0.0,
-            "line_total": 27
+            "line_total": 30
         },
         {
-            "branch_covered": 518,
-            "branch_percent": 74.2,
-            "branch_total": 698,
+            "branch_covered": 565,
+            "branch_percent": 75.4,
+            "branch_total": 749,
             "filename": "src/cli/menu.cpp",
-            "function_covered": 35,
+            "function_covered": 36,
             "function_percent": 100.0,
-            "function_total": 35,
-            "line_covered": 470,
-            "line_percent": 82.0,
-            "line_total": 573
+            "function_total": 36,
+            "line_covered": 509,
+            "line_percent": 82.5,
+            "line_total": 617
         },
         {
             "branch_covered": 16,
@@ -172,40 +172,40 @@
             "line_total": 9
         },
         {
-            "branch_covered": 207,
-            "branch_percent": 71.9,
-            "branch_total": 288,
+            "branch_covered": 218,
+            "branch_percent": 73.4,
+            "branch_total": 297,
             "filename": "src/persistence/file_account_store.cpp",
             "function_covered": 12,
             "function_percent": 100.0,
             "function_total": 12,
-            "line_covered": 253,
-            "line_percent": 76.9,
-            "line_total": 329
+            "line_covered": 264,
+            "line_percent": 78.3,
+            "line_total": 337
         },
         {
             "branch_covered": 0,
             "branch_percent": null,
             "branch_total": 0,
             "filename": "src/persistence/file_account_store.h",
-            "function_covered": 0,
-            "function_percent": 0.0,
+            "function_covered": 1,
+            "function_percent": 100.0,
             "function_total": 1,
-            "line_covered": 0,
-            "line_percent": 0.0,
+            "line_covered": 1,
+            "line_percent": 100.0,
             "line_total": 1
         },
         {
-            "branch_covered": 129,
-            "branch_percent": 77.2,
-            "branch_total": 167,
+            "branch_covered": 130,
+            "branch_percent": 77.4,
+            "branch_total": 168,
             "filename": "src/persistence/file_credential_store.cpp",
             "function_covered": 12,
             "function_percent": 100.0,
             "function_total": 12,
-            "line_covered": 149,
-            "line_percent": 83.7,
-            "line_total": 178
+            "line_covered": 150,
+            "line_percent": 83.8,
+            "line_total": 179
         },
         {
             "branch_covered": 0,
@@ -220,32 +220,32 @@
             "line_total": 1
         },
         {
-            "branch_covered": 42,
-            "branch_percent": 70.0,
+            "branch_covered": 55,
+            "branch_percent": 91.7,
             "branch_total": 60,
             "filename": "src/persistence/record_types.h",
             "function_covered": 18,
             "function_percent": 100.0,
             "function_total": 18,
-            "line_covered": 190,
-            "line_percent": 96.0,
+            "line_covered": 197,
+            "line_percent": 99.5,
             "line_total": 198
         },
         {
-            "branch_covered": 7,
-            "branch_percent": 30.4,
-            "branch_total": 23,
+            "branch_covered": 54,
+            "branch_percent": 71.1,
+            "branch_total": 76,
             "filename": "src/platform/platform_posix.cpp",
-            "function_covered": 2,
-            "function_percent": 66.7,
-            "function_total": 3,
-            "line_covered": 16,
-            "line_percent": 50.0,
-            "line_total": 32
+            "function_covered": 7,
+            "function_percent": 100.0,
+            "function_total": 7,
+            "line_covered": 68,
+            "line_percent": 82.9,
+            "line_total": 82
         },
         {
-            "branch_covered": 43,
-            "branch_percent": 86.0,
+            "branch_covered": 42,
+            "branch_percent": 84.0,
             "branch_total": 50,
             "filename": "src/report/report_service.cpp",
             "function_covered": 6,
@@ -256,16 +256,16 @@
             "line_total": 56
         },
         {
-            "branch_covered": 42,
-            "branch_percent": 82.4,
-            "branch_total": 51,
+            "branch_covered": 133,
+            "branch_percent": 93.7,
+            "branch_total": 142,
             "filename": "src/transaction/transaction_service.cpp",
-            "function_covered": 4,
+            "function_covered": 12,
             "function_percent": 100.0,
-            "function_total": 4,
-            "line_covered": 56,
-            "line_percent": 88.9,
-            "line_total": 63
+            "function_total": 12,
+            "line_covered": 167,
+            "line_percent": 98.8,
+            "line_total": 169
         },
         {
             "branch_covered": 129,
@@ -280,12 +280,12 @@
             "line_total": 79
         }
     ],
-    "function_covered": 186,
-    "function_percent": 98.4,
-    "function_total": 189,
+    "function_covered": 201,
+    "function_percent": 99.5,
+    "function_total": 202,
     "gcovr/summary_format_version": "0.6",
-    "line_covered": 1968,
-    "line_percent": 86.4,
-    "line_total": 2277,
+    "line_covered": 2192,
+    "line_percent": 88.0,
+    "line_total": 2491,
     "root": "../.."
 }

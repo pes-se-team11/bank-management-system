@@ -27,7 +27,7 @@
     </tr>
     <tr>
       <th scope="row">Date:</th>
-      <td>2026-11-07 11:08:14</td>
+      <td>2026-11-11 07:58:41</td>
     </tr>
   </table>
 </div>
@@ -53,9 +53,9 @@
     </tr>
     <tr>
       <th scope="row">Branches:</th>
-      <td>43</td>
+      <td>42</td>
       <td>50</td>
-      <td class="coverage-medium">86.0%</td>
+      <td class="coverage-medium">84.0%</td>
     </tr>
   </table>
 </div>
@@ -74,9 +74,9 @@
       <th>Block coverage</th>
     </tr>
     <tr><td><a href="#l20">bms::(anonymous namespace)::dayLabel(long) (line 20)</a></td><td>called 8 times, returned 8 times</td><td>52.0%</td></tr>
-    <tr><td><a href="#l31">bms::(anonymous namespace)::dayLabel(long)::{lambda(long)#1}::operator()(long) const (line 31)</a></td><td>called 16 times, returned 16 times</td><td>83.0%</td></tr>
+    <tr><td><a href="#l31">bms::(anonymous namespace)::dayLabel(long)::{lambda(long)#1}::operator()(long) const (line 31)</a></td><td>called 16 times, returned 16 times</td><td>75.0%</td></tr>
     <tr><td><a href="#l15">bms::(anonymous namespace)::systemTime() (line 15)</a></td><td>called 1 time, returned 1 time</td><td>100.0%</td></tr>
-    <tr><td><a href="#l45">bms::ReportService::ReportService(bms::ledger::Ledger&amp;, std::function&lt;long ()&gt;) (line 45)</a></td><td>called 21 times, returned 21 times</td><td>100.0%</td></tr>
+    <tr><td><a href="#l45">bms::ReportService::ReportService(bms::ledger::Ledger&amp;, std::function&lt;long ()&gt;) (line 45)</a></td><td>called 23 times, returned 23 times</td><td>100.0%</td></tr>
     <tr><td><a href="#l48">bms::ReportService::endOfDay(bms::Session const&amp;, bms::EodReport&amp;) (line 48)</a></td><td>called 13 times, returned 13 times</td><td>79.0%</td></tr>
     <tr><td><a href="#l39">bms::journalDay(long) (line 39)</a></td><td>called 29 times, returned 29 times</td><td>80.0%</td></tr>
   </table>
@@ -335,17 +335,17 @@
       <td class="lineno"><a id="l32" href="#l32">32</a></td>
       <td class="linebranch">
         <details class="linebranchDetails">
-        <summary class="linebranchSummary">4/4</summary>
+        <summary class="linebranchSummary">3/4</summary>
         <div class="linebranchContents">
           <div class="takenBranch">&check; Branch 1 taken 16 times.</div>
-          <div class="takenBranch">&check; Branch 3 taken 1 times.</div>
-          <div class="takenBranch">&check; Branch 4 taken 15 times.</div>
+          <div class="notTakenBranch">&cross; Branch 3 not taken.</div>
+          <div class="takenBranch">&check; Branch 4 taken 16 times.</div>
           <div class="takenBranch">&check; Branch 6 taken 16 times.</div>
         </div>
         </details>
       </td>
-      <td class="linecount coveredLine">16</td>
-      <td class="src coveredLine"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="p">(</span><span class="n">value</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;0&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">to_string</span><span class="p">(</span><span class="n">value</span><span class="p">);</span></td>
+      <td class="linecount partialCoveredLine">16</td>
+      <td class="src partialCoveredLine"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="p">(</span><span class="n">value</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">&quot;0&quot;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">to_string</span><span class="p">(</span><span class="n">value</span><span class="p">);</span></td>
     </tr>
     <tr class="source-line">
       <td class="lineno"><a id="l33" href="#l33">33</a></td>
@@ -454,7 +454,7 @@
       <td class="lineno"><a id="l45" href="#l45">45</a></td>
       <td class="linebranch">
       </td>
-      <td class="linecount coveredLine">21</td>
+      <td class="linecount coveredLine">23</td>
       <td class="src coveredLine"><span class="n">ReportService</span><span class="o">::</span><span class="n">ReportService</span><span class="p">(</span><span class="n">ledger</span><span class="o">::</span><span class="n">Ledger</span><span class="o">&amp;</span><span class="w"> </span><span class="n">journal</span><span class="p">,</span><span class="w"> </span><span class="n">Clock</span><span class="w"> </span><span class="n">clock</span><span class="p">)</span></td>
     </tr>
     <tr class="source-line">
@@ -464,11 +464,11 @@
         <summary class="linebranchSummary">2/2</summary>
         <div class="linebranchContents">
           <div class="takenBranch">&check; Branch 1 taken 7 times.</div>
-          <div class="takenBranch">&check; Branch 2 taken 14 times.</div>
+          <div class="takenBranch">&check; Branch 2 taken 16 times.</div>
         </div>
         </details>
       </td>
-      <td class="linecount coveredLine">21</td>
+      <td class="linecount coveredLine">23</td>
       <td class="src coveredLine"><span class="w">    </span><span class="o">:</span><span class="w"> </span><span class="n">journal_</span><span class="p">(</span><span class="n">journal</span><span class="p">),</span><span class="w"> </span><span class="n">clock_</span><span class="p">(</span><span class="n">clock</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">clock</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">Clock</span><span class="p">{</span><span class="n">systemTime</span><span class="p">})</span><span class="w"> </span><span class="p">{}</span></td>
     </tr>
     <tr class="source-line">
