@@ -138,8 +138,8 @@ TEST_CASE("Menu explains refusals and recovers from bad input") {
     const std::string script =
         kTellerOnDuty +
         "1\nAsha Rao\n12 MG Road\n9876543210\nABCDE1234F\n"
-        "2\n1\n1\n100\n12\n1234\n" // PIN too short, then a valid one
-        "4\n100001\n500\n"         // more than the balance
+        "2\n1\n1\n500\n12\n1234\n" // PIN too short, then a valid one
+        "4\n100001\n600\n"         // more than the balance
         "3\n100001\n12,000\n250\n" // badly formatted amount, re-prompted
         "5\n424242\n"              // unknown account
         "0\n"
@@ -201,7 +201,7 @@ TEST_CASE("TC-AUT-03: each role gets its own menu and input ending exits cleanly
         "1\nteller1\n1\nTellerPass1\n"  // manager adds a teller
         "0\n"
         "1\nteller1\nTellerPass1\n"
-        "9\n";                           // tellers have no option 9; input ends
+        "10\n";                          // tellers have no option 10; input ends
 
     const std::string out = runScript(script, "roles");
 
@@ -388,7 +388,7 @@ TEST_CASE("TC-ACC-04: a closed account cannot be reopened through lockout and un
     const std::string script =
         kTellerOnDuty +
         "1\nAsha Rao\n12 MG Road\n9876543210\nABCDE1234F\n"
-        "2\n1\n1\n0\n1234\n"   // opened with Rs 0
+        "2\n1\n2\n0\n1234\n"     // open a zero-balance Current account
         "0\n"
         "1\nadmin\nPassword123\n"
         "6\n100001\n1\n"         // closed
@@ -413,7 +413,7 @@ TEST_CASE("TC-ACC-04: a closed account cannot be reopened through lockout and un
     CHECK_FALSE(contains(out, "Account 100001 unlocked."));
     CHECK_FALSE(contains(out, "Deposited Rs 100.00."));
     CHECK_FALSE(contains(out, "Logged in to account 100001."));
-    CHECK(contains(out, "100001  Savings  Closed"));
+    CHECK(contains(out, "100001  Current  Closed"));
 }
 
 TEST_CASE("Staff IDs must be 3-16 letters or digits") {
@@ -423,3 +423,68 @@ TEST_CASE("Staff IDs must be 3-16 letters or digits") {
 }
 
 }  // namespace
+
+TEST_CASE("TC-TRF-01/02: transfer through the teller and customer menus") {
+    const std::string script =
+        kTellerOnDuty +
+        "1\nAsha Rao\n12 MG Road\n9876543210\nABCDE1234F\n"
+        "2\n1\n1\n500\n1234\n"          // account 100001, Rs 500
+        "2\n1\n1\n500\n5678\n"          // account 100002, Rs 500
+        "9\n100001\n100002\n200\n"      // teller moves Rs 200 across
+        "9\n100001\n100001\n10\n"       // same account: refused
+        "9\n100001\n100002\n9999\n"     // more than the balance: refused
+        "9\n100001\n999999\n10\n"       // unknown destination: refused
+        "0\n"
+        "2\n100002\n5678\n"             // the receiving customer logs in
+        "5\n100001\n50\n"               // and sends Rs 50 back
+        "0\n0\n";
+
+    const std::string out = runScript(script, "transfer");
+
+    CHECK(contains(out, "9. Transfer funds"));
+    CHECK(contains(out, "5. Transfer to another account"));
+    CHECK(contains(out, "Transferred Rs 200.00 from account 100001 to account 100002."));
+    CHECK(contains(out, "The two accounts are the same."));
+    CHECK(contains(out, "No money was moved."));
+    CHECK(contains(out, "No account has that number."));
+    CHECK(contains(out, "Transferred Rs 50.00 from account 100002 to account 100001."));
+}
+
+TEST_CASE("Menu describes the new limit refusals in plain words") {
+    bms::TransactionLimits limits;
+    limits.savings_minimum_balance = 50000;
+    limits.daily_withdrawal_limit = 10000;
+    limits.transfer_per_txn_ceiling = 5000;
+    const std::string journal = "test_cli_limits_journal.tmp";
+    const std::string audit = "test_cli_limits_audit.tmp";
+    std::remove(journal.c_str());
+    std::remove(audit.c_str());
+    std::string output;
+    {
+        bms::cli::InMemoryAccountStore account_store;
+        bms::cli::InMemoryCredentialStore credential_store;
+        bms::ledger::Ledger ledger(journal, audit);
+        bms::AccountService accounts(account_store, ledger);
+        bms::AuthService auth(credential_store, account_store, ledger, 1000);
+        bms::TransactionService transactions(account_store, ledger, 20000000, limits);
+        bms::ReportService reports(ledger);
+        std::istringstream in(
+            kTellerOnDuty +
+            "1\nAsha Rao\n12 MG Road\n9876543210\nABCDE1234F\n"
+            "2\n1\n1\n1000\n1234\n"
+            "2\n1\n1\n500\n5678\n"
+            "4\n100001\n600\n"            // would leave Rs 400, under the Rs 500 minimum
+            "4\n100001\n150\n"            // Rs 150 > the Rs 100 daily limit
+            "9\n100001\n100002\n60\n"     // Rs 60 > the Rs 50 transfer ceiling
+            "0\n0\n");
+        std::ostringstream out;
+        bms::cli::Menu menu(in, out, accounts, auth, transactions, ledger, reports, true);
+        menu.run();
+        output = out.str();
+    }
+    std::remove(journal.c_str());
+    std::remove(audit.c_str());
+    CHECK(contains(output, "below its minimum balance"));
+    CHECK(contains(output, "pass today's limit"));
+    CHECK(contains(output, "more than one transfer may carry"));
+}

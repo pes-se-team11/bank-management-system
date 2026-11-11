@@ -8,13 +8,23 @@
 #include "core/version.h"
 #include "ledger/ledger.h"
 #include "persistence/file_account_store.h"
+#include "platform/platform.h"
 #include "persistence/file_credential_store.h"
 #include "report/report_service.h"
 #include "transaction/transaction_service.h"
 
 namespace {
 
-constexpr bms::Paise kDepositCeiling = 20000000;
+// All amounts in paise (BMS-NF-003).
+constexpr bms::Paise kDepositCeiling = 20000000;  // Rs 2,00,000 per deposit
+
+// BMS-F-030, BMS-F-032, BMS-F-052. Agreed values; change here only.
+constexpr bms::TransactionLimits kLimits{
+    50000,      // Savings minimum balance        Rs 500
+    5000000,    // withdrawals per account / day  Rs 50,000
+    10000000,   // one transfer                   Rs 1,00,000
+    30000000,   // transfers per account / day    Rs 3,00,000
+};
 
 }  // namespace
 
@@ -22,12 +32,17 @@ int main() {
     std::cout << "Bank Management System v" << bms::kVersion << '\n';
 
     const std::string data_dir = "data";
-    std::error_code ec;
 
-    std::filesystem::create_directories(data_dir, ec);
-    if (ec) {
-        std::cerr << "Could not create the data folder: "
-                  << ec.message() << '\n';
+    // BMS-SR-006: owner-only files, refuse a loosened folder, one copy only.
+    std::string reason;
+    if (!bms::platform::secureDataDirectory(data_dir, reason)) {
+        std::cerr << reason << '\n';
+        return 1;
+    }
+    bms::platform::InstanceLock instance_lock;
+    if (!instance_lock.acquire(data_dir + "/.lock")) {
+        std::cerr << "The bank system is already running on this data "
+                     "folder. Close the other copy first.\n";
         return 1;
     }
 
@@ -53,7 +68,8 @@ int main() {
     bms::TransactionService transactions(
         account_store,
         ledger,
-        kDepositCeiling
+        kDepositCeiling,
+        kLimits
     );
 
     bms::ReportService reports(ledger);

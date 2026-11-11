@@ -1,3 +1,4 @@
+
 #include "account/account_service.h"
 
 #include "auth/authorization.h"
@@ -38,6 +39,13 @@ Error AccountService::openAccount(const Session& by, CustomerId customer,
     if (opening_deposit < 0) {
         return Error::InvalidInput;
     }
+
+    // Savings accounts require a minimum opening deposit of Rs 500.
+    // Money is stored in paise: Rs 500 = 50000 paise.
+    if (type == AccountType::Savings && opening_deposit < 50000) {
+        return Error::InvalidInput;
+    }
+
     Customer holder;
     if (const Error e = store_.readCustomer(customer, holder); e != Error::Ok) {
         return e;  // CustomerNotFound: an account always belongs to a real customer

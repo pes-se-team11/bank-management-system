@@ -1,3 +1,4 @@
+
 #include <doctest/doctest.h>
 
 #include <cstdio>
@@ -61,7 +62,7 @@ TEST_CASE("TC-ACC-01: a new customer gets an ID never used before") {
     REQUIRE(bank.accounts.createCustomer(kTeller, asha(), first) == Error::Ok);
     REQUIRE(bank.accounts.createCustomer(kTeller, asha(), second) == Error::Ok);
     CHECK(first != second);
-    CHECK(second > first);  // IDs only ever grow, so none is reused
+    CHECK(second > first);
 
     Customer stored;
     REQUIRE(bank.store.readCustomer(first, stored) == Error::Ok);
@@ -80,7 +81,7 @@ TEST_CASE("TC-ACC-01: invalid details are refused and use up no ID") {
 
     CustomerId good = 0;
     REQUIRE(bank.accounts.createCustomer(kTeller, asha(), good) == Error::Ok);
-    CHECK(good == 1U);  // the failed attempt did not consume ID 1
+    CHECK(good == 1U);
 }
 
 TEST_CASE("TC-ACC-02: an account opens ACTIVE with the deposit as its balance") {
@@ -103,6 +104,34 @@ TEST_CASE("TC-ACC-02: an account opens ACTIVE with the deposit as its balance") 
     CHECK(rec.state == AccountState::Active);
     CHECK(rec.opening_balance == 500000);
     CHECK(rec.balance == 500000);
+}
+
+TEST_CASE("TC-ACC-02: Savings accounts require a minimum opening deposit of Rs 500") {
+    Bank bank("savings_minimum");
+    CustomerId cust = 0;
+    REQUIRE(bank.accounts.createCustomer(kTeller, asha(), cust) == Error::Ok);
+
+    AccountNo no = 0;
+
+    // Rs 499.99 must be refused.
+    CHECK(bank.accounts.openAccount(kTeller, cust, AccountType::Savings, 49999, no) ==
+          Error::InvalidInput);
+    CHECK(bank.store.accounts.empty());
+
+    // Exactly Rs 500 must be accepted.
+    REQUIRE(bank.accounts.openAccount(kTeller, cust, AccountType::Savings, 50000, no) ==
+            Error::Ok);
+
+    AccountRecord rec;
+    REQUIRE(bank.accounts.findAccount(no, rec) == Error::Ok);
+    CHECK(rec.type == AccountType::Savings);
+    CHECK(rec.opening_balance == 50000);
+    CHECK(rec.balance == 50000);
+
+    // Current accounts are not subject to the Savings minimum.
+    AccountNo current = 0;
+    REQUIRE(bank.accounts.openAccount(kTeller, cust, AccountType::Current, 0, current) ==
+            Error::Ok);
 }
 
 TEST_CASE("TC-ACC-02: opening writes an OPEN journal record with the opening balance") {
@@ -131,7 +160,7 @@ TEST_CASE("TC-ACC-02: opening writes an OPEN journal record with the opening bal
 TEST_CASE("TC-ACC-02: opening is refused for an unknown customer or a negative deposit") {
     Bank bank("refused");
     AccountNo no = 0;
-    CHECK(bank.accounts.openAccount(kTeller, 42, AccountType::Savings, 1000, no) ==
+    CHECK(bank.accounts.openAccount(kTeller, 42, AccountType::Savings, 50000, no) ==
           Error::CustomerNotFound);
 
     CustomerId cust = 0;
@@ -157,11 +186,11 @@ TEST_CASE("TC-ACC-05: look up by account number and list by customer") {
     AccountNo a1 = 0;
     AccountNo a2 = 0;
     AccountNo b1 = 0;
-    REQUIRE(bank.accounts.openAccount(kTeller, a, AccountType::Savings, 100, a1) ==
+    REQUIRE(bank.accounts.openAccount(kTeller, a, AccountType::Savings, 50000, a1) ==
             Error::Ok);
     REQUIRE(bank.accounts.openAccount(kTeller, a, AccountType::Current, 200, a2) ==
             Error::Ok);
-    REQUIRE(bank.accounts.openAccount(kTeller, b, AccountType::Savings, 300, b1) ==
+    REQUIRE(bank.accounts.openAccount(kTeller, b, AccountType::Savings, 50000, b1) ==
             Error::Ok);
 
     std::vector<AccountRecord> list;
@@ -189,8 +218,8 @@ TEST_CASE("TC-ACC-03: a teller changes address and contact, and the audit keeps 
     REQUIRE(bank.accounts.findCustomer(id, stored) == Error::Ok);
     CHECK(stored.address == "7 Park Street, Mysuru");
     CHECK(stored.contact == "9123456780");
-    CHECK(stored.name == "Asha Rao");          // never editable
-    CHECK(stored.gov_id_ref == "ABCDE1234F");  // never editable
+    CHECK(stored.name == "Asha Rao");
+    CHECK(stored.gov_id_ref == "ABCDE1234F");
 
     std::vector<ledger::AuditRecord> audit;
     REQUIRE(bank.ledger.readAudit(audit) == Error::Ok);
@@ -211,7 +240,7 @@ TEST_CASE("TC-ACC-03: only changed fields are recorded, and no change writes not
     REQUIRE(bank.accounts.modifyCustomer(kTeller, id, "12 MG Road, Bengaluru",
                                          "9123456780") == Error::Ok);
     REQUIRE(bank.accounts.modifyCustomer(kTeller, id, "12 MG Road, Bengaluru",
-                                         "9123456780") == Error::Ok);  // same again
+                                         "9123456780") == Error::Ok);
 
     std::vector<ledger::AuditRecord> audit;
     REQUIRE(bank.ledger.readAudit(audit) == Error::Ok);
@@ -235,7 +264,6 @@ TEST_CASE("TC-ACC-03: modification is refused for bad input, unknown IDs and non
                                        "7 Park Street", "9123456780") ==
           Error::NotAuthorised);
 
-    // Nothing changed and nothing was audited.
     Customer stored;
     REQUIRE(bank.accounts.findCustomer(id, stored) == Error::Ok);
     CHECK(stored.address == "12 MG Road, Bengaluru");
@@ -250,14 +278,14 @@ TEST_CASE("TC-ACC-04: a zero-balance account closes and refuses every later tran
     CustomerId cust = 0;
     REQUIRE(bank.accounts.createCustomer(kTeller, asha(), cust) == Error::Ok);
     AccountNo no = 0;
-    REQUIRE(bank.accounts.openAccount(kTeller, cust, AccountType::Savings, 0, no) ==
+    REQUIRE(bank.accounts.openAccount(kTeller, cust, AccountType::Current, 0, no) ==
             Error::Ok);
 
     const Session manager{"manager1", Role::Manager};
     REQUIRE(bank.accounts.closeAccount(manager, no) == Error::Ok);
 
     AccountRecord rec;
-    REQUIRE(bank.accounts.findAccount(no, rec) == Error::Ok);  // kept, not deleted
+    REQUIRE(bank.accounts.findAccount(no, rec) == Error::Ok);
     CHECK(rec.state == AccountState::Closed);
 
     // AC-BMS-F-004: a later deposit is refused and the balance stays zero.
@@ -298,7 +326,6 @@ TEST_CASE("TC-ACC-04: closure is refused with money left, twice, unknown, or by 
     CHECK(rec.state == AccountState::Active);
     CHECK(rec.balance == 50000);
 
-    // Only the one successful closure is audited.
     std::vector<ledger::AuditRecord> audit;
     REQUIRE(bank.ledger.readAudit(audit) == Error::Ok);
     CHECK(audit.size() == 1);

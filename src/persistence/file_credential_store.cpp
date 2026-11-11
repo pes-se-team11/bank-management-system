@@ -286,6 +286,8 @@ Error FileCredentialStore::writeCredential(
         return Error::Io;
     }
 
+    // Ensure the write position is at the end before recording the offset.
+    file.seekp(0, std::ios::end);
     const std::streampos end_position = file.tellp();
 
     if (end_position == std::streampos(-1)) {

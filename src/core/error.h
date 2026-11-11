@@ -19,5 +19,13 @@ enum class Error {
     AccountNotLocked,    // unlock asked for an account that is not locked (BMS-F-013)
     AccountClosed,       // the account is CLOSED and accepts nothing more (BMS-F-004)
     BalanceNotZero,      // only a zero-balance account can be closed (BMS-F-004)
+
+    // Transaction and platform (Person 2). Appended, never renumbered.
+    BelowMinimumBalance,       // Savings debit would breach the minimum (BMS-F-032)
+    DailyLimitExceeded,        // today's running total would pass the limit (BMS-F-030, BMS-F-052)
+    TransferCeilingExceeded,   // one transfer is over the per-transaction ceiling (BMS-F-052)
+    SameAccount,               // transfer source and destination are the same (BMS-F-051)
+    InstanceLocked,            // another copy of the program holds the data directory (BMS-SR-006)
+    InsecureDataDirectory,     // data directory is group- or world-writable (BMS-SR-006)
 };
 }  // namespace bms
