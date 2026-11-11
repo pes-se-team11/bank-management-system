@@ -1,3 +1,4 @@
+
 #include <doctest/doctest.h>
 
 #include <cstdio>
@@ -104,9 +105,10 @@ TEST_CASE("TC-SEC-08: account services refuse the wrong role with no menu involv
 
     REQUIRE(bank.accounts.createCustomer(kTeller, asha(), id) == Error::Ok);
     AccountNo no = 0;
-    CHECK(bank.accounts.openAccount(kManager, id, AccountType::Savings, 1000, no) ==
+
+    CHECK(bank.accounts.openAccount(kManager, id, AccountType::Savings, 50000, no) ==
           Error::NotAuthorised);
-    CHECK(bank.accounts.openAccount(kCustomer, id, AccountType::Savings, 1000, no) ==
+    CHECK(bank.accounts.openAccount(kCustomer, id, AccountType::Savings, 50000, no) ==
           Error::NotAuthorised);
     CHECK(bank.account_store.accounts.empty());
 
@@ -116,7 +118,7 @@ TEST_CASE("TC-SEC-08: account services refuse the wrong role with no menu involv
     CHECK(entries.empty());
 
     // The same call from a Teller works and records the teller as operator.
-    REQUIRE(bank.accounts.openAccount(kTeller, id, AccountType::Savings, 1000, no) ==
+    REQUIRE(bank.accounts.openAccount(kTeller, id, AccountType::Savings, 50000, no) ==
             Error::Ok);
     REQUIRE(bank.ledger.readJournal(entries) == Error::Ok);
     REQUIRE(entries.size() == 1);

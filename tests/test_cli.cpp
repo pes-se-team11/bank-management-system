@@ -138,8 +138,8 @@ TEST_CASE("Menu explains refusals and recovers from bad input") {
     const std::string script =
         kTellerOnDuty +
         "1\nAsha Rao\n12 MG Road\n9876543210\nABCDE1234F\n"
-        "2\n1\n1\n100\n12\n1234\n" // PIN too short, then a valid one
-        "4\n100001\n500\n"         // more than the balance
+        "2\n1\n1\n500\n12\n1234\n" // PIN too short, then a valid one
+        "4\n100001\n600\n"         // more than the balance
         "3\n100001\n12,000\n250\n" // badly formatted amount, re-prompted
         "5\n424242\n"              // unknown account
         "0\n"
@@ -388,7 +388,7 @@ TEST_CASE("TC-ACC-04: a closed account cannot be reopened through lockout and un
     const std::string script =
         kTellerOnDuty +
         "1\nAsha Rao\n12 MG Road\n9876543210\nABCDE1234F\n"
-        "2\n1\n1\n0\n1234\n"   // opened with Rs 0
+        "2\n1\n2\n0\n1234\n"     // open a zero-balance Current account
         "0\n"
         "1\nadmin\nPassword123\n"
         "6\n100001\n1\n"         // closed
@@ -413,7 +413,7 @@ TEST_CASE("TC-ACC-04: a closed account cannot be reopened through lockout and un
     CHECK_FALSE(contains(out, "Account 100001 unlocked."));
     CHECK_FALSE(contains(out, "Deposited Rs 100.00."));
     CHECK_FALSE(contains(out, "Logged in to account 100001."));
-    CHECK(contains(out, "100001  Savings  Closed"));
+    CHECK(contains(out, "100001  Current  Closed"));
 }
 
 TEST_CASE("Staff IDs must be 3-16 letters or digits") {
@@ -429,7 +429,7 @@ TEST_CASE("TC-TRF-01/02: transfer through the teller and customer menus") {
         kTellerOnDuty +
         "1\nAsha Rao\n12 MG Road\n9876543210\nABCDE1234F\n"
         "2\n1\n1\n500\n1234\n"          // account 100001, Rs 500
-        "2\n1\n1\n100\n5678\n"          // account 100002, Rs 100
+        "2\n1\n1\n500\n5678\n"          // account 100002, Rs 500
         "9\n100001\n100002\n200\n"      // teller moves Rs 200 across
         "9\n100001\n100001\n10\n"       // same account: refused
         "9\n100001\n100002\n9999\n"     // more than the balance: refused
@@ -472,7 +472,7 @@ TEST_CASE("Menu describes the new limit refusals in plain words") {
             kTellerOnDuty +
             "1\nAsha Rao\n12 MG Road\n9876543210\nABCDE1234F\n"
             "2\n1\n1\n1000\n1234\n"
-            "2\n1\n1\n100\n5678\n"
+            "2\n1\n1\n500\n5678\n"
             "4\n100001\n600\n"            // would leave Rs 400, under the Rs 500 minimum
             "4\n100001\n150\n"            // Rs 150 > the Rs 100 daily limit
             "9\n100001\n100002\n60\n"     // Rs 60 > the Rs 50 transfer ceiling
