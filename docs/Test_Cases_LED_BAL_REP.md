@@ -2,12 +2,12 @@
 
 **Owner of this update:** Adarsha E (PES1UG24AM334) · **Team 11 — Bank Management System**  
 **Baseline:** SRS v1.0 requirement IDs and acceptance criteria.  
-**Result column:** automated run on Linux, g++ 14, `-Wall -Wextra -Werror -pedantic`, 44 test cases in this group, 0 failures.  
-**Where the tests live:** `tests/test_ledger.cpp` (TC-LED, TC-BAL, TC-SEC-03, TC-SEC-06), `tests/test_report.cpp` (TC-REP / TC-LED-03, TC-LED-04, TC-AUT-03).  
+**Result column:** automated run on Linux, g++ 14, `-Wall -Wextra -Werror -pedantic`, 33 test cases in this group, 0 failures.  
+**Where the tests live:** `tests/test_ledger.cpp` (TC-LED, TC-SEC-03, TC-SEC-06), `tests/test_report.cpp` (TC-REP / TC-LED-03, TC-LED-04, TC-AUT-03).  
 Run one case: `./build/tests/bms_tests -tc="TC-LED-01*"`  
-Run the group: `./build/tests/bms_tests -tc="TC-LED*" -tc="TC-BAL*" -tc="TC-SEC-03*" -tc="TC-SEC-06*" -tc="TC-LED-03*" -tc="TC-LED-04*" -tc="TC-AUT-03*"`  
+Run the group: `./build/tests/bms_tests -tc="TC-LED*" -tc="TC-SEC-03*" -tc="TC-SEC-06*" -tc="TC-LED-03*" -tc="TC-LED-04*" -tc="TC-AUT-03*"`  
 
-Test levels: **U** = unit (Ledger/ReportService + in-memory/fake clock), **I** = integration (real file store via Ledger), **S** = scripted menu run.
+Test levels: **U** = unit (Ledger/ReportService + in-memory/fake clock), **I** = integration (real file store via Ledger).
 
 ---
 

@@ -1,7 +1,7 @@
 # Unit Test Report — LedgerModule & ReportModule
 
 **Project:** Team 11 — Bank Management System (C/C++)  
-**Owner:** Adarsha P (PES1UG24AM...) — P3  
+**Owner:** Adarsha E (PES1UG24AM334) — P3  
 **Commit measured:** `448ecb9` on `main` (after PRs #17–#24)  
 **Date:** 12-11-2026  
 **Tools:** g++ (GCC) 14.4.0, doctest 2.4.11, gcovr 7.2, CMake 3.31.6 (Linux, `gcc:14` container)  
@@ -14,10 +14,10 @@
 
 | Module | Source files | Test file | Test cases | Assertions | Status |
 |---|---|---|---|---|---|
-| LedgerModule | `src/ledger/ledger.cpp`, `src/ledger/ledger.h` | `tests/test_ledger.cpp` | 35 | 1120 | **All pass** |
-| ReportModule | `src/report/report_service.cpp`, `src/report/report_service.h` | `tests/test_report.cpp` | 9 | 84 | **All pass** |
+| LedgerModule | `src/ledger/ledger.cpp`, `src/ledger/ledger.h` | `tests/test_ledger.cpp` | 25 | ~700 | **All pass** |
+| ReportModule | `src/report/report_service.cpp`, `src/report/report_service.h` | `tests/test_report.cpp` | 8 | 84 | **All pass** |
 
-**Total for P3 (Adarsha):** 44 test cases, 1204 assertions — all passing.
+**Total for P3 (Adarsha):** 33 test cases, ~784 assertions — all passing.
 
 ---
 
@@ -35,8 +35,8 @@
 |---|---|---|---|---|
 | TC-LED-01 | BMS-F-060 | U | Journal & audit append preserves every earlier byte; sequences continue after restart; every transaction type round-trips including OPEN and both transfer legs; invalid transactions leave files/sequence unchanged | `TC-LED-01: journal and audit appends preserve every earlier byte`, `independent journal and audit sequences continue after restart`, `every journal type round trips…`, `invalid transactions leave files and output sequence unchanged` |
 | TC-LED-02 | BMS-F-061 | U | Reconciliation passes on clean data; passes with no journal/accounts; names every tampered stored balance; detects edited journal amount; detects consistently edited final record; journal without OPEN start fails; repeated OPEN fails; integer limits without wraparound | `TC-LED-02: reconciliation passes on clean data`, `passes with no journal and no accounts`, `names every tampered stored balance`, `detects an edited journal amount`, `detects a consistently edited final record`, `a journal history without an OPEN start cannot reconcile`, `a repeated OPEN record cannot reconcile`, `reconciliation covers integer limits without wraparound` |
-| TC-LED-03 | BMS-F-041 | U | Mini-statement returns up to 10 newest records for only that account; empty journal clears previous output; rejects account zero; propagates journal errors without partial results | `TC-BAL-02: mini-statement returns up to ten newest records…`, `mini-statement on an empty journal clears previous output`, `mini-statement rejects account zero…`, `mini-statement propagates journal errors without partial results` |
-| TC-LED-04 | BMS-F-063 | U | Privileged actions capture operator, action, target, details and timestamp; audit refuses empty operators and unknown actions | `TC-LED-04: privileged actions capture operator action target details and timestamp`, `audit refuses empty operators and unknown actions` |
+| TC-LED-03 | BMS-F-062 | U | Totals equal the day's journal entries and close every account; empty day totals zero but still closes every account; empty journal produces zero report with correct day label | `TC-LED-03: totals equal the day's journal entries and close every account`, `an empty day totals zero but still closes every account`, `an empty journal produces a zero report for the day` |
+| TC-LED-04 | BMS-F-063 | U | Each manager report writes exactly one audit record (REPORT_RUN); a refused report writes no audit record | `TC-LED-04: each manager report writes exactly one audit record`, `a refused report writes no audit record` |
 | TC-SEC-03 | BMS-SR-003 | U | Integer limits round-trip and exhausted sequences never wrap | `TC-SEC-03: integer limits round trip and exhausted sequences never wrap` |
 | TC-SEC-06 | BMS-SR-005 | U | Reserved free-text characters escape and round-trip exactly; strict journal/audit parsing refuses malformed fields without changing output; corrupt/unterminated files refuse reads and further appends; missing files are empty; unwritable path reports Io | `TC-SEC-06: reserved free text characters escape and round trip exactly`, `strict journal parsing refuses malformed fields…`, `strict audit parsing refuses malformed fields…`, `corrupt or unterminated files refuse reads and further appends`, `missing files are empty and an unwritable path reports Io` |
 | TC-SEC-06 (clock) | BMS-F-060 | U | Default clock records current Unix time | `TC-LED-04: the default clock records current Unix time` |
@@ -96,10 +96,7 @@ $ ./build/tests/bms_tests
 **Ledger & Report specific:**
 ```
 $ ./build/tests/bms_tests -tc="TC-LED*"
-[doctest] test cases: 26 | 26 passed | 0 failed
-
-$ ./build/tests/bms_tests -tc="TC-BAL*"
-[doctest] test cases: 4 | 4 passed | 0 failed
+[doctest] test cases: 25 | 25 passed | 0 failed
 
 $ ./build/tests/bms_tests -tc="TC-LED-03*"
 [doctest] test cases: 5 | 5 passed | 0 failed
@@ -116,22 +113,37 @@ $ ./build/tests/bms_tests -tc="TC-SEC-03*"
 
 ---
 
-## 5. Deviations & Open Points
+## 5. P1 / P2 Module Summaries (to be completed by owners)
+
+| Module | Owner | Test file | Test cases | Line Coverage | Branch Coverage | Status |
+|---|---|---|---|---|---|---|
+| AccountModule | P1 Dhanush | `tests/test_account.cpp` | — | 93.0 % | 90.9 % | 📝 To fill |
+| AuthModule | P1 Dhanush | `tests/test_auth.cpp`, `tests/test_authorization.cpp` | — | 93.5 % | 85.6 % | 📝 To fill |
+| ValidationModule | P1 Dhanush | `tests/test_validation.cpp` | — | 98.7 % | 90.8 % | 📝 To fill |
+| TransactionModule | P2 Vidit | `tests/test_transaction.cpp`, `tests/test_transaction_rules.cpp` | — | 98.8 % | 93.7 % | 📝 To fill |
+| Money type | P2 Vidit | `tests/test_money.cpp` | — | 100.0 % | 88.9 % | 📝 To fill |
+| PersistenceModule | P2 Vidit | `tests/test_persistence.cpp` | — | 86.0 % | 77.7 % | 📝 To fill |
+| Platform layer | P2 Vidit | `tests/test_platform.cpp` | — | 82.9 % | 71.1 % | 📝 To fill |
+| MenuLayer (CLI) | Shared | `tests/test_cli.cpp`, `tests/test_main.cpp` | — | 79.8 % | 72.2 % | 📝 To fill |
+
+---
+
+## 6. Deviations & Open Points
 
 | # | Requirement | Deviation | Impact |
 |---|---|---|---|
-| 1 | BMS-F-061 (full) | Start-up journal replay not implemented. `reconcile()` reports mismatches but nothing replays the journal into stored balances at process start. `TC-REL-01` (kill mid-write, restart, verify) is therefore **not met**. | Data integrity relies on external reconciliation runs; no automatic recovery. |
+| 1 | BMS-F-061 (full) | No start-up journal replay. `reconcile()` reports mismatches but nothing replays the journal into stored balances at process start. `TC-REL-01` (kill mid-write, restart, verify) is therefore **not met**. | Data integrity relies on external reconciliation runs; no automatic recovery. |
 | 2 | BMS-F-063 | Audit record written *after* report computation. If process crashes between report and audit write, the report ran but left no trace. Mirrors the AuthService unlock flow; accepted for v1.0. | Low — manager can re-run; audit gap is visible in next reconciliation. |
 | 3 | BMS-F-041 | Mini-statement reads entire journal sequentially. For very large journals this could be slow; no index. | Performance — not a functional gap for v1.0 scope. |
 | 4 | BMS-SR-005 | Append-only by design; no update/delete API. Corrupt records are detected but not repaired. | Operational — requires manual intervention if corruption occurs. |
 
 ---
 
-## 6. Sign-off
+## 7. Sign-off
 
 | Role | Name | Date | Status |
 |---|---|---|---|
-| **Owner (P3)** | Adarsha P | 12-11-2026 | ✅ Complete |
+| **Owner (P3)** | Adarsha E | 12-11-2026 | ✅ Complete |
 | **Reviewer (P1)** | Dhanush S | — | Pending |
 | **Reviewer (P2)** | Vidit S | — | Pending |
 
