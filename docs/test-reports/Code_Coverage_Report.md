@@ -85,7 +85,39 @@ Requirements covered for these modules: TC-ACC-01..05, TC-AUT-01..04,
 TC-SEC-01, TC-SEC-02, TC-SEC-04, TC-SEC-05, TC-SEC-08.
 ## Analysis - other modules
 
-_Ledger, Report - P3 Adarsha, and MenuLayer (CLI) / `main.cpp` - shared: to be added by their owners._
+### LedgerModule (P3 Adarsha)
+
+**97.7 % line coverage (257 / 263), 96.5 % branch coverage (329 / 341).**
+
+The 6 uncovered lines and ~12 uncovered branches are all **IO-failure paths** in `ledger.cpp`:
+
+- `appendLine` failure returns (disk full, unwritable directory) — the in-memory test fixtures and temporary directories never trigger these.
+- `readLines` failure in the fast-path of `readJournal`/`readAudit` — same reason.
+- The `journal_status_` / `audit_status_` latch branches after a failed append — never reached because appends never fail in tests.
+
+Every business decision is covered: every transaction type (OPEN, DEPOSIT, WITHDRAW, TRANSFER_OUT, TRANSFER_IN) and every audit action round-trips; mini-statement filtering, limiting, and error propagation; reconciliation logic for clean data, tampered balances, edited journals, missing/duplicate OPEN, integer limits; escape handling for reserved characters; corrupt-file detection; sequence recovery across restart.
+
+Requirements covered: TC-LED-01 (BMS-F-060), TC-LED-02 (BMS-F-061), TC-LED-03 (BMS-F-041), TC-LED-04 (BMS-F-063), TC-SEC-03 (BMS-SR-003), TC-SEC-06 (BMS-SR-005), TC-BAL-02 (BMS-F-041).
+
+Gap accepted — fault-injection for `appendLine`/`readLines` is a project-wide improvement tracked in PersistenceModule.
+
+### ReportModule (P3 Adarsha)
+
+**92.9 % line coverage (52 / 56), 84.0 % branch coverage (42 / 50).**
+
+The 4 uncovered lines and 8 uncovered branches in `report_service.cpp` are:
+
+- `readJournal` error return (lines 55–57) — the test Ledger never fails a read.
+- `journalDay` negative-timestamp branch (lines 41–42) — tests use a positive fixed Unix time.
+- `appendAudit` `InvalidInput` and `Io` returns (lines 92–95) — the test Ledger's audit append never fails.
+
+Every business decision is covered: IST day boundary (`journalDay`); totals by type (deposit, withdrawal, transfer-out, transfer-in) for the report day only; closing balance of every account with journal history; empty day / empty journal handling; Manager-only authorization (Teller, Customer, empty operator refused); exactly one REPORT_RUN audit record per successful run; zero audit on refused run; corrupt journal reported and refused.
+
+Requirements covered: TC-LED-03 (BMS-F-062), TC-LED-04 (BMS-F-063), TC-AUT-03 / TC-SEC-08 (BMS-F-012).
+
+Gap accepted — same IO-failure class as LedgerModule and PersistenceModule; `journalDay` negative branch unreachable with real timestamps.
+
+### MenuLayer (CLI) / `main.cpp` - shared: to be added by their owners.
 
 ### TransactionModule, Money type, PersistenceModule, Platform layer (P2 Vidit)
 
